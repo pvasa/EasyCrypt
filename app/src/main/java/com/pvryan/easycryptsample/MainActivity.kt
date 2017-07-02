@@ -1,37 +1,56 @@
 package com.pvryan.easycryptsample
 
+import android.Manifest
 import android.os.Bundle
-import android.support.design.widget.Snackbar
+import android.os.Environment
+import android.support.v4.app.Fragment
+import android.support.v4.app.FragmentManager
+import android.support.v4.app.FragmentPagerAdapter
+import android.support.v4.view.ViewPager
 import android.support.v7.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
 import com.pvryan.easycrypt.ECrypt
-
+import com.pvryan.easycryptsample.extensions.checkPermissions
+import com.pvryan.easycryptsample.extensions.handlePermissionResults
 import kotlinx.android.synthetic.main.activity_main.*
+import java.io.File
+import java.io.FileWriter
 
 class MainActivity : AppCompatActivity() {
+
+    private val RC_PERMISSIONS = 1
+    private val eCrypt = ECrypt()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
 
-        val eCrypt = ECrypt(ECrypt.Transformations.AES_CBC_PKCS5Padding)
+        viewPager.adapter = SectionsPagerAdapter(supportFragmentManager)
 
-        buttonEncrypt.setOnClickListener {
-            tvOutput.text = eCrypt.encrypt(edInput.text.toString(), "Ryan@L18").toString(Charsets.UTF_8)
+        viewPager.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
+            override fun onPageScrollStateChanged(state: Int) {}
+
+            override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {}
+
+            override fun onPageSelected(position: Int) {
+
+            }
+
+        })
+
+        val tempFile = File(Environment.getExternalStorageDirectory().absolutePath, "/test.txt")
+        if (!tempFile.exists()) {
+            val writer = FileWriter(tempFile)
+            writer.write("Test data to be encrypted.")
+            writer.flush()
+            writer.close()
         }
 
-        buttonDecrypt.setOnClickListener {
-            tvOutput.text = eCrypt.decrypt(tvOutput.text.toString().toByteArray(Charsets.UTF_8), "Ryan@L18")
-        }
-
-        fab.setOnClickListener { view ->
-            Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                    .setAction("Action", null).show()
-        }
     }
 
+    /***************** Options menu *****************/
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
         menuInflater.inflate(R.menu.menu_main, menu)
@@ -46,5 +65,35 @@ class MainActivity : AppCompatActivity() {
             R.id.action_settings -> true
             else -> super.onOptionsItemSelected(item)
         }
+    }
+
+    /***************** App permissions *****************/
+    override fun onResume() {
+        super.onResume()
+        checkPermissions(RC_PERMISSIONS,
+                Manifest.permission.READ_EXTERNAL_STORAGE,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE)
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        when (requestCode) {
+            RC_PERMISSIONS -> handlePermissionResults(requestCode, permissions, grantResults)
+        }
+    }
+
+    private inner class SectionsPagerAdapter(fm: FragmentManager) : FragmentPagerAdapter(fm) {
+        override fun getCount(): Int {
+            return 2
+        }
+
+        override fun getItem(position: Int): Fragment {
+            when (position) {
+                0 -> return FragmentString.newInstance()
+                1 -> return FragmentFile.newInstance()
+                else -> return Fragment()
+            }
+        }
+
     }
 }
