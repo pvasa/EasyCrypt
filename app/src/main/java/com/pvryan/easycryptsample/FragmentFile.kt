@@ -1,3 +1,18 @@
+/**
+ * Copyright 2017 Priyank Vasa
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.pvryan.easycryptsample
 
 import android.app.Activity
@@ -13,6 +28,7 @@ import kotlinx.android.synthetic.main.fragment_file.*
 import org.jetbrains.anko.AnkoLogger
 import org.jetbrains.anko.support.v4.indeterminateProgressDialog
 import org.jetbrains.anko.support.v4.onUiThread
+import org.jetbrains.anko.support.v4.progressDialog
 import org.jetbrains.anko.support.v4.toast
 import java.io.File
 import java.io.FileNotFoundException
@@ -27,6 +43,10 @@ class FragmentFile : Fragment(), AnkoLogger {
     override fun onCreateView(inflater: LayoutInflater?, @Nullable container: ViewGroup?,
                               @Nullable savedInstanceState: Bundle?): View? {
         return inflater?.inflate(R.layout.fragment_file, container, false)
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
     }
 
     override fun onViewCreated(view: View?, @Nullable savedInstanceState: Bundle?) {
@@ -62,10 +82,21 @@ class FragmentFile : Fragment(), AnkoLogger {
 
                     val fis = context.contentResolver.openInputStream(data?.data)
 
-                    val pDialog = indeterminateProgressDialog("Hashing file...")
+                    val pDialog = progressDialog("Hashing file...")
+                    pDialog.max = fis.available() / 1024
+                    pDialog.setProgressNumberFormat(null)
+                    pDialog.setOnCancelListener {
+                        fis.close()
+                        toast("Canceled by user.")
+                    }
 
                     eCrypt.hash(fis, ECrypt.HashAlgorithms.SHA_256,
                             object : ECrypt.HashResultListener {
+
+                                override fun onProgress(progressBy: Int) {
+                                    pDialog.incrementProgressBy(progressBy / 1024)
+                                }
+
                                 override fun <T> onHashed(result: T) {
                                     onUiThread {
                                         pDialog.dismiss()
@@ -80,7 +111,7 @@ class FragmentFile : Fragment(), AnkoLogger {
                                         toast("Error: $message")
                                     }
                                 }
-                            }, activity)
+                            })
                 } catch (e: FileNotFoundException) {
                     e.printStackTrace()
                     toast("File not found.")
@@ -91,10 +122,22 @@ class FragmentFile : Fragment(), AnkoLogger {
                 try {
 
                     val fis = context.contentResolver.openInputStream(data?.data)
-                    val pDialog = indeterminateProgressDialog("Encrypting file...")
+
+                    val pDialog = progressDialog("Encrypting file...")
+                    pDialog.max = fis.available() / 1024
+                    pDialog.setProgressNumberFormat(null)
+                    pDialog.setOnCancelListener {
+                        fis.close()
+                        toast("Canceled by user.")
+                    }
 
                     eCrypt.encrypt(fis, edPassword.text.toString(),
                             object : ECrypt.EncryptionResultListener {
+
+                                override fun onProgress(progressBy: Int) {
+                                    pDialog.incrementProgressBy(progressBy / 1024)
+                                }
+
                                 override fun <T> onEncrypted(result: T) {
                                     onUiThread {
                                         pDialog.dismiss()

@@ -1,6 +1,20 @@
+/**
+ * Copyright 2017 Priyank Vasa
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.pvryan.easycrypt
 
-import android.content.Context
 import android.os.Build
 import android.os.Environment
 import com.pvryan.easycrypt.extensions.*
@@ -12,19 +26,17 @@ import java.security.MessageDigest
 import java.security.SecureRandom
 import javax.crypto.*
 import javax.crypto.spec.IvParameterSpec
-import javax.crypto.spec.PBEKeySpec
-import javax.crypto.spec.SecretKeySpec
 
 class ECrypt : AnkoLogger {
 
-    private val KEY_BITS_LENGTH = 256
+    val KEY_BITS_LENGTH = 256
     private val SALT_BYTES_LENGTH = KEY_BITS_LENGTH / 8
 
-    private val ITERATIONS = 10000 //ideally 10000
+    val ITERATIONS = 10000
 
     private val TRANSFORMATION = "AES/CBC/PKCS5Padding"
-    private var SECRET_KEY_FAC_ALGORITHM = "PBKDF2WithHmacSHA1"
-    private var SECRET_KEY_SPEC_ALGORITHM = "AES"
+    var SECRET_KEY_FAC_ALGORITHM = "PBKDF2WithHmacSHA1"
+    var SECRET_KEY_SPEC_ALGORITHM = "AES"
 
     private val ECRYPT_FILE_EXT = ".ecrypt"
     private val ENCRYPTED_FILE_NAME = "EncryptedFile"
@@ -43,28 +55,6 @@ class ECrypt : AnkoLogger {
         if (Build.VERSION.SDK_INT >= 26) {
             SECRET_KEY_FAC_ALGORITHM = "PBEwithHmacSHA512AndAES_256"
         }
-    }
-
-    private fun getKey(password: String = String(), salt: ByteArray): SecretKeySpec {
-
-        var pass = password
-
-        if (password.isNullOrBlank()) {
-            val passBytes = ByteArray(32)
-            random.nextBytes(passBytes)
-            pass = passBytes.asString()
-        }
-
-        val pbeKeySpec: PBEKeySpec = PBEKeySpec(
-                pass.toCharArray(), salt, ITERATIONS, KEY_BITS_LENGTH)
-
-        val keyFactory: SecretKeyFactory =
-                SecretKeyFactory.getInstance(SECRET_KEY_FAC_ALGORITHM)
-
-        val keyBytes: ByteArray = keyFactory.generateSecret(pbeKeySpec).encoded
-        val keySpec = SecretKeySpec(keyBytes, SECRET_KEY_SPEC_ALGORITHM)
-
-        return keySpec
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -125,6 +115,8 @@ class ECrypt : AnkoLogger {
                 }
 
                 is FileInputStream -> {
+                    val fos = outputFile.outputStream()
+                    var cos = CipherOutputStream(fos, cipher)
                     try {
                         if (outputFile.exists()) {
                             if (outputFile.absolutePath != DEF_ENCRYPTED_FILE_PATH) {
@@ -136,24 +128,29 @@ class ECrypt : AnkoLogger {
                         }
                         outputFile.createNewFile()
 
-                        val fos = outputFile.outputStream()
+                        fos.write(iv)
+                        fos.write(salt)
+                        cos = CipherOutputStream(fos, cipher)
 
-                    fos.write(iv)
-                    fos.write(salt)
-                    val cos = CipherOutputStream(fos, cipher)
-
-                        input.copyTo(cos)
-                    cos.flush()
-                    cos.close()
-                        input.close()
+                        val buffer = ByteArray(8192)
+                        var wrote = 0
+                        while ({ wrote = input.read(buffer); wrote }() > 0) {
+                            cos.write(buffer)
+                            erl.onProgress(wrote)
+                        }
 
                         erl.onEncrypted(outputFile as T)
 
                     } catch (e: IOException) {
+                        outputFile.delete()
                         erl.onFailed("Cannot write to file.", e)
+                    } finally {
+                        cos.flush()
+                        cos.close()
+                        input.close()
+                    }
                 }
             }
-        }
         }
     }
 
@@ -170,7 +167,7 @@ class ECrypt : AnkoLogger {
                 }
 
                 is CharSequence -> {
-                    decrypt(input.toString(), password, drl)
+                    decrypt(input.toString().asByteArray(), password, drl)
                     return@doAsync
                 }
 
@@ -204,6 +201,8 @@ class ECrypt : AnkoLogger {
                 }
 
                 is FileInputStream -> {
+                    val fos = outputFile.outputStream()
+                    val cis = CipherInputStream(input, cipher)
                     try {
                         if (outputFile.exists()) {
                             if (outputFile.absolutePath != DEF_DECRYPTED_FILE_PATH) {
@@ -215,10 +214,8 @@ class ECrypt : AnkoLogger {
                         }
                         outputFile.createNewFile()
 
-                        val fos = outputFile.outputStream()
-
-                    val iv = ByteArray(cipher.blockSize)
-                    val salt = ByteArray(SALT_BYTES_LENGTH)
+                        val iv = ByteArray(cipher.blockSize)
+                        val salt = ByteArray(SALT_BYTES_LENGTH)
 
                         try {
                             if (cipher.blockSize != input.read(iv) ||
@@ -231,30 +228,35 @@ class ECrypt : AnkoLogger {
                             return@doAsync
                         }
 
-                    val key = getKey(password, salt)
-                    val ivParams = IvParameterSpec(iv)
+                        val key = getKey(password, salt)
+                        val ivParams = IvParameterSpec(iv)
 
-                    cipher.init(Cipher.DECRYPT_MODE, key, ivParams)
-                        val cis = CipherInputStream(input, cipher)
+                        cipher.init(Cipher.DECRYPT_MODE, key, ivParams)
 
-                    cis.copyTo(fos)
-                    fos.flush()
-                    fos.close()
-                    cis.close()
+                        val buffer = ByteArray(8192)
+                        var wrote = 0
+                        while ({ wrote = cis.read(buffer); wrote }() > 0) {
+                            fos.write(buffer)
+                            drl.onProgress(wrote)
+                        }
 
                         drl.onDecrypted(outputFile as T)
 
                     } catch (e: IOException) {
+                        outputFile.delete()
                         drl.onFailed("Cannot write to file.", e)
+                    } finally {
+                        fos.flush()
+                        fos.close()
+                        cis.close()
                     }
                 }
 
                 is File -> {
 
-                    when { !input.exists() || input.isDirectory -> {
+                    if (!input.exists() || input.isDirectory) {
                         drl.onFailed("File does not exist.", NoSuchFileException(input))
                         return@doAsync
-                    }
                     }
 
                     val decryptedFile =
@@ -263,16 +265,16 @@ class ECrypt : AnkoLogger {
                             else outputFile
 
                     decrypt(input.inputStream(), password, drl, decryptedFile)
-            }
+                }
 
                 else -> drl.onFailed("Invalid input type.", InvalidParameterException())
 
-        }
+            }
         }
     }
 
     fun <T> hash(input: T, algorithm: HashAlgorithms = HashAlgorithms.SHA_512,
-                 hrl: HashResultListener, context: Context) {
+                 hrl: HashResultListener) {
         doAsync {
 
             val digest: MessageDigest = MessageDigest.getInstance(algorithm.value)
@@ -280,15 +282,15 @@ class ECrypt : AnkoLogger {
             when (input) {
 
                 is String -> {
-                    hash(input.asByteArray().inputStream(), algorithm, hrl, context)
+                    hash(input.asByteArray().inputStream(), algorithm, hrl)
                 }
 
                 is CharSequence -> {
-                    hash(input.toString().asByteArray().inputStream(), algorithm, hrl, context)
+                    hash(input.toString().asByteArray().inputStream(), algorithm, hrl)
                 }
 
                 is File -> {
-                    hash(input.inputStream(), algorithm, hrl, context)
+                    hash(input.inputStream(), algorithm, hrl)
                 }
 
                 is ByteArray -> {
@@ -299,40 +301,22 @@ class ECrypt : AnkoLogger {
 
                     val buffer = ByteArray(8192)
 
-                    if (input.available() < buffer.size) {
-                        hash(input.readBytes(), algorithm, hrl, context)
+                    if (input.available() <= buffer.size) {
+                        hash(input.readBytes(), algorithm, hrl)
                         return@doAsync
                     }
-
-                    /*var pDialog: ProgressDialog? = null
-                    context.runOnUiThread {
-                        pDialog = ProgressDialog(context)
-                        pDialog?.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)
-                        pDialog?.setTitle("Hashing file...")
-                        pDialog?.max = input.available() / 1000
-                        pDialog?.setProgressNumberFormat(null)
-                        pDialog?.setButton(ProgressDialog.BUTTON_NEGATIVE, "Cancel") {
-                            dialog, _ ->
-                            dialog.cancel()
-                        }
-                        pDialog?.setOnCancelListener {
-                            input.close()
-                            hrl.onFailed("Canceled by user.", CancellationException())
-                        }
-                        pDialog?.show()
-                    }*/
 
                     try {
                         var read = 0
                         while ({ read = input.read(buffer); read }() > 0) {
                             digest.update(buffer)
-                            //pDialog?.incrementProgressBy(read / 1000)
+                            hrl.onProgress(read)
                         }
                         hrl.onHashed(digest.digest().asHexString())
+
                     } catch (e: IOException) {
                         hrl.onFailed("Cannot read from file.", e)
                     } finally {
-                        //pDialog?.dismiss()
                         input.close()
                     }
                 }
@@ -343,16 +327,19 @@ class ECrypt : AnkoLogger {
     }
 
     interface EncryptionResultListener {
+        fun onProgress(progressBy: Int) {}
         fun <T> onEncrypted(result: T)
         fun onFailed(message: String, e: Exception)
     }
 
     interface DecryptionResultListener {
+        fun onProgress(progressBy: Int) {}
         fun <T> onDecrypted(result: T)
         fun onFailed(message: String, e: Exception)
     }
 
     interface HashResultListener {
+        fun onProgress(progressBy: Int) {}
         fun <T> onHashed(result: T)
         fun onFailed(message: String, e: Exception)
     }
