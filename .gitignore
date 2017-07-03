@@ -54,3 +54,6 @@ freeline.py
 freeline/
 freeline_project_description.json
 
+# Unused code
+*.unused
+.idea/vcs.xml

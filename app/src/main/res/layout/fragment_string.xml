@@ -12,7 +12,7 @@
         android:layout_marginStart="32dp"
         android:layout_marginTop="16dp"
         android:layout_weight="1"
-        android:hint="String to encrypt / decrypt"
+        android:hint="@string/ed_string_to_encrypt_hash"
         android:inputType="textMultiLine"
         android:maxLines="6" />
 
@@ -24,11 +24,12 @@
         android:layout_marginStart="32dp"
         android:layout_marginTop="16dp"
         android:layout_weight="1"
-        android:hint="Password"
+        android:hint="@string/ed_password"
         android:inputType="textPassword" />
 
     <TextView
         android:id="@+id/tvResult"
+        style="?android:attr/textAppearanceMedium"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginEnd="32dp"
@@ -50,21 +51,21 @@
             style="?android:attr/buttonBarButtonStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Hash" />
+            android:text="@string/button_hash" />
 
         <Button
             android:id="@+id/buttonEncrypt"
             style="?android:attr/buttonBarButtonStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Encrypt" />
+            android:text="@string/button_encrypt" />
 
         <Button
             android:id="@+id/buttonDecrypt"
             style="?android:attr/buttonBarButtonStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Decrypt" />
+            android:text="@string/button_decrypt" />
 
     </LinearLayout>
 

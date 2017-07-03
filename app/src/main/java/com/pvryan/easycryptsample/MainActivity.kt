@@ -2,51 +2,35 @@ package com.pvryan.easycryptsample
 
 import android.Manifest
 import android.os.Bundle
-import android.os.Environment
+import android.support.design.widget.TabLayout
 import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentManager
 import android.support.v4.app.FragmentPagerAdapter
-import android.support.v4.view.ViewPager
 import android.support.v7.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
-import com.pvryan.easycrypt.ECrypt
 import com.pvryan.easycryptsample.extensions.checkPermissions
 import com.pvryan.easycryptsample.extensions.handlePermissionResults
 import kotlinx.android.synthetic.main.activity_main.*
-import java.io.File
-import java.io.FileWriter
 
 class MainActivity : AppCompatActivity() {
 
     private val RC_PERMISSIONS = 1
-    private val eCrypt = ECrypt()
+    private val fragments = arrayListOf(
+            FragmentString.newInstance(),
+            FragmentFile.newInstance()
+    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
         setSupportActionBar(toolbar)
 
         viewPager.adapter = SectionsPagerAdapter(supportFragmentManager)
 
-        viewPager.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
-            override fun onPageScrollStateChanged(state: Int) {}
-
-            override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {}
-
-            override fun onPageSelected(position: Int) {
-
-            }
-
-        })
-
-        val tempFile = File(Environment.getExternalStorageDirectory().absolutePath, "/test.txt")
-        if (!tempFile.exists()) {
-            val writer = FileWriter(tempFile)
-            writer.write("Test data to be encrypted.")
-            writer.flush()
-            writer.close()
-        }
+        viewPager.addOnPageChangeListener(TabLayout.TabLayoutOnPageChangeListener(tabs))
+        tabs.addOnTabSelectedListener(TabLayout.ViewPagerOnTabSelectedListener(viewPager))
 
     }
 
@@ -83,15 +67,20 @@ class MainActivity : AppCompatActivity() {
     }
 
     private inner class SectionsPagerAdapter(fm: FragmentManager) : FragmentPagerAdapter(fm) {
+
         override fun getCount(): Int {
-            return 2
+            return fragments.size
         }
 
         override fun getItem(position: Int): Fragment {
-            when (position) {
-                0 -> return FragmentString.newInstance()
-                1 -> return FragmentFile.newInstance()
-                else -> return Fragment()
+            return fragments[position]
+        }
+
+        override fun getPageTitle(position: Int): CharSequence {
+            return when (fragments[position]) {
+                is FragmentString -> "String"
+                is FragmentFile -> "File"
+                else -> "Fragment $position"
             }
         }
 

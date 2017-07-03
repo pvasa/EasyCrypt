@@ -1,4 +1,15 @@
 <resources>
     <string name="app_name">EasyCryptSample</string>
     <string name="action_settings">Settings</string>
+    <string name="ed_string_to_encrypt_hash">String to encrypt / hash</string>
+    <string name="ed_password">Password</string>
+    <string name="button_hash">Hash</string>
+    <string name="button_encrypt">Encrypt</string>
+    <string name="button_decrypt">Decrypt</string>
+    <string name="button_select_hash">Hash</string>
+    <string name="button_select_encrypt">Encrypt</string>
+    <string name="button_select_decrypt">Decrypt</string>
+    <string name="tv_select_file_to">Select file to,</string>
+    <string name="success_file_encrypted">Successfully encrypted file to\n%s</string>
+    <string name="success_file_decrypted">Successfully decrypted file to\n%s</string>
 </resources>
