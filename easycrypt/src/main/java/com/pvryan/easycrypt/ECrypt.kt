@@ -1,14 +1,15 @@
 package com.pvryan.easycrypt
 
+import android.content.Context
 import android.os.Build
+import android.os.Environment
 import com.pvryan.easycrypt.extensions.*
 import org.jetbrains.anko.AnkoLogger
 import org.jetbrains.anko.doAsync
-import java.io.ByteArrayOutputStream
-import java.io.File
+import java.io.*
+import java.security.InvalidParameterException
 import java.security.MessageDigest
 import java.security.SecureRandom
-import java.security.spec.KeySpec
 import javax.crypto.*
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.PBEKeySpec
@@ -25,7 +26,15 @@ class ECrypt : AnkoLogger {
     private var SECRET_KEY_FAC_ALGORITHM = "PBKDF2WithHmacSHA1"
     private var SECRET_KEY_SPEC_ALGORITHM = "AES"
 
-    private val FILE_EXT = ".ecrypt"
+    private val ECRYPT_FILE_EXT = ".ecrypt"
+    private val ENCRYPTED_FILE_NAME = "EncryptedFile"
+    private val DECRYPTED_FILE_NAME = "DecryptedFile"
+    private val DEF_ENCRYPTED_FILE_PATH =
+            Environment.getExternalStorageDirectory().absolutePath +
+                    File.separator + ENCRYPTED_FILE_NAME + ECRYPT_FILE_EXT
+    private val DEF_DECRYPTED_FILE_PATH =
+            Environment.getExternalStorageDirectory().absolutePath +
+                    File.separator + DECRYPTED_FILE_NAME + ECRYPT_FILE_EXT
 
     private val cipher = Cipher.getInstance(TRANSFORMATION)
     private val random = SecureRandom()
@@ -46,42 +55,50 @@ class ECrypt : AnkoLogger {
             pass = passBytes.asString()
         }
 
-        val pbeKeySpec: KeySpec = PBEKeySpec(pass.toCharArray(), salt, ITERATIONS, KEY_BITS_LENGTH)
+        val pbeKeySpec: PBEKeySpec = PBEKeySpec(
+                pass.toCharArray(), salt, ITERATIONS, KEY_BITS_LENGTH)
 
         val keyFactory: SecretKeyFactory =
                 SecretKeyFactory.getInstance(SECRET_KEY_FAC_ALGORITHM)
 
-        val keyBytes = keyFactory.generateSecret(pbeKeySpec).encoded
+        val keyBytes: ByteArray = keyFactory.generateSecret(pbeKeySpec).encoded
         val keySpec = SecretKeySpec(keyBytes, SECRET_KEY_SPEC_ALGORITHM)
 
         return keySpec
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun <T> encrypt(input: T, erl: EncryptionResultListener, password: String) {
+    fun <T> encrypt(input: T, password: String, erl: EncryptionResultListener,
+                    outputFile: File = File(DEF_ENCRYPTED_FILE_PATH)) {
         doAsync {
 
             when (input) {
                 is String -> {
-                    encrypt(input.asByteArray(), erl, password)
+                    encrypt(input.asByteArray(), password, erl)
                     return@doAsync
                 }
                 is CharSequence -> {
-                    encrypt(input.toString().asByteArray(), erl, password)
+                    encrypt(input.toString().asByteArray(), password, erl)
                     return@doAsync
                 }
                 is File -> {
-                    if (!input.exists()) {
-                        erl.onFailed("File does not exist.")
-                        return@doAsync
-                    } else if (input.isDirectory) {
-                        erl.onFailed("Cannot encrypt folder.")
-                        return@doAsync
+                    if (!input.exists() || input.isDirectory) {
+                        erl.onFailed("File does not exist.", NoSuchFileException(input))
+                    } else {
+                        val encryptedFile =
+                                if (outputFile.absolutePath == DEF_ENCRYPTED_FILE_PATH)
+                                    File(input.absolutePath + ECRYPT_FILE_EXT)
+                                else outputFile
+
+                        encrypt(input.inputStream(), password, erl, encryptedFile)
                     }
+                    return@doAsync
+                }
+                is FileInputStream -> {
                 }
                 is ByteArray -> {
                 }
-                else -> erl.onFailed("Invalid input type.")
+                else -> erl.onFailed("Invalid input type.", InvalidParameterException())
             }
 
             val salt = ByteArray(SALT_BYTES_LENGTH)
@@ -107,41 +124,53 @@ class ECrypt : AnkoLogger {
                     erl.onEncrypted(it.toByteArray().toBase64().asString() as T)
                 }
 
-                is File -> {
-                    val fis = input.inputStream()
+                is FileInputStream -> {
+                    try {
+                        if (outputFile.exists()) {
+                            if (outputFile.absolutePath != DEF_ENCRYPTED_FILE_PATH) {
+                                erl.onFailed("Output file already exists.",
+                                        FileAlreadyExistsException(outputFile))
+                                return@doAsync
+                            }
+                            outputFile.delete()
+                        }
+                        outputFile.createNewFile()
 
-                    val encryptedFile = File(input.absolutePath + FILE_EXT)
-                    val fos = encryptedFile.outputStream()
+                        val fos = outputFile.outputStream()
+
                     fos.write(iv)
                     fos.write(salt)
                     val cos = CipherOutputStream(fos, cipher)
 
-                    fis.copyTo(cos)
+                        input.copyTo(cos)
                     cos.flush()
                     cos.close()
-                    fis.close()
+                        input.close()
 
-                    input.delete()
+                        erl.onEncrypted(outputFile as T)
 
-                    erl.onEncrypted(encryptedFile as T)
+                    } catch (e: IOException) {
+                        erl.onFailed("Cannot write to file.", e)
                 }
             }
+        }
         }
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun <T> decrypt(input: T, drl: DecryptionResultListener, password: String) {
+    fun <T> decrypt(input: T, password: String, drl: DecryptionResultListener,
+                    outputFile: File = File(DEF_DECRYPTED_FILE_PATH)) {
         doAsync {
 
             when (input) {
 
                 is String -> {
-                    decrypt(input.asByteArray(), drl, password)
+                    decrypt(input.asByteArray(), password, drl)
                     return@doAsync
                 }
 
                 is CharSequence -> {
-                    decrypt(input.toString(), drl, password)
+                    decrypt(input.toString(), password, drl)
                     return@doAsync
                 }
 
@@ -149,14 +178,14 @@ class ECrypt : AnkoLogger {
 
                     val IV = ByteArray(cipher.blockSize)
                     if (cipher.blockSize != it.read(IV)) {
-                        drl.onFailed("Invalid input data.")
+                        drl.onFailed("Invalid input data.", BadPaddingException())
                         return@doAsync
                     }
                     val ivParams = IvParameterSpec(IV)
 
                     val salt = ByteArray(SALT_BYTES_LENGTH)
                     if (SALT_BYTES_LENGTH != it.read(salt)) {
-                        drl.onFailed("Invalid input data.")
+                        drl.onFailed("Invalid input data.", BadPaddingException())
                         return@doAsync
                     }
                     val key = getKey(password, salt)
@@ -167,55 +196,83 @@ class ECrypt : AnkoLogger {
                     try {
                         drl.onDecrypted(cipher.doFinal(secureBytes).asString() as T)
                     } catch (e: BadPaddingException) {
-                        drl.onFailed("Invalid input data.")
+                        drl.onFailed("Invalid input data.", e)
                     } catch (e: IllegalBlockSizeException) {
-                        drl.onFailed("Invalid input data.")
+                        drl.onFailed("Invalid input data.", e)
                     }
 
                 }
 
-                is File -> {
+                is FileInputStream -> {
+                    try {
+                        if (outputFile.exists()) {
+                            if (outputFile.absolutePath != DEF_DECRYPTED_FILE_PATH) {
+                                drl.onFailed("Output file already exists.",
+                                        FileAlreadyExistsException(outputFile))
+                                return@doAsync
+                            }
+                            outputFile.delete()
+                        }
+                        outputFile.createNewFile()
 
-                    if (!input.exists()) {
-                        drl.onFailed("File does not exist.")
-                        return@doAsync
-                    } else if (input.isDirectory) {
-                        drl.onFailed("Cannot decrypt folder.")
-                        return@doAsync
-                    }
-
-                    val fis = input.inputStream()
-                    val decryptedFile = File(input.absoluteFile.toString().removeSuffix(FILE_EXT))
-                    val fos = decryptedFile.outputStream()
+                        val fos = outputFile.outputStream()
 
                     val iv = ByteArray(cipher.blockSize)
                     val salt = ByteArray(SALT_BYTES_LENGTH)
-                    if (cipher.blockSize != fis.read(iv) || SALT_BYTES_LENGTH != fis.read(salt)) {
-                        drl.onFailed("Invalid input data.")
-                        return@doAsync
-                    }
+
+                        try {
+                            if (cipher.blockSize != input.read(iv) ||
+                                    SALT_BYTES_LENGTH != input.read(salt)) {
+                                drl.onFailed("Invalid input data.", BadPaddingException())
+                                return@doAsync
+                            }
+                        } catch (e: IOException) {
+                            drl.onFailed("Cannot read from file.", e)
+                            return@doAsync
+                        }
+
                     val key = getKey(password, salt)
                     val ivParams = IvParameterSpec(iv)
 
                     cipher.init(Cipher.DECRYPT_MODE, key, ivParams)
-                    val cis = CipherInputStream(fis, cipher)
+                        val cis = CipherInputStream(input, cipher)
 
                     cis.copyTo(fos)
                     fos.flush()
                     fos.close()
                     cis.close()
 
-                    drl.onDecrypted(decryptedFile as T)
+                        drl.onDecrypted(outputFile as T)
+
+                    } catch (e: IOException) {
+                        drl.onFailed("Cannot write to file.", e)
+                    }
                 }
 
-                else -> drl.onFailed("Invalid input type.")
+                is File -> {
 
+                    when { !input.exists() || input.isDirectory -> {
+                        drl.onFailed("File does not exist.", NoSuchFileException(input))
+                        return@doAsync
+                    }
+                    }
+
+                    val decryptedFile =
+                            if (outputFile.absolutePath == DEF_DECRYPTED_FILE_PATH)
+                                File(input.absoluteFile.toString().removeSuffix(ECRYPT_FILE_EXT))
+                            else outputFile
+
+                    decrypt(input.inputStream(), password, drl, decryptedFile)
             }
+
+                else -> drl.onFailed("Invalid input type.", InvalidParameterException())
+
+        }
         }
     }
 
-    fun <T> hash(input: T, hrl: HashResultListener,
-                 algorithm: HashAlgorithms = HashAlgorithms.SHA_512) {
+    fun <T> hash(input: T, algorithm: HashAlgorithms = HashAlgorithms.SHA_512,
+                 hrl: HashResultListener, context: Context) {
         doAsync {
 
             val digest: MessageDigest = MessageDigest.getInstance(algorithm.value)
@@ -223,37 +280,81 @@ class ECrypt : AnkoLogger {
             when (input) {
 
                 is String -> {
-                    hash(input.asByteArray(), hrl, algorithm)
-                    return@doAsync
+                    hash(input.asByteArray().inputStream(), algorithm, hrl, context)
                 }
 
                 is CharSequence -> {
-                    hash(input.toString().asByteArray(), hrl, algorithm)
-                    return@doAsync
+                    hash(input.toString().asByteArray().inputStream(), algorithm, hrl, context)
+                }
+
+                is File -> {
+                    hash(input.inputStream(), algorithm, hrl, context)
                 }
 
                 is ByteArray -> {
-                    hrl.onHashed(digest.digest(input).toHexString())
+                    hrl.onHashed(digest.digest(input).asHexString())
                 }
 
-                else -> hrl.onFailed("Invalid input type.")
+                is InputStream -> {
+
+                    val buffer = ByteArray(8192)
+
+                    if (input.available() < buffer.size) {
+                        hash(input.readBytes(), algorithm, hrl, context)
+                        return@doAsync
+                    }
+
+                    /*var pDialog: ProgressDialog? = null
+                    context.runOnUiThread {
+                        pDialog = ProgressDialog(context)
+                        pDialog?.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)
+                        pDialog?.setTitle("Hashing file...")
+                        pDialog?.max = input.available() / 1000
+                        pDialog?.setProgressNumberFormat(null)
+                        pDialog?.setButton(ProgressDialog.BUTTON_NEGATIVE, "Cancel") {
+                            dialog, _ ->
+                            dialog.cancel()
+                        }
+                        pDialog?.setOnCancelListener {
+                            input.close()
+                            hrl.onFailed("Canceled by user.", CancellationException())
+                        }
+                        pDialog?.show()
+                    }*/
+
+                    try {
+                        var read = 0
+                        while ({ read = input.read(buffer); read }() > 0) {
+                            digest.update(buffer)
+                            //pDialog?.incrementProgressBy(read / 1000)
+                        }
+                        hrl.onHashed(digest.digest().asHexString())
+                    } catch (e: IOException) {
+                        hrl.onFailed("Cannot read from file.", e)
+                    } finally {
+                        //pDialog?.dismiss()
+                        input.close()
+                    }
+                }
+
+                else -> hrl.onFailed("Invalid input type.", InvalidParameterException())
             }
         }
     }
 
     interface EncryptionResultListener {
         fun <T> onEncrypted(result: T)
-        fun onFailed(error: String)
+        fun onFailed(message: String, e: Exception)
     }
 
     interface DecryptionResultListener {
         fun <T> onDecrypted(result: T)
-        fun onFailed(error: String)
+        fun onFailed(message: String, e: Exception)
     }
 
     interface HashResultListener {
         fun <T> onHashed(result: T)
-        fun onFailed(error: String)
+        fun onFailed(message: String, e: Exception)
     }
 
     enum class HashAlgorithms(val value: String) {
@@ -266,57 +367,3 @@ class ECrypt : AnkoLogger {
     }
 
 }
-
-/*
-@Suppress("unused")
-object Transformations {
-    val AES_CBC_NoPadding = "AES/CBC/NoPadding" //(128)
-    val AES_CBC_PKCS5Padding = "AES/CBC/PKCS5Padding" //(128)
-    val AES_ECB_NoPadding = "AES/ECB/NoPadding" //(128)
-    val AES_ECB_PKCS5Padding = "AES/ECB/PKCS5Padding" //(128)
-    val DES_CBC_NoPadding = "DES/CBC/NoPadding" //(56)
-    val DES_CBC_PKCS5Padding = "DES/CBC/PKCS5Padding" //(56)
-    val DES_ECB_NoPadding = "DES/ECB/NoPadding" //(56)
-    val DES_ECB_PKCS5Padding = "DES/ECB/PKCS5Padding" //(56)
-    val DESede_CBC_NoPadding = "DESede/CBC/NoPadding" //(168)
-    val DESede_CBC_PKCS5Padding = "DESede/CBC/PKCS5Padding" //(168)
-    val DESede_ECB_NoPadding = "DESede/ECB/NoPadding" //(168)
-    val DESede_ECB_PKCS5Padding = "DESede/ECB/PKCS5Padding" //(168)
-    val RSA_ECB_PKCS1Padding = "RSA/ECB/PKCS1Padding" //(1024, 2048)
-    val RSA_ECB_OAEPWithSHA_1AndMGF1Padding = "RSA/ECB/OAEPWithSHA-1AndMGF1Padding" //(1024, 2048)
-    val RSA_ECB_OAEPWithSHA_256AndMGF1Padding = "RSA/ECB/OAEPWithSHA-256AndMGF1Padding" //(1024, 2048)
-}
-when(transformation) {
-    with(Transformations) {
-        AES_CBC_NoPadding
-        AES_CBC_PKCS5Padding
-        AES_ECB_NoPadding
-        AES_ECB_PKCS5Padding
-    } -> {
-        SECRET_KEY_SPEC_ALGORITHM = "AES"
-    }
-    with(Transformations) {
-        DES_CBC_NoPadding
-        DES_CBC_PKCS5Padding
-        DES_ECB_NoPadding
-        DES_ECB_PKCS5Padding
-    } -> {
-        SECRET_KEY_SPEC_ALGORITHM = "DES"
-    }
-    with(Transformations) {
-        DESede_CBC_NoPadding
-        DESede_CBC_PKCS5Padding
-        DESede_ECB_NoPadding
-        DESede_ECB_PKCS5Padding
-    } -> {
-        SECRET_KEY_SPEC_ALGORITHM = "DESede"
-    }
-    with(Transformations) {
-        RSA_ECB_PKCS1Padding
-        RSA_ECB_OAEPWithSHA_1AndMGF1Padding
-        RSA_ECB_OAEPWithSHA_256AndMGF1Padding
-    } -> {
-        SECRET_KEY_SPEC_ALGORITHM = "RSA"
-    }
-}
-*/

@@ -6,7 +6,7 @@ private val HEX_CHARS = "0123456789ABCDEF".toCharArray()
 fun ByteArray.asString(): String = this.toString(Charsets.UTF_8)
 fun ByteArray.toBase64(): ByteArray = Base64.encode(this, Base64.DEFAULT)
 fun ByteArray.fromBase64(): ByteArray = Base64.decode(this, Base64.DEFAULT)
-fun ByteArray.toHexString(): String {
+fun ByteArray.asHexString(): String {
     val result = StringBuffer()
     forEach {
         val octet = it.toInt()
