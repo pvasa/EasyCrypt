@@ -68,14 +68,10 @@
         )
 
 ------------------------------------------
-Input -> Output
-
-File -> outputFile
-
-FileInputStream -> outputFile
-
-ByteArray -> String (outputFile, if provided)
-
-String -> String (outputFile, if provided)
-
-CharSequence -> String (outputFile, if provided)
+| Input           | Output                           |
+|-----------------|----------------------------------|
+| File            | outputFile                       |
+| FileInputStream | outputFile                       |
+| ByteArray       | String (outputFile, if provided) |
+| String          | String (outputFile, if provided) |
+| CharSequence    | String (outputFile, if provided) |
