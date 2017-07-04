@@ -51,9 +51,7 @@ class FragmentString : Fragment() {
                         override fun <T> onSuccess(result: T) {
                             onUiThread {
                                 pDialog.dismiss()
-                                tvResult.text = resources.getString(
-                                        R.string.success_file_encrypted,
-                                        (result as File).absolutePath)
+                                tvResult.text = result as String
                             }
                         }
 
@@ -64,9 +62,7 @@ class FragmentString : Fragment() {
                                 toast("Error: $message")
                             }
                         }
-                    },
-                    File(Environment.getExternalStorageDirectory().absolutePath +
-                            File.separator + "Encrypted.txt")
+                    }
             )
         }
 
@@ -80,9 +76,7 @@ class FragmentString : Fragment() {
                         override fun <T> onSuccess(result: T) {
                             onUiThread {
                                 pDialog.dismiss()
-                                tvResult.text = resources.getString(
-                                        R.string.success_file_decrypted,
-                                        (result as File).absolutePath)
+                                tvResult.text = result as String
                             }
                         }
 
@@ -94,9 +88,7 @@ class FragmentString : Fragment() {
                             }
                         }
 
-                    },
-                    File(Environment.getExternalStorageDirectory().absolutePath +
-                            File.separator + "Decrypted.txt")
+                    }
             )
         }
 
@@ -105,14 +97,20 @@ class FragmentString : Fragment() {
             eCrypt.hash(edInput.text, ECrypt.HashAlgorithms.SHA_256,
                     erl = object : ECrypt.ECryptResultListener {
                         override fun <T> onSuccess(result: T) {
-                            onUiThread { tvResult.text = result as String }
+                            onUiThread {
+                                tvResult.text = resources.getString(
+                                        R.string.success_file_hashed,
+                                        (result as File).absolutePath)
+                            }
                         }
 
                         override fun onFailure(message: String, e: Exception) {
                             e.printStackTrace()
                             onUiThread { toast("Error: $message") }
                         }
-                    }
+                    },
+                    outputFile = File(Environment.getExternalStorageDirectory().absolutePath +
+                            File.separator + "Hash.txt")
             )
         }
 

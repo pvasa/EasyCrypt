@@ -337,7 +337,16 @@ class ECrypt : AnkoLogger {
                 }
 
                 is ByteArray -> {
-                    erl.onSuccess(digest.digest(input).asHexString())
+                    val hash = digest.digest(input).asHexString()
+                    if (outputFile.absolutePath != DEF_HASH_FILE_PATH) {
+                        outputFile.outputStream().use {
+                            it.write(hash.toByteArray())
+                            it.flush()
+                        }
+                        erl.onSuccess(outputFile)
+                    } else {
+                        erl.onSuccess(hash)
+                    }
                 }
 
                 is InputStream -> {
