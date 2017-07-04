@@ -17,14 +17,20 @@ package com.pvryan.easycrypt.extensions
 
 import android.util.Base64
 import com.pvryan.easycrypt.ECrypt
+import java.util.regex.Pattern
 import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.PBEKeySpec
 import javax.crypto.spec.SecretKeySpec
 
-private val HEX_CHARS = "0123456789ABCDEF".toCharArray()
+fun ByteArray.toBase64(): ByteArray = Base64.encode(this, Base64.URL_SAFE)
+fun ByteArray.toBase64String(): String = Base64.encodeToString(this, Base64.URL_SAFE)
+
+@Throws(IllegalArgumentException::class)
+fun ByteArray.fromBase64(): ByteArray = Base64.decode(this, Base64.URL_SAFE)
+
 fun ByteArray.asString(): String = this.toString(Charsets.UTF_8)
-fun ByteArray.toBase64(): ByteArray = Base64.encode(this, Base64.DEFAULT)
-fun ByteArray.fromBase64(): ByteArray = Base64.decode(this, Base64.DEFAULT)
+
+private val HEX_CHARS = "0123456789ABCDEF".toCharArray()
 fun ByteArray.asHexString(): String {
     val result = StringBuffer()
     forEach {
@@ -37,14 +43,26 @@ fun ByteArray.asHexString(): String {
     return result.toString()
 }
 
-fun String.asByteArray(): ByteArray = this.toByteArray(Charsets.UTF_8)
-fun String.toBase64(): String = this.asByteArray().toBase64().asString()
-fun String.fromBase64(): String = this.asByteArray().fromBase64().asString()
+val pHex: Pattern = Pattern.compile("[0-9a-fA-F]+")
+fun String.isValidHex(): Boolean = (this.length % 2 == 0 && pHex.matcher(this).matches())
+
+@Throws(IllegalArgumentException::class)
+fun String.hexToByteArray(): ByteArray {
+    if (!this.isValidHex()) throw IllegalArgumentException()
+    val data = ByteArray(this.length / 2)
+    var i = 0
+    while (i < this.length) {
+        data[i / 2] = ((Character.digit(this[i], 16) shl 4) +
+                Character.digit(this[i + 1], 16)).toByte()
+        i += 2
+    }
+    return data
+}
 
 fun ECrypt.getKey(password: String = String(), salt: ByteArray): SecretKeySpec {
 
     val pbeKeySpec: PBEKeySpec = PBEKeySpec(
-            password.toCharArray(), salt, ITERATIONS, KEY_BITS_LENGTH)
+            password.trim().toCharArray(), salt, ITERATIONS, KEY_BITS_LENGTH)
 
     val keyFactory: SecretKeyFactory =
             SecretKeyFactory.getInstance(SECRET_KEY_FAC_ALGORITHM)

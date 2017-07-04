@@ -20,7 +20,10 @@ import android.os.Environment
 import com.pvryan.easycrypt.extensions.*
 import org.jetbrains.anko.AnkoLogger
 import org.jetbrains.anko.doAsync
-import java.io.*
+import java.io.File
+import java.io.FileInputStream
+import java.io.IOException
+import java.io.InputStream
 import java.security.InvalidParameterException
 import java.security.MessageDigest
 import java.security.SecureRandom
@@ -31,22 +34,35 @@ class ECrypt : AnkoLogger {
 
     val KEY_BITS_LENGTH = 256
     private val SALT_BYTES_LENGTH = KEY_BITS_LENGTH / 8
-
     val ITERATIONS = 10000
 
     private val TRANSFORMATION = "AES/CBC/PKCS5Padding"
     var SECRET_KEY_FAC_ALGORITHM = "PBKDF2WithHmacSHA1"
-    var SECRET_KEY_SPEC_ALGORITHM = "AES"
+    val SECRET_KEY_SPEC_ALGORITHM = "AES"
 
+    private val HASH_FILE_EXT = ".txt"
     private val ECRYPT_FILE_EXT = ".ecrypt"
+
+    private val HASH_FILE_NAME = "HashOfFile"
     private val ENCRYPTED_FILE_NAME = "EncryptedFile"
     private val DECRYPTED_FILE_NAME = "DecryptedFile"
+
+    private val DEF_HASH_FILE_PATH =
+            Environment.getExternalStorageDirectory().absolutePath +
+                    File.separator + HASH_FILE_NAME + HASH_FILE_EXT
     private val DEF_ENCRYPTED_FILE_PATH =
             Environment.getExternalStorageDirectory().absolutePath +
                     File.separator + ENCRYPTED_FILE_NAME + ECRYPT_FILE_EXT
     private val DEF_DECRYPTED_FILE_PATH =
             Environment.getExternalStorageDirectory().absolutePath +
                     File.separator + DECRYPTED_FILE_NAME + ECRYPT_FILE_EXT
+
+    private val MSG_INVALID_INPUT_TYPE = "Invalid input type."
+    private val MSG_INVALID_INPUT_DATA = "Invalid input data."
+    private val MSG_NO_SUCH_FILE = "File does not exist."
+    private val MSG_CANNOT_WRITE = "Cannot write to file."
+    private val MSG_CANNOT_READ = "Cannot read from file."
+    private val MSG_OUTPUT_FILE_EXISTS = "Output file already exists."
 
     private val cipher = Cipher.getInstance(TRANSFORMATION)
     private val random = SecureRandom()
@@ -64,16 +80,16 @@ class ECrypt : AnkoLogger {
 
             when (input) {
                 is String -> {
-                    encrypt(input.asByteArray(), password, erl)
+                    encrypt(input.toByteArray(), password, erl, outputFile)
                     return@doAsync
                 }
                 is CharSequence -> {
-                    encrypt(input.toString().asByteArray(), password, erl)
+                    encrypt(input.toString().toByteArray(), password, erl, outputFile)
                     return@doAsync
                 }
                 is File -> {
                     if (!input.exists() || input.isDirectory) {
-                        erl.onFailure("File does not exist.", NoSuchFileException(input))
+                        erl.onFailure(MSG_NO_SUCH_FILE, NoSuchFileException(input))
                     } else {
                         val encryptedFile =
                                 if (outputFile.absolutePath == DEF_ENCRYPTED_FILE_PATH)
@@ -88,7 +104,7 @@ class ECrypt : AnkoLogger {
                 }
                 is ByteArray -> {
                 }
-                else -> erl.onFailure("Invalid input type.", InvalidParameterException())
+                else -> erl.onFailure(MSG_INVALID_INPUT_TYPE, InvalidParameterException())
             }
 
             val salt = ByteArray(SALT_BYTES_LENGTH)
@@ -106,40 +122,32 @@ class ECrypt : AnkoLogger {
 
                 is ByteArray -> {
 
-                    if (outputFile.absolutePath != DEF_ENCRYPTED_FILE_PATH) {
-
-                        try {
+                    try {
+                        if (outputFile.absolutePath != DEF_ENCRYPTED_FILE_PATH) {
                             outputFile.outputStream().use {
+                                val secureBytes = cipher.doFinal(input)
 
-                                it.write(iv)
-                                it.write(salt)
-                                it.write(cipher.doFinal(input))
+                                it.write(iv.plus(salt).plus(secureBytes).toBase64())
                                 it.flush()
 
                                 erl.onSuccess(outputFile as T)
                             }
-                        } catch (e: IOException) {
-                            erl.onFailure("Cannot write to file.", e)
+                        } else {
+                            val secureBytes = cipher.doFinal(input)
+                            erl.onSuccess(iv.plus(salt).plus(secureBytes).toBase64String())
                         }
-                    } else {
-                        ByteArrayOutputStream().use {
-                            it.write(iv)
-                            it.write(salt)
-                            it.write(cipher.doFinal(input))
-                            it.flush()
-
-                            erl.onSuccess(it.toByteArray().toBase64().asString() as T)
-                        }
+                    } catch (e: IOException) {
+                        erl.onFailure(MSG_CANNOT_WRITE, e)
                     }
                 }
 
-                is FileInputStream -> {
+                is InputStream -> {
                     val fos = outputFile.outputStream()
                     var cos = CipherOutputStream(fos, cipher)
                     try {
                         if (outputFile.exists()) {
                             if (outputFile.absolutePath != DEF_ENCRYPTED_FILE_PATH) {
-                                erl.onFailure("Output file already exists.",
+                                erl.onFailure(MSG_OUTPUT_FILE_EXISTS,
                                         FileAlreadyExistsException(outputFile))
                                 return@doAsync
                             }
@@ -162,7 +170,7 @@ class ECrypt : AnkoLogger {
 
                     } catch (e: IOException) {
                         outputFile.delete()
-                        erl.onFailure("Cannot write to file.", e)
+                        erl.onFailure(MSG_CANNOT_WRITE, e)
                     } finally {
                         cos.flush()
                         cos.close()
@@ -174,58 +182,89 @@ class ECrypt : AnkoLogger {
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun <T> decrypt(input: T, password: String, drl: ECryptResultListener,
+    fun <T> decrypt(input: T, password: String, erl: ECryptResultListener,
                     outputFile: File = File(DEF_DECRYPTED_FILE_PATH)) {
         doAsync {
 
             when (input) {
 
                 is String -> {
-                    decrypt(input.asByteArray(), password, drl)
+                    decrypt(input.toByteArray(), password, erl, outputFile)
                     return@doAsync
                 }
 
                 is CharSequence -> {
-                    decrypt(input.toString().asByteArray(), password, drl)
+                    decrypt(input.toString().toByteArray(), password, erl, outputFile)
                     return@doAsync
                 }
 
-                is ByteArray -> input.fromBase64().inputStream().use {
+                is File -> {
 
-                    val IV = ByteArray(cipher.blockSize)
-                    if (cipher.blockSize != it.read(IV)) {
-                        drl.onFailure("Invalid input data.", BadPaddingException())
+                    if (!input.exists() || input.isDirectory) {
+                        erl.onFailure(MSG_NO_SUCH_FILE, NoSuchFileException(input))
                         return@doAsync
                     }
-                    val ivParams = IvParameterSpec(IV)
 
-                    val salt = ByteArray(SALT_BYTES_LENGTH)
-                    if (SALT_BYTES_LENGTH != it.read(salt)) {
-                        drl.onFailure("Invalid input data.", BadPaddingException())
-                        return@doAsync
-                    }
-                    val key = getKey(password, salt)
+                    val decryptedFile =
+                            if (outputFile.absolutePath == DEF_DECRYPTED_FILE_PATH)
+                                File(input.absoluteFile.toString().removeSuffix(ECRYPT_FILE_EXT))
+                            else outputFile
 
-                    val secureBytes = it.readBytes()
-                    cipher.init(Cipher.DECRYPT_MODE, key, ivParams)
-
-                    try {
-                        drl.onSuccess(cipher.doFinal(secureBytes).asString() as T)
-                    } catch (e: BadPaddingException) {
-                        drl.onFailure("Invalid input data.", e)
-                    } catch (e: IllegalBlockSizeException) {
-                        drl.onFailure("Invalid input data.", e)
-                    }
-
+                    decrypt(input.inputStream(), password, erl, decryptedFile)
                 }
 
-                is FileInputStream -> {
-                    val fos = outputFile.outputStream()
+                is ByteArray -> {
+
+                    val decodedBytes: ByteArray = try {
+                        input.fromBase64()
+                    } catch (e: IllegalArgumentException) {
+                        erl.onFailure(MSG_INVALID_INPUT_DATA, e)
+                        byteArrayOf()
+                        return@doAsync
+                    }
+
+                    decodedBytes.inputStream().use {
+
+                        val IV = ByteArray(cipher.blockSize)
+                        val salt = ByteArray(SALT_BYTES_LENGTH)
+
+                        if (cipher.blockSize != it.read(IV) || SALT_BYTES_LENGTH != it.read(salt)) {
+                            erl.onFailure(MSG_INVALID_INPUT_DATA, BadPaddingException())
+                            return@doAsync
+                        }
+
+                        val ivParams = IvParameterSpec(IV)
+                        val key = getKey(password, salt)
+                        cipher.init(Cipher.DECRYPT_MODE, key, ivParams)
+
+                        try {
+                            val secureBytes = it.readBytes()
+                            val plainBytes = cipher.doFinal(secureBytes)
+
+                            if (outputFile.absolutePath != DEF_DECRYPTED_FILE_PATH) {
+                                outputFile.outputStream().use {
+                                    it.write(plainBytes)
+                                    it.flush()
+                                }
+                                erl.onSuccess(outputFile as T)
+                            } else {
+                                erl.onSuccess(plainBytes.asString() as T)
+                            }
+                        } catch (e: BadPaddingException) {
+                            erl.onFailure(MSG_INVALID_INPUT_DATA, e)
+                        } catch (e: IllegalBlockSizeException) {
+                            erl.onFailure(MSG_INVALID_INPUT_DATA, e)
+                        }
+                    }
+                }
+
+                is InputStream -> {
                     val cis = CipherInputStream(input, cipher)
+                    val fos = outputFile.outputStream()
                     try {
                         if (outputFile.exists()) {
                             if (outputFile.absolutePath != DEF_DECRYPTED_FILE_PATH) {
-                                drl.onFailure("Output file already exists.",
+                                erl.onFailure(MSG_OUTPUT_FILE_EXISTS,
                                         FileAlreadyExistsException(outputFile))
                                 return@doAsync
                             }
@@ -239,11 +278,11 @@ class ECrypt : AnkoLogger {
                         try {
                             if (cipher.blockSize != input.read(iv) ||
                                     SALT_BYTES_LENGTH != input.read(salt)) {
-                                drl.onFailure("Invalid input data.", BadPaddingException())
+                                erl.onFailure(MSG_INVALID_INPUT_DATA, BadPaddingException())
                                 return@doAsync
                             }
                         } catch (e: IOException) {
-                            drl.onFailure("Cannot read from file.", e)
+                            erl.onFailure(MSG_CANNOT_READ, e)
                             return@doAsync
                         }
 
@@ -256,14 +295,14 @@ class ECrypt : AnkoLogger {
                         var wrote = 0
                         while ({ wrote = cis.read(buffer); wrote }() > 0) {
                             fos.write(buffer)
-                            drl.onProgress(wrote)
+                            erl.onProgress(wrote)
                         }
 
-                        drl.onSuccess(outputFile as T)
+                        erl.onSuccess(outputFile as T)
 
                     } catch (e: IOException) {
                         outputFile.delete()
-                        drl.onFailure("Cannot write to file.", e)
+                        erl.onFailure(MSG_CANNOT_WRITE, e)
                     } finally {
                         fos.flush()
                         fos.close()
@@ -271,29 +310,14 @@ class ECrypt : AnkoLogger {
                     }
                 }
 
-                is File -> {
-
-                    if (!input.exists() || input.isDirectory) {
-                        drl.onFailure("File does not exist.", NoSuchFileException(input))
-                        return@doAsync
-                    }
-
-                    val decryptedFile =
-                            if (outputFile.absolutePath == DEF_DECRYPTED_FILE_PATH)
-                                File(input.absoluteFile.toString().removeSuffix(ECRYPT_FILE_EXT))
-                            else outputFile
-
-                    decrypt(input.inputStream(), password, drl, decryptedFile)
-                }
-
-                else -> drl.onFailure("Invalid input type.", InvalidParameterException())
+                else -> erl.onFailure(MSG_INVALID_INPUT_TYPE, InvalidParameterException())
 
             }
         }
     }
 
     fun <T> hash(input: T, algorithm: HashAlgorithms = HashAlgorithms.SHA_512,
-                 hrl: ECryptResultListener) {
+                 erl: ECryptResultListener, outputFile: File = File(DEF_HASH_FILE_PATH)) {
         doAsync {
 
             val digest: MessageDigest = MessageDigest.getInstance(algorithm.value)
@@ -301,19 +325,19 @@ class ECrypt : AnkoLogger {
             when (input) {
 
                 is String -> {
-                    hash(input.asByteArray().inputStream(), algorithm, hrl)
+                    hash(input.toByteArray().inputStream(), algorithm, erl, outputFile)
                 }
 
                 is CharSequence -> {
-                    hash(input.toString().asByteArray().inputStream(), algorithm, hrl)
+                    hash(input.toString().toByteArray().inputStream(), algorithm, erl, outputFile)
                 }
 
                 is File -> {
-                    hash(input.inputStream(), algorithm, hrl)
+                    hash(input.inputStream(), algorithm, erl, outputFile)
                 }
 
                 is ByteArray -> {
-                    hrl.onSuccess(digest.digest(input).asHexString())
+                    erl.onSuccess(digest.digest(input).asHexString())
                 }
 
                 is InputStream -> {
@@ -321,7 +345,7 @@ class ECrypt : AnkoLogger {
                     val buffer = ByteArray(8192)
 
                     if (input.available() <= buffer.size) {
-                        hash(input.readBytes(), algorithm, hrl)
+                        hash(input.readBytes(), algorithm, erl, outputFile)
                         return@doAsync
                     }
 
@@ -329,18 +353,28 @@ class ECrypt : AnkoLogger {
                         var read = 0
                         while ({ read = input.read(buffer); read }() > 0) {
                             digest.update(buffer)
-                            hrl.onProgress(read)
+                            erl.onProgress(read)
                         }
-                        hrl.onSuccess(digest.digest().asHexString())
+                        val hash = digest.digest().asHexString()
+
+                        if (outputFile.absolutePath != DEF_HASH_FILE_PATH) {
+                            outputFile.outputStream().use {
+                                it.write(hash.toByteArray())
+                                it.flush()
+                            }
+                            erl.onSuccess(outputFile)
+                        } else {
+                            erl.onSuccess(hash)
+                        }
 
                     } catch (e: IOException) {
-                        hrl.onFailure("Cannot read from file.", e)
+                        erl.onFailure(MSG_CANNOT_READ, e)
                     } finally {
                         input.close()
                     }
                 }
 
-                else -> hrl.onFailure("Invalid input type.", InvalidParameterException())
+                else -> erl.onFailure(MSG_INVALID_INPUT_TYPE, InvalidParameterException())
             }
         }
     }

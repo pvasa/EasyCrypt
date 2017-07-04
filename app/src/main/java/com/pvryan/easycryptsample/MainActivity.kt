@@ -49,7 +49,6 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    /***************** Options menu *****************/
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
         menuInflater.inflate(R.menu.menu_main, menu)
@@ -66,7 +65,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    /***************** App permissions *****************/
     override fun onResume() {
         super.onResume()
         checkPermissions(RC_PERMISSIONS,

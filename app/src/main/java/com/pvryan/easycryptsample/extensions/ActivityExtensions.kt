@@ -21,6 +21,7 @@ import android.support.v4.content.ContextCompat
 import android.support.v4.util.ArraySet
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
+import com.pvryan.easycryptsample.R
 
 fun AppCompatActivity.checkPermissions(requestCode: Int, vararg permissions: String): Boolean {
 
@@ -31,7 +32,8 @@ fun AppCompatActivity.checkPermissions(requestCode: Int, vararg permissions: Str
     }
 
     if (!unGranted.isEmpty()) {
-        ActivityCompat.requestPermissions(this, unGranted.toTypedArray<String>(), requestCode)
+        ActivityCompat.requestPermissions(
+                this, unGranted.toTypedArray<String>(), requestCode)
         return false
     } else {
         return true
@@ -43,15 +45,14 @@ fun AppCompatActivity.handlePermissionResults(
 
     if (grantResults.contains(PackageManager.PERMISSION_DENIED)) {
         AlertDialog.Builder(this).setCancelable(false)
-                .setTitle("Permissions")
-                .setMessage("Permissions required to run this app correctly. " +
-                        "Grant to allow or Exit to close the app.")
-                .setPositiveButton("Grant", {
+                .setTitle(getString(R.string.title_permissions))
+                .setMessage(getString(R.string.message_permissions))
+                .setPositiveButton(getString(R.string.button_grant), {
                     dialog, _ ->
                     checkPermissions(requestCode, *permissions)
                     dialog.dismiss()
                 })
-                .setNegativeButton("Exit", {
+                .setNegativeButton(getString(R.string.button_exit), {
                     dialog, _ ->
                     dialog.cancel()
                     finish()
