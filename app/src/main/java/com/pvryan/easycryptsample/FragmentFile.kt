@@ -91,20 +91,20 @@ class FragmentFile : Fragment(), AnkoLogger {
                     }
 
                     eCrypt.hash(fis, ECrypt.HashAlgorithms.SHA_256,
-                            object : ECrypt.HashResultListener {
+                            object : ECrypt.ECryptResultListener {
 
                                 override fun onProgress(progressBy: Int) {
                                     pDialog.incrementProgressBy(progressBy / 1024)
                                 }
 
-                                override fun <T> onHashed(result: T) {
+                                override fun <T> onSuccess(result: T) {
                                     onUiThread {
                                         pDialog.dismiss()
                                         tvResult.text = result as String
                                     }
                                 }
 
-                                override fun onFailed(message: String, e: Exception) {
+                                override fun onFailure(message: String, e: Exception) {
                                     e.printStackTrace()
                                     onUiThread {
                                         pDialog.dismiss()
@@ -132,13 +132,13 @@ class FragmentFile : Fragment(), AnkoLogger {
                     }
 
                     eCrypt.encrypt(fis, edPassword.text.toString(),
-                            object : ECrypt.EncryptionResultListener {
+                            object : ECrypt.ECryptResultListener {
 
                                 override fun onProgress(progressBy: Int) {
                                     pDialog.incrementProgressBy(progressBy / 1024)
                                 }
 
-                                override fun <T> onEncrypted(result: T) {
+                                override fun <T> onSuccess(result: T) {
                                     onUiThread {
                                         pDialog.dismiss()
                                         tvResult.text = resources.getString(
@@ -147,7 +147,7 @@ class FragmentFile : Fragment(), AnkoLogger {
                                     }
                                 }
 
-                                override fun onFailed(message: String, e: Exception) {
+                                override fun onFailure(message: String, e: Exception) {
                                     e.printStackTrace()
                                     onUiThread {
                                         pDialog.dismiss()
@@ -168,8 +168,8 @@ class FragmentFile : Fragment(), AnkoLogger {
                     val pDialog = indeterminateProgressDialog("Decrypting file...")
 
                     eCrypt.decrypt(fis, edPassword.text.toString(),
-                            object : ECrypt.DecryptionResultListener {
-                                override fun <T> onDecrypted(result: T) {
+                            object : ECrypt.ECryptResultListener {
+                                override fun <T> onSuccess(result: T) {
                                     onUiThread {
                                         pDialog.dismiss()
                                         tvResult.text = resources.getString(
@@ -178,7 +178,7 @@ class FragmentFile : Fragment(), AnkoLogger {
                                     }
                                 }
 
-                                override fun onFailed(message: String, e: Exception) {
+                                override fun onFailure(message: String, e: Exception) {
                                     e.printStackTrace()
                                     onUiThread {
                                         pDialog.dismiss()
