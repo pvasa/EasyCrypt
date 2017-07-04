@@ -58,7 +58,7 @@ class ECrypt : AnkoLogger {
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun <T> encrypt(input: T, password: String, erl: EncryptionResultListener,
+    fun <T> encrypt(input: T, password: String, erl: ECryptResultListener,
                     outputFile: File = File(DEF_ENCRYPTED_FILE_PATH)) {
         doAsync {
 
@@ -73,7 +73,7 @@ class ECrypt : AnkoLogger {
                 }
                 is File -> {
                     if (!input.exists() || input.isDirectory) {
-                        erl.onFailed("File does not exist.", NoSuchFileException(input))
+                        erl.onFailure("File does not exist.", NoSuchFileException(input))
                     } else {
                         val encryptedFile =
                                 if (outputFile.absolutePath == DEF_ENCRYPTED_FILE_PATH)
@@ -88,7 +88,7 @@ class ECrypt : AnkoLogger {
                 }
                 is ByteArray -> {
                 }
-                else -> erl.onFailed("Invalid input type.", InvalidParameterException())
+                else -> erl.onFailure("Invalid input type.", InvalidParameterException())
             }
 
             val salt = ByteArray(SALT_BYTES_LENGTH)
@@ -104,14 +104,33 @@ class ECrypt : AnkoLogger {
 
             when (input) {
 
-                is ByteArray -> ByteArrayOutputStream().use {
+                is ByteArray -> {
 
-                    it.write(iv)
-                    it.write(salt)
-                    it.write(cipher.doFinal(input))
-                    it.flush()
+                    if (outputFile.absolutePath != DEF_ENCRYPTED_FILE_PATH) {
 
-                    erl.onEncrypted(it.toByteArray().toBase64().asString() as T)
+                        try {
+                            outputFile.outputStream().use {
+
+                                it.write(iv)
+                                it.write(salt)
+                                it.write(cipher.doFinal(input))
+                                it.flush()
+
+                                erl.onSuccess(outputFile as T)
+                            }
+                        } catch (e: IOException) {
+                            erl.onFailure("Cannot write to file.", e)
+                        }
+                    } else {
+                        ByteArrayOutputStream().use {
+                            it.write(iv)
+                            it.write(salt)
+                            it.write(cipher.doFinal(input))
+                            it.flush()
+
+                            erl.onSuccess(it.toByteArray().toBase64().asString() as T)
+                        }
+                    }
                 }
 
                 is FileInputStream -> {
@@ -120,7 +139,7 @@ class ECrypt : AnkoLogger {
                     try {
                         if (outputFile.exists()) {
                             if (outputFile.absolutePath != DEF_ENCRYPTED_FILE_PATH) {
-                                erl.onFailed("Output file already exists.",
+                                erl.onFailure("Output file already exists.",
                                         FileAlreadyExistsException(outputFile))
                                 return@doAsync
                             }
@@ -139,11 +158,11 @@ class ECrypt : AnkoLogger {
                             erl.onProgress(wrote)
                         }
 
-                        erl.onEncrypted(outputFile as T)
+                        erl.onSuccess(outputFile as T)
 
                     } catch (e: IOException) {
                         outputFile.delete()
-                        erl.onFailed("Cannot write to file.", e)
+                        erl.onFailure("Cannot write to file.", e)
                     } finally {
                         cos.flush()
                         cos.close()
@@ -155,7 +174,7 @@ class ECrypt : AnkoLogger {
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun <T> decrypt(input: T, password: String, drl: DecryptionResultListener,
+    fun <T> decrypt(input: T, password: String, drl: ECryptResultListener,
                     outputFile: File = File(DEF_DECRYPTED_FILE_PATH)) {
         doAsync {
 
@@ -175,14 +194,14 @@ class ECrypt : AnkoLogger {
 
                     val IV = ByteArray(cipher.blockSize)
                     if (cipher.blockSize != it.read(IV)) {
-                        drl.onFailed("Invalid input data.", BadPaddingException())
+                        drl.onFailure("Invalid input data.", BadPaddingException())
                         return@doAsync
                     }
                     val ivParams = IvParameterSpec(IV)
 
                     val salt = ByteArray(SALT_BYTES_LENGTH)
                     if (SALT_BYTES_LENGTH != it.read(salt)) {
-                        drl.onFailed("Invalid input data.", BadPaddingException())
+                        drl.onFailure("Invalid input data.", BadPaddingException())
                         return@doAsync
                     }
                     val key = getKey(password, salt)
@@ -191,11 +210,11 @@ class ECrypt : AnkoLogger {
                     cipher.init(Cipher.DECRYPT_MODE, key, ivParams)
 
                     try {
-                        drl.onDecrypted(cipher.doFinal(secureBytes).asString() as T)
+                        drl.onSuccess(cipher.doFinal(secureBytes).asString() as T)
                     } catch (e: BadPaddingException) {
-                        drl.onFailed("Invalid input data.", e)
+                        drl.onFailure("Invalid input data.", e)
                     } catch (e: IllegalBlockSizeException) {
-                        drl.onFailed("Invalid input data.", e)
+                        drl.onFailure("Invalid input data.", e)
                     }
 
                 }
@@ -206,7 +225,7 @@ class ECrypt : AnkoLogger {
                     try {
                         if (outputFile.exists()) {
                             if (outputFile.absolutePath != DEF_DECRYPTED_FILE_PATH) {
-                                drl.onFailed("Output file already exists.",
+                                drl.onFailure("Output file already exists.",
                                         FileAlreadyExistsException(outputFile))
                                 return@doAsync
                             }
@@ -220,11 +239,11 @@ class ECrypt : AnkoLogger {
                         try {
                             if (cipher.blockSize != input.read(iv) ||
                                     SALT_BYTES_LENGTH != input.read(salt)) {
-                                drl.onFailed("Invalid input data.", BadPaddingException())
+                                drl.onFailure("Invalid input data.", BadPaddingException())
                                 return@doAsync
                             }
                         } catch (e: IOException) {
-                            drl.onFailed("Cannot read from file.", e)
+                            drl.onFailure("Cannot read from file.", e)
                             return@doAsync
                         }
 
@@ -240,11 +259,11 @@ class ECrypt : AnkoLogger {
                             drl.onProgress(wrote)
                         }
 
-                        drl.onDecrypted(outputFile as T)
+                        drl.onSuccess(outputFile as T)
 
                     } catch (e: IOException) {
                         outputFile.delete()
-                        drl.onFailed("Cannot write to file.", e)
+                        drl.onFailure("Cannot write to file.", e)
                     } finally {
                         fos.flush()
                         fos.close()
@@ -255,7 +274,7 @@ class ECrypt : AnkoLogger {
                 is File -> {
 
                     if (!input.exists() || input.isDirectory) {
-                        drl.onFailed("File does not exist.", NoSuchFileException(input))
+                        drl.onFailure("File does not exist.", NoSuchFileException(input))
                         return@doAsync
                     }
 
@@ -267,14 +286,14 @@ class ECrypt : AnkoLogger {
                     decrypt(input.inputStream(), password, drl, decryptedFile)
                 }
 
-                else -> drl.onFailed("Invalid input type.", InvalidParameterException())
+                else -> drl.onFailure("Invalid input type.", InvalidParameterException())
 
             }
         }
     }
 
     fun <T> hash(input: T, algorithm: HashAlgorithms = HashAlgorithms.SHA_512,
-                 hrl: HashResultListener) {
+                 hrl: ECryptResultListener) {
         doAsync {
 
             val digest: MessageDigest = MessageDigest.getInstance(algorithm.value)
@@ -294,7 +313,7 @@ class ECrypt : AnkoLogger {
                 }
 
                 is ByteArray -> {
-                    hrl.onHashed(digest.digest(input).asHexString())
+                    hrl.onSuccess(digest.digest(input).asHexString())
                 }
 
                 is InputStream -> {
@@ -312,36 +331,24 @@ class ECrypt : AnkoLogger {
                             digest.update(buffer)
                             hrl.onProgress(read)
                         }
-                        hrl.onHashed(digest.digest().asHexString())
+                        hrl.onSuccess(digest.digest().asHexString())
 
                     } catch (e: IOException) {
-                        hrl.onFailed("Cannot read from file.", e)
+                        hrl.onFailure("Cannot read from file.", e)
                     } finally {
                         input.close()
                     }
                 }
 
-                else -> hrl.onFailed("Invalid input type.", InvalidParameterException())
+                else -> hrl.onFailure("Invalid input type.", InvalidParameterException())
             }
         }
     }
 
-    interface EncryptionResultListener {
+    interface ECryptResultListener {
         fun onProgress(progressBy: Int) {}
-        fun <T> onEncrypted(result: T)
-        fun onFailed(message: String, e: Exception)
-    }
-
-    interface DecryptionResultListener {
-        fun onProgress(progressBy: Int) {}
-        fun <T> onDecrypted(result: T)
-        fun onFailed(message: String, e: Exception)
-    }
-
-    interface HashResultListener {
-        fun onProgress(progressBy: Int) {}
-        fun <T> onHashed(result: T)
-        fun onFailed(message: String, e: Exception)
+        fun <T> onSuccess(result: T)
+        fun onFailure(message: String, e: Exception)
     }
 
     enum class HashAlgorithms(val value: String) {
