@@ -16,6 +16,7 @@
 package com.pvryan.easycryptsample
 
 import android.os.Bundle
+import android.os.Environment
 import android.support.annotation.Nullable
 import android.support.v4.app.Fragment
 import android.view.LayoutInflater
@@ -23,8 +24,10 @@ import android.view.View
 import android.view.ViewGroup
 import com.pvryan.easycrypt.ECrypt
 import kotlinx.android.synthetic.main.fragment_string.*
+import org.jetbrains.anko.support.v4.indeterminateProgressDialog
 import org.jetbrains.anko.support.v4.onUiThread
 import org.jetbrains.anko.support.v4.toast
+import java.io.File
 
 class FragmentString : Fragment() {
 
@@ -40,51 +43,67 @@ class FragmentString : Fragment() {
 
         buttonEncrypt.setOnClickListener {
 
+            val pDialog = indeterminateProgressDialog("Encrypting...")
+
             eCrypt.encrypt(edInput.text, edPassword.text.toString(),
                     object : ECrypt.ECryptResultListener {
 
                         override fun <T> onSuccess(result: T) {
                             onUiThread {
-                                tvResult.text = result as String
+                                pDialog.dismiss()
+                                tvResult.text = resources.getString(
+                                        R.string.success_file_encrypted,
+                                        (result as File).absolutePath)
                             }
                         }
 
                         override fun onFailure(message: String, e: Exception) {
                             e.printStackTrace()
                             onUiThread {
+                                pDialog.dismiss()
                                 toast("Error: $message")
                             }
                         }
-                    }
+                    },
+                    File(Environment.getExternalStorageDirectory().absolutePath +
+                            File.separator + "Encrypted.txt")
             )
         }
 
         buttonDecrypt.setOnClickListener {
 
-            eCrypt.decrypt(tvResult.text, edPassword.text.toString(),
+            val pDialog = indeterminateProgressDialog("Decrypting...")
+
+            eCrypt.decrypt(edInput.text, edPassword.text.toString(),
                     object : ECrypt.ECryptResultListener {
 
                         override fun <T> onSuccess(result: T) {
                             onUiThread {
-                                tvResult.text = result as String
+                                pDialog.dismiss()
+                                tvResult.text = resources.getString(
+                                        R.string.success_file_decrypted,
+                                        (result as File).absolutePath)
                             }
                         }
 
                         override fun onFailure(message: String, e: Exception) {
                             e.printStackTrace()
                             onUiThread {
+                                pDialog.dismiss()
                                 toast("Error: $message")
                             }
                         }
 
-                    }
+                    },
+                    File(Environment.getExternalStorageDirectory().absolutePath +
+                            File.separator + "Decrypted.txt")
             )
         }
 
         buttonHash.setOnClickListener {
 
             eCrypt.hash(edInput.text, ECrypt.HashAlgorithms.SHA_256,
-                    hrl = object : ECrypt.ECryptResultListener {
+                    erl = object : ECrypt.ECryptResultListener {
                         override fun <T> onSuccess(result: T) {
                             onUiThread { tvResult.text = result as String }
                         }
