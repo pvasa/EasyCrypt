@@ -24,6 +24,7 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.IOException
 import java.io.InputStream
+import java.security.InvalidKeyException
 import java.security.InvalidParameterException
 import java.security.MessageDigest
 import java.security.SecureRandom
@@ -77,7 +78,9 @@ class ECrypt : AnkoLogger {
     fun <T> encrypt(input: T, password: String, erl: ECryptResultListener,
                     outputFile: File = File(DEF_ENCRYPTED_FILE_PATH)) {
         doAsync {
-
+            if (password.trim().isNullOrBlank()) {
+                erl.onFailure("Password is null or blank.", InvalidKeyException())
+            }
             when (input) {
                 is String -> {
                     encrypt(input.toByteArray(), password, erl, outputFile)
@@ -142,28 +145,33 @@ class ECrypt : AnkoLogger {
                 }
 
                 is InputStream -> {
+                    if (outputFile.exists()) {
+                        if (outputFile.absolutePath != DEF_ENCRYPTED_FILE_PATH) {
+                            erl.onFailure(MSG_OUTPUT_FILE_EXISTS,
+                                    FileAlreadyExistsException(outputFile))
+                            return@doAsync
+                        }
+                        outputFile.delete()
+                    }
+                    outputFile.createNewFile()
+
                     val fos = outputFile.outputStream()
                     var cos = CipherOutputStream(fos, cipher)
-                    try {
-                        if (outputFile.exists()) {
-                            if (outputFile.absolutePath != DEF_ENCRYPTED_FILE_PATH) {
-                                erl.onFailure(MSG_OUTPUT_FILE_EXISTS,
-                                        FileAlreadyExistsException(outputFile))
-                                return@doAsync
-                            }
-                            outputFile.delete()
-                        }
-                        outputFile.createNewFile()
 
+                    try {
                         fos.write(iv)
                         fos.write(salt)
                         cos = CipherOutputStream(fos, cipher)
 
                         val buffer = ByteArray(8192)
-                        var wrote = 0
-                        while ({ wrote = input.read(buffer); wrote }() > 0) {
-                            cos.write(buffer)
-                            erl.onProgress(wrote)
+                        if (input.available() <= buffer.size) {
+                            cos.write(input.readBytes())
+                        } else {
+                            var wrote = 0
+                            while ({ wrote = input.read(buffer); wrote }() > 0) {
+                                cos.write(buffer)
+                                erl.onProgress(wrote)
+                            }
                         }
 
                         erl.onSuccess(outputFile as T)
@@ -185,7 +193,9 @@ class ECrypt : AnkoLogger {
     fun <T> decrypt(input: T, password: String, erl: ECryptResultListener,
                     outputFile: File = File(DEF_DECRYPTED_FILE_PATH)) {
         doAsync {
-
+            if (password.trim().isNullOrBlank()) {
+                erl.onFailure("Password is null or blank.", InvalidKeyException())
+            }
             when (input) {
 
                 is String -> {
@@ -259,19 +269,21 @@ class ECrypt : AnkoLogger {
                 }
 
                 is InputStream -> {
+
+                    if (outputFile.exists()) {
+                        if (outputFile.absolutePath != DEF_DECRYPTED_FILE_PATH) {
+                            erl.onFailure(MSG_OUTPUT_FILE_EXISTS,
+                                    FileAlreadyExistsException(outputFile))
+                            return@doAsync
+                        }
+                        outputFile.delete()
+                    }
+                    outputFile.createNewFile()
+
                     val cis = CipherInputStream(input, cipher)
                     val fos = outputFile.outputStream()
-                    try {
-                        if (outputFile.exists()) {
-                            if (outputFile.absolutePath != DEF_DECRYPTED_FILE_PATH) {
-                                erl.onFailure(MSG_OUTPUT_FILE_EXISTS,
-                                        FileAlreadyExistsException(outputFile))
-                                return@doAsync
-                            }
-                            outputFile.delete()
-                        }
-                        outputFile.createNewFile()
 
+                    try {
                         val iv = ByteArray(cipher.blockSize)
                         val salt = ByteArray(SALT_BYTES_LENGTH)
 
@@ -292,10 +304,14 @@ class ECrypt : AnkoLogger {
                         cipher.init(Cipher.DECRYPT_MODE, key, ivParams)
 
                         val buffer = ByteArray(8192)
-                        var wrote = 0
-                        while ({ wrote = cis.read(buffer); wrote }() > 0) {
-                            fos.write(buffer)
-                            erl.onProgress(wrote)
+                        if (cis.available() <= buffer.size) {
+                            fos.write(cis.readBytes())
+                        } else {
+                            var wrote = 0
+                            while ({ wrote = cis.read(buffer); wrote }() > 0) {
+                                fos.write(buffer)
+                                erl.onProgress(wrote)
+                            }
                         }
 
                         erl.onSuccess(outputFile as T)

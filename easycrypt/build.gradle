@@ -1,4 +1,29 @@
 apply plugin: 'com.android.library'
+
+ext {
+    bintrayRepo = 'maven'
+    bintrayName = 'easy-crypt'
+
+    publishedGroupId = 'com.pvryan.easycrypt'
+    libraryName = 'EasyCrypt'
+    artifact = 'easy-crypt'
+
+    libraryDescription = 'Library to easily encrypt, decrypt, and hash any type of data.'
+
+    siteUrl = 'https://github.com/ryan652/EasyCrypt'
+    gitUrl = 'https://github.com/ryan652/EasyCrypt.git'
+
+    libraryVersion = '1.0.1-beta'
+
+    developerId = 'ryan652'
+    developerName = 'Priyank Vasa'
+    developerEmail = 'pv.ryan14@gmail.com'
+
+    licenseName = 'The Apache Software License, Version 2.0'
+    licenseUrl = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+    allLicenses = ["Apache-2.0"]
+}
+
 apply plugin: 'kotlin-android'
 
 apply plugin: 'kotlin-android-extensions'
@@ -39,3 +64,6 @@ dependencies {
 repositories {
     mavenCentral()
 }
+
+apply from: 'https://raw.githubusercontent.com/nuuneoi/JCenter/master/installv1.gradle'
+apply from: 'https://raw.githubusercontent.com/nuuneoi/JCenter/master/bintrayv1.gradle'
