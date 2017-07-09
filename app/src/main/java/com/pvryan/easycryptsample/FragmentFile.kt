@@ -26,7 +26,6 @@ import android.view.ViewGroup
 import com.pvryan.easycrypt.ECrypt
 import kotlinx.android.synthetic.main.fragment_file.*
 import org.jetbrains.anko.AnkoLogger
-import org.jetbrains.anko.support.v4.indeterminateProgressDialog
 import org.jetbrains.anko.support.v4.onUiThread
 import org.jetbrains.anko.support.v4.progressDialog
 import org.jetbrains.anko.support.v4.toast
@@ -93,8 +92,8 @@ class FragmentFile : Fragment(), AnkoLogger {
                     eCrypt.hash(fis, ECrypt.HashAlgorithms.SHA_256,
                             object : ECrypt.ECryptResultListener {
 
-                                override fun onProgress(progressBy: Int) {
-                                    pDialog.incrementProgressBy(progressBy / 1024)
+                                override fun onProgress(newBytes: Int, bytesProcessed: Long) {
+                                    pDialog.progress = (bytesProcessed / 1024).toInt()
                                 }
 
                                 override fun <T> onSuccess(result: T) {
@@ -134,8 +133,8 @@ class FragmentFile : Fragment(), AnkoLogger {
                     eCrypt.encrypt(fis, edPassword.text.toString(),
                             object : ECrypt.ECryptResultListener {
 
-                                override fun onProgress(progressBy: Int) {
-                                    pDialog.incrementProgressBy(progressBy / 1024)
+                                override fun onProgress(newBytes: Int, bytesProcessed: Long) {
+                                    pDialog.progress = (bytesProcessed / 1024).toInt()
                                 }
 
                                 override fun <T> onSuccess(result: T) {
@@ -165,10 +164,22 @@ class FragmentFile : Fragment(), AnkoLogger {
                 try {
 
                     val fis = context.contentResolver.openInputStream(data?.data)
-                    val pDialog = indeterminateProgressDialog("Decrypting file...")
+
+                    val pDialog = progressDialog("Decrypting file...")
+                    pDialog.max = fis.available() / 1024
+                    pDialog.setProgressNumberFormat(null)
+                    pDialog.setOnCancelListener {
+                        fis.close()
+                        toast("Canceled by user.")
+                    }
 
                     eCrypt.decrypt(fis, edPassword.text.toString(),
                             object : ECrypt.ECryptResultListener {
+
+                                override fun onProgress(newBytes: Int, bytesProcessed: Long) {
+                                    pDialog.progress = (bytesProcessed / 1024).toInt()
+                                }
+
                                 override fun <T> onSuccess(result: T) {
                                     onUiThread {
                                         pDialog.dismiss()

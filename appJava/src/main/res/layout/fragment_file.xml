@@ -18,7 +18,7 @@
     android:orientation="vertical">
 
     <EditText
-        android:id="@+id/edPassword"
+        android:id="@+id/edPasswordFile"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginEnd="32dp"
@@ -71,8 +71,18 @@
 
     </LinearLayout>
 
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="32dp"
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="16dp"
+        android:visibility="invisible" />
+
     <TextView
-        android:id="@+id/tvResult"
+        android:id="@+id/tvResultFile"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="32dp"
