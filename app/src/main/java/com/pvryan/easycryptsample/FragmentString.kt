@@ -16,7 +16,6 @@
 package com.pvryan.easycryptsample
 
 import android.os.Bundle
-import android.os.Environment
 import android.support.annotation.Nullable
 import android.support.v4.app.Fragment
 import android.view.LayoutInflater
@@ -108,12 +107,9 @@ class FragmentString : Fragment() {
                             e.printStackTrace()
                             onUiThread { toast("Error: $message") }
                         }
-                    },
-                    outputFile = File(Environment.getExternalStorageDirectory().absolutePath +
-                            File.separator + "Hash.txt")
+                    }
             )
         }
-
     }
 
     companion object {

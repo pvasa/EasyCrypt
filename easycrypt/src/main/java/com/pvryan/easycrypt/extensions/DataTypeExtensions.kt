@@ -16,12 +16,7 @@
 package com.pvryan.easycrypt.extensions
 
 import android.util.Base64
-import com.pvryan.easycrypt.ECrypt
-import java.security.spec.InvalidKeySpecException
 import java.util.regex.Pattern
-import javax.crypto.SecretKeyFactory
-import javax.crypto.spec.PBEKeySpec
-import javax.crypto.spec.SecretKeySpec
 
 fun ByteArray.toBase64(): ByteArray = Base64.encode(this, Base64.URL_SAFE)
 fun ByteArray.toBase64String(): String = Base64.encodeToString(this, Base64.URL_SAFE)
@@ -58,19 +53,4 @@ fun String.hexToByteArray(): ByteArray {
         i += 2
     }
     return data
-}
-
-@Throws(InvalidKeySpecException::class)
-fun ECrypt.getKey(password: String = String(), salt: ByteArray): SecretKeySpec {
-
-    val pbeKeySpec: PBEKeySpec = PBEKeySpec(
-            password.trim().toCharArray(), salt, ITERATIONS, KEY_BITS_LENGTH)
-
-    val keyFactory: SecretKeyFactory =
-            SecretKeyFactory.getInstance(SECRET_KEY_FAC_ALGORITHM)
-
-    val keyBytes: ByteArray = keyFactory.generateSecret(pbeKeySpec).encoded
-    val keySpec = SecretKeySpec(keyBytes, SECRET_KEY_SPEC_ALGORITHM)
-
-    return keySpec
 }

@@ -18,8 +18,8 @@ package com.pvryan.easycrypt
 import android.os.Build
 import android.os.Environment
 import com.pvryan.easycrypt.extensions.*
-import org.jetbrains.anko.AnkoLogger
 import org.jetbrains.anko.doAsync
+import org.jetbrains.annotations.NotNull
 import java.io.File
 import java.io.FileInputStream
 import java.io.IOException
@@ -28,18 +28,25 @@ import java.security.InvalidKeyException
 import java.security.InvalidParameterException
 import java.security.MessageDigest
 import java.security.SecureRandom
+import java.security.spec.InvalidKeySpecException
 import javax.crypto.*
 import javax.crypto.spec.IvParameterSpec
+import javax.crypto.spec.PBEKeySpec
+import javax.crypto.spec.SecretKeySpec
 
-class ECrypt : AnkoLogger {
-
-    val KEY_BITS_LENGTH = 256
-    private val SALT_BYTES_LENGTH = KEY_BITS_LENGTH / 8
-    val ITERATIONS = 10000
+class ECrypt {
 
     private val TRANSFORMATION = "AES/CBC/PKCS5Padding"
-    var SECRET_KEY_FAC_ALGORITHM = "PBKDF2WithHmacSHA1"
-    val SECRET_KEY_SPEC_ALGORITHM = "AES"
+    private var SECRET_KEY_FAC_ALGORITHM = "PBKDF2WithHmacSHA1"
+    private val SECRET_KEY_SPEC_ALGORITHM = "AES"
+
+    private val cipher = Cipher.getInstance(TRANSFORMATION)
+    private val random = SecureRandom()
+
+    private val KEY_BITS_LENGTH = 256
+    private val IV_BYTES_LENGTH = cipher.blockSize
+    private val SALT_BYTES_LENGTH = KEY_BITS_LENGTH / 8
+    private val ITERATIONS = 10000
 
     private val HASH_FILE_EXT = ".txt"
     private val ECRYPT_FILE_EXT = ".ecrypt"
@@ -58,15 +65,12 @@ class ECrypt : AnkoLogger {
             Environment.getExternalStorageDirectory().absolutePath +
                     File.separator + DECRYPTED_FILE_NAME + ECRYPT_FILE_EXT
 
-    private val MSG_INVALID_INPUT_TYPE = "Invalid input type."
+    private val MSG_INPUT_TYPE_NOT_SUPPORTED = "Input type not supported."
     private val MSG_INVALID_INPUT_DATA = "Invalid input data."
     private val MSG_NO_SUCH_FILE = "File does not exist."
     private val MSG_CANNOT_WRITE = "Cannot write to file."
     private val MSG_CANNOT_READ = "Cannot read from file."
     private val MSG_OUTPUT_FILE_EXISTS = "Output file already exists."
-
-    private val cipher = Cipher.getInstance(TRANSFORMATION)
-    private val random = SecureRandom()
 
     init {
         if (Build.VERSION.SDK_INT >= 26) {
@@ -74,12 +78,30 @@ class ECrypt : AnkoLogger {
         }
     }
 
+    @Throws(InvalidKeySpecException::class)
+    private fun getKey(password: String = String(), salt: ByteArray): SecretKeySpec {
+
+        val pbeKeySpec: PBEKeySpec = PBEKeySpec(
+                password.trim().toCharArray(), salt, ITERATIONS, KEY_BITS_LENGTH)
+
+        val keyFactory: SecretKeyFactory =
+                SecretKeyFactory.getInstance(SECRET_KEY_FAC_ALGORITHM)
+
+        val keyBytes: ByteArray = keyFactory.generateSecret(pbeKeySpec).encoded
+
+        return SecretKeySpec(keyBytes, SECRET_KEY_SPEC_ALGORITHM)
+    }
+
     @Suppress("UNCHECKED_CAST")
-    fun <T> encrypt(input: T, password: String, erl: ECryptResultListener,
-                    outputFile: File = File(DEF_ENCRYPTED_FILE_PATH)) {
+    @JvmOverloads
+    fun <T> encrypt(@NotNull input: T,
+                    @NotNull password: String,
+                    @NotNull erl: ECryptResultListener,
+                    @NotNull outputFile: File = File(DEF_ENCRYPTED_FILE_PATH)) {
         doAsync {
             if (password.trim().isNullOrBlank()) {
                 erl.onFailure("Password is null or blank.", InvalidKeyException())
+                return@doAsync
             }
             when (input) {
                 is String -> {
@@ -107,7 +129,7 @@ class ECrypt : AnkoLogger {
                 }
                 is ByteArray -> {
                 }
-                else -> erl.onFailure(MSG_INVALID_INPUT_TYPE, InvalidParameterException())
+                else -> erl.onFailure(MSG_INPUT_TYPE_NOT_SUPPORTED, InvalidParameterException())
             }
 
             val salt = ByteArray(SALT_BYTES_LENGTH)
@@ -115,7 +137,7 @@ class ECrypt : AnkoLogger {
 
             val keySpec = getKey(password, salt)
 
-            val iv = ByteArray(cipher.blockSize)
+            val iv = ByteArray(IV_BYTES_LENGTH)
             random.nextBytes(iv)
             val ivParams = IvParameterSpec(iv)
 
@@ -167,10 +189,13 @@ class ECrypt : AnkoLogger {
                         if (input.available() <= buffer.size) {
                             cos.write(input.readBytes())
                         } else {
-                            var wrote = 0
-                            while ({ wrote = input.read(buffer); wrote }() > 0) {
-                                cos.write(buffer)
-                                erl.onProgress(wrote)
+                            var bytesCopied: Long = 0
+                            var read = input.read(buffer)
+                            while (read > -1) {
+                                cos.write(buffer, 0, read)
+                                bytesCopied += read
+                                erl.onProgress(read, bytesCopied)
+                                read = input.read(buffer)
                             }
                         }
 
@@ -190,22 +215,24 @@ class ECrypt : AnkoLogger {
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun <T> decrypt(input: T, password: String, erl: ECryptResultListener,
-                    outputFile: File = File(DEF_DECRYPTED_FILE_PATH)) {
+    @JvmOverloads
+    fun <T> decrypt(@NotNull input: T,
+                    @NotNull password: String,
+                    @NotNull erl: ECryptResultListener,
+                    @NotNull outputFile: File = File(DEF_DECRYPTED_FILE_PATH)) {
         doAsync {
             if (password.trim().isNullOrBlank()) {
                 erl.onFailure("Password is null or blank.", InvalidKeyException())
+                return@doAsync
             }
             when (input) {
 
                 is String -> {
                     decrypt(input.toByteArray(), password, erl, outputFile)
-                    return@doAsync
                 }
 
                 is CharSequence -> {
                     decrypt(input.toString().toByteArray(), password, erl, outputFile)
-                    return@doAsync
                 }
 
                 is File -> {
@@ -235,19 +262,20 @@ class ECrypt : AnkoLogger {
 
                     decodedBytes.inputStream().use {
 
-                        val IV = ByteArray(cipher.blockSize)
+                        val IV = ByteArray(IV_BYTES_LENGTH)
                         val salt = ByteArray(SALT_BYTES_LENGTH)
 
-                        if (cipher.blockSize != it.read(IV) || SALT_BYTES_LENGTH != it.read(salt)) {
+                        if (IV_BYTES_LENGTH != it.read(IV) || SALT_BYTES_LENGTH != it.read(salt)) {
                             erl.onFailure(MSG_INVALID_INPUT_DATA, BadPaddingException())
                             return@doAsync
                         }
 
                         val ivParams = IvParameterSpec(IV)
                         val key = getKey(password, salt)
-                        cipher.init(Cipher.DECRYPT_MODE, key, ivParams)
 
                         try {
+                            cipher.init(Cipher.DECRYPT_MODE, key, ivParams)
+
                             val secureBytes = it.readBytes()
                             val plainBytes = cipher.doFinal(secureBytes)
 
@@ -280,37 +308,41 @@ class ECrypt : AnkoLogger {
                     }
                     outputFile.createNewFile()
 
-                    val cis = CipherInputStream(input, cipher)
+                    var cis: CipherInputStream? = null
                     val fos = outputFile.outputStream()
 
-                    try {
-                        val iv = ByteArray(cipher.blockSize)
-                        val salt = ByteArray(SALT_BYTES_LENGTH)
+                    val iv = ByteArray(IV_BYTES_LENGTH)
+                    val salt = ByteArray(SALT_BYTES_LENGTH)
 
-                        try {
-                            if (cipher.blockSize != input.read(iv) ||
-                                    SALT_BYTES_LENGTH != input.read(salt)) {
-                                erl.onFailure(MSG_INVALID_INPUT_DATA, BadPaddingException())
-                                return@doAsync
-                            }
-                        } catch (e: IOException) {
-                            erl.onFailure(MSG_CANNOT_READ, e)
+                    try {
+                        if (IV_BYTES_LENGTH != input.read(iv) ||
+                                SALT_BYTES_LENGTH != input.read(salt)) {
+                            erl.onFailure(MSG_INVALID_INPUT_DATA, BadPaddingException())
                             return@doAsync
                         }
+                    } catch (e: IOException) {
+                        erl.onFailure(MSG_CANNOT_READ, e)
+                        return@doAsync
+                    }
 
-                        val key = getKey(password, salt)
-                        val ivParams = IvParameterSpec(iv)
+                    val key = getKey(password, salt)
+                    val ivParams = IvParameterSpec(iv)
 
-                        cipher.init(Cipher.DECRYPT_MODE, key, ivParams)
+                    cipher.init(Cipher.DECRYPT_MODE, key, ivParams)
 
+                    try {
+                        cis = CipherInputStream(input, cipher)
                         val buffer = ByteArray(8192)
-                        if (cis.available() <= buffer.size) {
+                        if (input.available() <= buffer.size) {
                             fos.write(cis.readBytes())
                         } else {
-                            var wrote = 0
-                            while ({ wrote = cis.read(buffer); wrote }() > 0) {
-                                fos.write(buffer)
-                                erl.onProgress(wrote)
+                            var bytesCopied: Long = 0
+                            var read = cis.read(buffer)
+                            while (read > -1) {
+                                fos.write(buffer, 0, read)
+                                bytesCopied += read
+                                erl.onProgress(read, bytesCopied)
+                                read = cis.read(buffer)
                             }
                         }
 
@@ -322,18 +354,21 @@ class ECrypt : AnkoLogger {
                     } finally {
                         fos.flush()
                         fos.close()
-                        cis.close()
+                        cis?.close()
                     }
                 }
 
-                else -> erl.onFailure(MSG_INVALID_INPUT_TYPE, InvalidParameterException())
+                else -> erl.onFailure(MSG_INPUT_TYPE_NOT_SUPPORTED, InvalidParameterException())
 
             }
         }
     }
 
-    fun <T> hash(input: T, algorithm: HashAlgorithms = HashAlgorithms.SHA_512,
-                 erl: ECryptResultListener, outputFile: File = File(DEF_HASH_FILE_PATH)) {
+    @JvmOverloads
+    fun <T> hash(@NotNull input: T,
+                 @NotNull algorithm: HashAlgorithms = HashAlgorithms.SHA_512,
+                 @NotNull erl: ECryptResultListener,
+                 @NotNull outputFile: File = File(DEF_HASH_FILE_PATH)) {
         doAsync {
 
             val digest: MessageDigest = MessageDigest.getInstance(algorithm.value)
@@ -375,11 +410,16 @@ class ECrypt : AnkoLogger {
                     }
 
                     try {
-                        var read = 0
-                        while ({ read = input.read(buffer); read }() > 0) {
-                            digest.update(buffer)
-                            erl.onProgress(read)
+
+                        var bytesCopied: Long = 0
+                        var read = input.read(buffer)
+                        while (read > -1) {
+                            digest.update(buffer, 0, read)
+                            bytesCopied += read
+                            erl.onProgress(read, bytesCopied)
+                            read = input.read(buffer)
                         }
+
                         val hash = digest.digest().asHexString()
 
                         if (outputFile.absolutePath != DEF_HASH_FILE_PATH) {
@@ -399,13 +439,13 @@ class ECrypt : AnkoLogger {
                     }
                 }
 
-                else -> erl.onFailure(MSG_INVALID_INPUT_TYPE, InvalidParameterException())
+                else -> erl.onFailure(MSG_INPUT_TYPE_NOT_SUPPORTED, InvalidParameterException())
             }
         }
     }
 
     interface ECryptResultListener {
-        fun onProgress(progressBy: Int) {}
+        fun onProgress(newBytes: Int, bytesProcessed: Long) {}
         fun <T> onSuccess(result: T)
         fun onFailure(message: String, e: Exception)
     }

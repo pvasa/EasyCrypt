@@ -1,14 +1,16 @@
 apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
 
 ext {
-    bintrayRepo = 'EasyCrypt'
-    bintrayName = 'easy-crypt'
+    bintrayRepo = 'easycrypt'
+    bintrayName = 'easycrypt'
 
     publishedGroupId = 'com.pvryan.easycrypt'
     libraryName = 'EasyCrypt'
-    artifact = 'easy-crypt'
+    artifact = 'easycrypt'
 
-    libraryDescription = 'Library to easily encrypt, decrypt, and hash any type of data.'
+    libraryDescription = 'Easy to use Android cryptography library.'
 
     siteUrl = 'https://github.com/ryan652/EasyCrypt'
     gitUrl = 'https://github.com/ryan652/EasyCrypt.git'
@@ -23,10 +25,6 @@ ext {
     licenseUrl = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
     allLicenses = ["Apache-2.0"]
 }
-
-apply plugin: 'kotlin-android'
-
-apply plugin: 'kotlin-android-extensions'
 
 android {
     compileSdkVersion 25
@@ -56,6 +54,8 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
     implementation "org.jetbrains.anko:anko-commons:$anko_version"
 
+    implementation 'com.nulab-inc:zxcvbn:1.2.3'
+
     androidTestImplementation('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
@@ -70,6 +70,7 @@ tasks.withType(Javadoc) {
     options.addStringOption('Xdoclint:none', '-quiet')
     options.addStringOption('encoding', 'UTF-8')
     options.addStringOption('charSet', 'UTF-8')
+    enabled = false
 }
 
 apply from: 'https://raw.githubusercontent.com/nuuneoi/JCenter/master/installv1.gradle'
