@@ -34,6 +34,9 @@ import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.PBEKeySpec
 import javax.crypto.spec.SecretKeySpec
 
+/**
+ * It provides methods to [encrypt], [decrypt], and [hash] data
+ */
 class ECrypt {
 
     private val TRANSFORMATION = "AES/CBC/PKCS5Padding"
@@ -92,6 +95,30 @@ class ECrypt {
         return SecretKeySpec(keyBytes, SECRET_KEY_SPEC_ALGORITHM)
     }
 
+    /**
+     * Encrypts the input data using AES algorithm in CBC mode with PKCS5Padding padding
+     * and posts response to [ECryptResultListener.onSuccess] if successful or
+     * posts error to [ECryptResultListener.onFailure] if failed.
+     * Encryption progress is posted to [ECryptResultListener.onProgress].
+     * Result can be a String or a File depending on the data type of [input] and parameter [outputFile].
+     *
+     * @param T which can be either of [String], [CharSequence], [ByteArray], [InputStream], or [File]
+     * @param input input data to be encrypted
+     * @param password password string used to encrypt input
+     * @param erl listener interface of type ECryptResultListener where result and progress will be posted
+     * @param outputFile optional output file. If provided, result will be written to this file
+     *
+     * @exception InvalidKeyException if password is null or blank
+     * @exception NoSuchFileException if input is a File which does not exists or is a Directory
+     * @exception InvalidParameterException if input data type is not supported
+     * @exception IOException if cannot read or write to a file
+     * @exception FileAlreadyExistsException if output file is provided and already exists
+     * @exception IllegalBlockSizeException if this cipher is a block cipher,
+     * no padding has been requested (only in encryption mode), and the total
+     * input length of the data processed by this cipher is not a multiple of
+     * block size; or if this encryption algorithm is unable to
+     * process the input data provided.
+     */
     @Suppress("UNCHECKED_CAST")
     @JvmOverloads
     fun <T> encrypt(@NotNull input: T,
@@ -214,6 +241,34 @@ class ECrypt {
         }
     }
 
+    /**
+     * Decrypts the input data using AES algorithm in CBC mode with PKCS5Padding padding
+     * and posts response to [ECryptResultListener.onSuccess] if successful or
+     * posts error to [ECryptResultListener.onFailure] if failed.
+     * Decryption progress is posted to [ECryptResultListener.onProgress].
+     * Result can be a String or a File depending on the data type of [input] and parameter [outputFile]
+     *
+     * @param input input data to be decrypted. It can be of type
+     * [String], [CharSequence], [ByteArray], [InputStream], or [File]
+     * @param password password string used to encrypt input
+     * @param erl listener interface of type ECryptResultListener where result and progress will be posted
+     * @param outputFile optional output file. If provided, result will be written to this file
+     *
+     * @exception InvalidKeyException if password is null or blank
+     * @exception NoSuchFileException if input is a File which does not exists or is a Directory
+     * @exception InvalidParameterException if input data type is not supported
+     * @exception IOException if cannot read or write to a file
+     * @exception FileAlreadyExistsException if output file is provided and already exists
+     * @exception IllegalArgumentException if input data is not in valid format
+     * @exception IllegalBlockSizeException if this cipher is a block cipher,
+     * no padding has been requested (only in encryption mode), and the total
+     * input length of the data processed by this cipher is not a multiple of
+     * block size; or if this encryption algorithm is unable to
+     * process the input data provided.
+     * @exception BadPaddingException if this cipher is in decryption mode,
+     * and (un)padding has been requested, but the decrypted data is not
+     * bounded by the appropriate padding bytes
+     */
     @Suppress("UNCHECKED_CAST")
     @JvmOverloads
     fun <T> decrypt(@NotNull input: T,
@@ -364,6 +419,23 @@ class ECrypt {
         }
     }
 
+    /**
+     * Decrypts the input data using AES algorithm in CBC mode with PKCS5Padding padding
+     * and posts response to [ECryptResultListener.onSuccess] if successful or
+     * posts error to [ECryptResultListener.onFailure] if failed.
+     * Hashing progress is posted to [ECryptResultListener.onProgress].
+     * Result is either returned as a Hex string or Hex string returned in [outputFile] if provided.
+     *
+     * @param input input data to be hashed. It can be of type
+     * [String], [CharSequence], [ByteArray], [InputStream], or [File]
+     * @param erl listener interface of type ECryptResultListener where result and progress will be posted
+     * @param outputFile optional output file. If provided, result will be written to this file
+     *
+     * @exception NoSuchFileException if input is a File which does not exists or is a Directory
+     * @exception InvalidParameterException if input data type is not supported
+     * @exception IOException if cannot read or write to a file
+     * @exception FileAlreadyExistsException if output file is provided and already exists
+     */
     @JvmOverloads
     fun <T> hash(@NotNull input: T,
                  @NotNull algorithm: HashAlgorithms = HashAlgorithms.SHA_512,
@@ -444,12 +516,18 @@ class ECrypt {
         }
     }
 
+    /**
+     * Interface where result is posted by [encrypt], [decrypt], and [hash]
+     */
     interface ECryptResultListener {
         fun onProgress(newBytes: Int, bytesProcessed: Long) {}
         fun <T> onSuccess(result: T)
         fun onFailure(message: String, e: Exception)
     }
 
+    /**
+     * Enum class defining available hash algorithms for [hash] method
+     */
     enum class HashAlgorithms(val value: String) {
         MD5("MD5"),
         SHA_1("SHA-1"),
