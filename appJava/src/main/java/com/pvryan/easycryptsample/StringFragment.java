@@ -38,9 +38,9 @@ public class StringFragment extends Fragment {
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
 
-        EditText edInput = view.findViewById(R.id.edInput);
-        EditText edPassword = view.findViewById(R.id.edPassword);
-        TextView tvResult = view.findViewById(R.id.tvResult);
+        EditText edInput = (EditText) view.findViewById(R.id.edInput);
+        EditText edPassword = (EditText) view.findViewById(R.id.edPassword);
+        TextView tvResult = (TextView) view.findViewById(R.id.tvResult);
 
         view.findViewById(R.id.buttonHash).setOnClickListener(
                 buttonHash -> {
