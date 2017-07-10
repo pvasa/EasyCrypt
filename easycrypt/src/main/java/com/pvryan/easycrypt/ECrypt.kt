@@ -21,7 +21,6 @@ import com.pvryan.easycrypt.extensions.*
 import org.jetbrains.anko.doAsync
 import org.jetbrains.annotations.NotNull
 import java.io.File
-import java.io.FileInputStream
 import java.io.IOException
 import java.io.InputStream
 import java.security.InvalidKeyException
@@ -44,7 +43,7 @@ class ECrypt {
     private val SECRET_KEY_SPEC_ALGORITHM = "AES"
 
     private val cipher = Cipher.getInstance(TRANSFORMATION)
-    private val random = SecureRandom()
+    private val random: SecureRandom
 
     private val KEY_BITS_LENGTH = 256
     private val IV_BYTES_LENGTH = cipher.blockSize
@@ -76,9 +75,11 @@ class ECrypt {
     private val MSG_OUTPUT_FILE_EXISTS = "Output file already exists."
 
     init {
-        if (Build.VERSION.SDK_INT >= 26) {
-            SECRET_KEY_FAC_ALGORITHM = "PBEwithHmacSHA512AndAES_256"
+        when {
+            Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT -> PRNGFixes.apply()
+            Build.VERSION.SDK_INT >= 26 -> SECRET_KEY_FAC_ALGORITHM = "PBEwithHmacSHA512AndAES_256"
         }
+        random = SecureRandom()
     }
 
     @Throws(InvalidKeySpecException::class)
@@ -147,16 +148,27 @@ class ECrypt {
                                 if (outputFile.absolutePath == DEF_ENCRYPTED_FILE_PATH)
                                     File(input.absolutePath + ECRYPT_FILE_EXT)
                                 else outputFile
-
                         encrypt(input.inputStream(), password, erl, encryptedFile)
                     }
                     return@doAsync
                 }
-                is FileInputStream -> {
+                is InputStream -> {
+                    if (outputFile.exists()) {
+                        if (outputFile.absolutePath != DEF_ENCRYPTED_FILE_PATH) {
+                            erl.onFailure(MSG_OUTPUT_FILE_EXISTS,
+                                    FileAlreadyExistsException(outputFile))
+                            return@doAsync
+                        }
+                        outputFile.delete()
+                    }
+                    outputFile.createNewFile()
                 }
                 is ByteArray -> {
                 }
-                else -> erl.onFailure(MSG_INPUT_TYPE_NOT_SUPPORTED, InvalidParameterException())
+                else -> {
+                    erl.onFailure(MSG_INPUT_TYPE_NOT_SUPPORTED, InvalidParameterException())
+                    return@doAsync
+                }
             }
 
             val salt = ByteArray(SALT_BYTES_LENGTH)
@@ -175,18 +187,23 @@ class ECrypt {
                 is ByteArray -> {
 
                     try {
+                        val output = iv.plus(salt).plus(cipher.doFinal(input))
+
                         if (outputFile.absolutePath != DEF_ENCRYPTED_FILE_PATH) {
+
+                            if (outputFile.exists()) {
+                                erl.onFailure(MSG_OUTPUT_FILE_EXISTS,
+                                        FileAlreadyExistsException(outputFile))
+                                return@doAsync
+                            }
+
                             outputFile.outputStream().use {
-                                val secureBytes = cipher.doFinal(input)
-
-                                it.write(iv.plus(salt).plus(secureBytes).toBase64())
+                                it.write(output.toBase64())
                                 it.flush()
-
                                 erl.onSuccess(outputFile as T)
                             }
                         } else {
-                            val secureBytes = cipher.doFinal(input)
-                            erl.onSuccess(iv.plus(salt).plus(secureBytes).toBase64String())
+                            erl.onSuccess(output.toBase64String())
                         }
                     } catch (e: IOException) {
                         erl.onFailure(MSG_CANNOT_WRITE, e)
@@ -194,15 +211,6 @@ class ECrypt {
                 }
 
                 is InputStream -> {
-                    if (outputFile.exists()) {
-                        if (outputFile.absolutePath != DEF_ENCRYPTED_FILE_PATH) {
-                            erl.onFailure(MSG_OUTPUT_FILE_EXISTS,
-                                    FileAlreadyExistsException(outputFile))
-                            return@doAsync
-                        }
-                        outputFile.delete()
-                    }
-                    outputFile.createNewFile()
 
                     val fos = outputFile.outputStream()
                     var cos = CipherOutputStream(fos, cipher)
@@ -213,17 +221,14 @@ class ECrypt {
                         cos = CipherOutputStream(fos, cipher)
 
                         val buffer = ByteArray(8192)
-                        if (input.available() <= buffer.size) {
-                            cos.write(input.readBytes())
-                        } else {
-                            var bytesCopied: Long = 0
-                            var read = input.read(buffer)
-                            while (read > -1) {
-                                cos.write(buffer, 0, read)
-                                bytesCopied += read
-                                erl.onProgress(read, bytesCopied)
-                                read = input.read(buffer)
-                            }
+                        var bytesCopied: Long = 0
+                        var read = input.read(buffer)
+
+                        while (read > -1) {
+                            cos.write(buffer, 0, read)
+                            bytesCopied += read
+                            erl.onProgress(read, bytesCopied)
+                            read = input.read(buffer)
                         }
 
                         erl.onSuccess(outputFile as T)
@@ -387,18 +392,16 @@ class ECrypt {
 
                     try {
                         cis = CipherInputStream(input, cipher)
+
                         val buffer = ByteArray(8192)
-                        if (input.available() <= buffer.size) {
-                            fos.write(cis.readBytes())
-                        } else {
-                            var bytesCopied: Long = 0
-                            var read = cis.read(buffer)
-                            while (read > -1) {
-                                fos.write(buffer, 0, read)
-                                bytesCopied += read
-                                erl.onProgress(read, bytesCopied)
-                                read = cis.read(buffer)
-                            }
+                        var bytesCopied: Long = 0
+
+                        var read = cis.read(buffer)
+                        while (read > -1) {
+                            fos.write(buffer, 0, read)
+                            bytesCopied += read
+                            erl.onProgress(read, bytesCopied)
+                            read = cis.read(buffer)
                         }
 
                         erl.onSuccess(outputFile as T)
