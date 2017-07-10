@@ -30,9 +30,10 @@ dependencies {
     implementation "com.android.support:appcompat-v7:$support_version"
     implementation "com.android.support:design:$support_version"
 
+    implementation project(path: ':easycrypt')
+
     androidTestImplementation ('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
     testImplementation 'junit:junit:4.12'
-    implementation project(path: ':easycrypt')
 }

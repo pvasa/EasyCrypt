@@ -52,9 +52,9 @@ public class FileFragment extends Fragment {
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
 
-        edPassword = getActivity().findViewById(R.id.edPasswordFile);
-        tvResult = getActivity().findViewById(R.id.tvResultFile);
-        pBar = getActivity().findViewById(R.id.progressBar);
+        edPassword = (EditText) getActivity().findViewById(R.id.edPasswordFile);
+        tvResult = (TextView) getActivity().findViewById(R.id.tvResultFile);
+        pBar = (ProgressBar) getActivity().findViewById(R.id.progressBar);
 
         view.findViewById(R.id.buttonSelectHash)
                 .setOnClickListener(view1 -> selectFile(RC_HASH));
