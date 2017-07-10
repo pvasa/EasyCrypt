@@ -520,8 +520,21 @@ class ECrypt {
      * Interface where result is posted by [encrypt], [decrypt], and [hash]
      */
     interface ECryptResultListener {
+        /**
+         * @param newBytes number of new bytes processed
+         * @param bytesProcessed total number of bytes processed
+         */
         fun onProgress(newBytes: Int, bytesProcessed: Long) {}
+
+        /**
+         * @param result of the methods [encrypt], [decrypt], or [hash]
+         */
         fun <T> onSuccess(result: T)
+
+        /**
+         * @param message on failure
+         * @param e exception thrown by called method
+         */
         fun onFailure(message: String, e: Exception)
     }
 

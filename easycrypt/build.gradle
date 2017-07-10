@@ -15,7 +15,7 @@ ext {
     siteUrl = 'https://github.com/ryan652/EasyCrypt'
     gitUrl = 'https://github.com/ryan652/EasyCrypt.git'
 
-    libraryVersion = '1.0.2'
+    libraryVersion = '1.0.3'
 
     developerId = 'ryan652'
     developerName = 'Priyank Vasa'
@@ -34,7 +34,7 @@ android {
         minSdkVersion 16
         targetSdkVersion 25
         versionCode 1
-        versionName "1.0.2"
+        versionName libraryVersion
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
