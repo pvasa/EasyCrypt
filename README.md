@@ -1,5 +1,9 @@
-# EasyCrypt
+[![CircleCI](https://img.shields.io/circleci/project/github/ryan652/EasyCrypt.svg?link=https://circleci.com/gh/ryan652/EasyCrypt&link=https://circleci.com/gh/ryan652/EasyCrypt)]()
+[![Bintray](https://img.shields.io/bintray/v/ryan652/easycrypt/easycrypt.svg?link=https://bintray.com/ryan652/easycrypt/easycrypt&link=https://bintray.com/ryan652/easycrypt/easycrypt)]()
+[![license](https://img.shields.io/github/license/ryan652/easycrypt.svg?link=https://github.com/ryan652/EasyCrypt/blob/master/LICENSE&link=https://github.com/ryan652/EasyCrypt/blob/master/LICENSE)]()
+[![GitHub issues](https://img.shields.io/github/issues/ryan652/easycrypt.svg?link=https://github.com/ryan652/EasyCrypt/issues&link=https://github.com/ryan652/EasyCrypt/issues)]()
 
+# EasyCrypt
 Easily encrypt, decrypt, or hash data in a very secure way.
 
 ## Features
