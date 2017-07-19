@@ -22,6 +22,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.pvryan.easycrypt.ECrypt
+import com.pvryan.easycrypt.ECryptHashAlgorithms
 import kotlinx.android.synthetic.main.fragment_string.*
 import org.jetbrains.anko.support.v4.indeterminateProgressDialog
 import org.jetbrains.anko.support.v4.onUiThread
@@ -93,7 +94,7 @@ class FragmentString : Fragment() {
 
         buttonHash.setOnClickListener {
 
-            eCrypt.hash(edInput.text, ECrypt.HashAlgorithms.SHA_256,
+            eCrypt.hash(edInput.text, ECryptHashAlgorithms.SHA_256,
                     erl = object : ECrypt.ECryptResultListener {
                         override fun <T> onSuccess(result: T) {
                             onUiThread {

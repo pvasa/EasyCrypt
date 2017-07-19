@@ -18,11 +18,20 @@ package com.pvryan.easycrypt
 import android.os.Build
 import android.os.Environment
 import com.pvryan.easycrypt.extensions.*
+import com.pvryan.easycrypt.randomorg.RandomOrgApis
+import com.pvryan.easycrypt.randomorg.RandomOrgRequest
+import com.pvryan.easycrypt.randomorg.RandomOrgResponse
 import org.jetbrains.anko.doAsync
 import org.jetbrains.annotations.NotNull
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
+import java.net.HttpURLConnection
 import java.security.InvalidKeyException
 import java.security.InvalidParameterException
 import java.security.MessageDigest
@@ -32,6 +41,7 @@ import javax.crypto.*
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.PBEKeySpec
 import javax.crypto.spec.SecretKeySpec
+
 
 /**
  * It provides methods to [encrypt], [decrypt], and [hash] data
@@ -74,12 +84,106 @@ class ECrypt {
     private val MSG_CANNOT_READ = "Cannot read from file."
     private val MSG_OUTPUT_FILE_EXISTS = "Output file already exists."
 
+    private val STANDARD_SYMBOLS =
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
+                    "abcdefghijklmnopqrstuvwxyz" +
+                    "0123456789"
+
     init {
         when {
             Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT -> PRNGFixes.apply()
             Build.VERSION.SDK_INT >= 26 -> SECRET_KEY_FAC_ALGORITHM = "PBEwithHmacSHA512AndAES_256"
         }
         random = SecureRandom()
+    }
+
+    /**
+     * Generate pseudo-random password using Java's [SecureRandom] number generator.
+     *
+     * @param length of password to be generated
+     * @param symbols to be used in the password
+     *
+     * @return [String] password of specified [length]
+     *
+     * @throws InvalidParameterException when length is less than 1
+     */
+    @Throws(InvalidParameterException::class)
+    @JvmOverloads
+    fun genSecureRandomPassword(length: Int,
+                                symbols: CharArray = STANDARD_SYMBOLS.toCharArray()): String {
+
+        if (length < 1) throw InvalidParameterException(
+                "Invalid password length. Only positive length allowed.")
+
+        val password = CharArray(length)
+        for (i in 0..length - 1) {
+            password[i] = symbols[random.nextInt(symbols.size - 1)]
+        }
+        return password.joinToString("")
+    }
+
+    /**
+     * Generate true random password using random.org service
+     * and posts response to [ECryptPasswordListener.onSuccess] if successful or
+     * posts error to [ECryptPasswordListener.onFailure] if failed.
+     * Result is a [String] password of specified [length].
+     *
+     * @param length of password to be generated
+     * @param randomOrgApiKey provided by api.random.org/api-keys/beta
+     * @param resultListener listener interface of type [ECryptPasswordListener] where generated password will be posted
+     */
+    fun genRandomOrgPassword(length: Int, randomOrgApiKey: String,
+                             resultListener: ECryptPasswordListener) {
+
+        if (length < 2) {
+            resultListener.onFailure(
+                    "Invalid length.",
+                    InvalidParameterException("Password length cannot be less than 2."))
+            return
+        }
+
+        doAsync {
+
+            val retrofit = Retrofit.Builder().baseUrl(RandomOrgApis.BASE_URL)
+                    .addConverterFactory(GsonConverterFactory.create()).build()
+
+            val randomOrgApis: RandomOrgApis = retrofit.create(RandomOrgApis::class.java)
+
+            val params = RandomOrgRequest.Params(apiKey = randomOrgApiKey, n = length / 2)
+            val postData = RandomOrgRequest(params = params)
+
+            randomOrgApis.request(postData).enqueue(object : Callback<RandomOrgResponse> {
+
+                override fun onFailure(call: Call<RandomOrgResponse>, t: Throwable) {
+                    resultListener.onFailure(t.localizedMessage, Exception(t))
+                }
+
+                override fun onResponse(call: Call<RandomOrgResponse>, response: Response<RandomOrgResponse>) {
+
+                    if (HttpURLConnection.HTTP_OK == response.code()) {
+
+                        val body = response.body()
+
+                        if (body != null) {
+                            val randomKeyArray = body.result.random.data
+                            val randomKeyHex = StringBuilder()
+                            for (i in 0..(randomKeyArray.size() - 1)) {
+                                randomKeyHex.append(randomKeyArray[i].toString().replace("\"", "", true))
+                            }
+                            resultListener.onSuccess(randomKeyHex.toString())
+                        } else {
+                            resultListener.onFailure("Random.org error.",
+                                    Exception(response.errorBody()?.string()
+                                            ?: "Null response from Random.org. Please try again."))
+                        }
+                    } else {
+                        resultListener.onFailure("Response code ${response.code()}",
+                                Exception(response.errorBody()?.string() ?:
+                                        "Some error occurred at Random.org. Please try again."))
+                    }
+                }
+            })
+        }
     }
 
     @Throws(InvalidKeySpecException::class)
@@ -106,7 +210,7 @@ class ECrypt {
      * @param T which can be either of [String], [CharSequence], [ByteArray], [InputStream], or [File]
      * @param input input data to be encrypted
      * @param password password string used to encrypt input
-     * @param erl listener interface of type ECryptResultListener where result and progress will be posted
+     * @param erl listener interface of type [ECryptResultListener] where result and progress will be posted
      * @param outputFile optional output file. If provided, result will be written to this file
      *
      * @exception InvalidKeyException if password is null or blank
@@ -256,7 +360,7 @@ class ECrypt {
      * @param input input data to be decrypted. It can be of type
      * [String], [CharSequence], [ByteArray], [InputStream], or [File]
      * @param password password string used to encrypt input
-     * @param erl listener interface of type ECryptResultListener where result and progress will be posted
+     * @param erl listener interface of type [ECryptResultListener] where result and progress will be posted
      * @param outputFile optional output file. If provided, result will be written to this file
      *
      * @exception InvalidKeyException if password is null or blank
@@ -441,7 +545,7 @@ class ECrypt {
      */
     @JvmOverloads
     fun <T> hash(@NotNull input: T,
-                 @NotNull algorithm: HashAlgorithms = HashAlgorithms.SHA_512,
+                 @NotNull algorithm: ECryptHashAlgorithms = ECryptHashAlgorithms.SHA_512,
                  @NotNull erl: ECryptResultListener,
                  @NotNull outputFile: File = File(DEF_HASH_FILE_PATH)) {
         doAsync {
@@ -542,15 +646,21 @@ class ECrypt {
     }
 
     /**
-     * Enum class defining available hash algorithms for [hash] method
+     * Interface where result is posted by [genRandomOrgPassword]
      */
-    enum class HashAlgorithms(val value: String) {
-        MD5("MD5"),
-        SHA_1("SHA-1"),
-        SHA_224("SHA-224"),
-        SHA_256("SHA-256"),
-        SHA_384("SHA-384"),
-        SHA_512("SHA-512");
+    interface ECryptPasswordListener {
+
+        /**
+         * @param password generated by [genRandomOrgPassword]
+         */
+        fun onSuccess(password: String)
+
+        /**
+         * @param message on failure
+         * @param e exception thrown by called method
+         */
+        fun onFailure(message: String, e: Exception)
+
     }
 
 }

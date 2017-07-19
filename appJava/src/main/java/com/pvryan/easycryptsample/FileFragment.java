@@ -16,6 +16,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.pvryan.easycrypt.ECrypt;
+import com.pvryan.easycrypt.ECryptHashAlgorithms;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -91,7 +92,7 @@ public class FileFragment extends Fragment {
                     pBar.setProgress(0);
                     pBar.setVisibility(View.VISIBLE);
 
-                    eCrypt.hash(fis, ECrypt.HashAlgorithms.SHA_512,
+                    eCrypt.hash(fis, ECryptHashAlgorithms.SHA_512,
                             new ECrypt.ECryptResultListener() {
 
                                 @Override

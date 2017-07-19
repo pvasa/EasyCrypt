@@ -24,7 +24,6 @@
         android:layout_marginEnd="32dp"
         android:layout_marginStart="32dp"
         android:layout_marginTop="16dp"
-        android:layout_weight="1"
         android:hint="@string/ed_string_to_encrypt_decrypt_hash"
         android:inputType="textMultiLine"
         android:maxLines="6" />
@@ -36,7 +35,6 @@
         android:layout_marginEnd="32dp"
         android:layout_marginStart="32dp"
         android:layout_marginTop="16dp"
-        android:layout_weight="1"
         android:hint="@string/ed_password"
         android:inputType="textPassword" />
 
@@ -44,19 +42,19 @@
         android:id="@+id/tvResult"
         style="?android:attr/textAppearanceMedium"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
+        android:layout_height="wrap_content"
         android:layout_marginEnd="32dp"
         android:layout_marginStart="32dp"
         android:layout_marginTop="16dp"
-        android:layout_weight="50"
         android:textIsSelectable="true" />
 
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:layout_margin="16dp"
-        android:layout_weight="1"
+        android:layout_marginEnd="32dp"
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="16dp"
         android:orientation="horizontal">
 
         <Button

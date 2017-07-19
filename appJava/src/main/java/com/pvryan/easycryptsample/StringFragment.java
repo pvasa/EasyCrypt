@@ -13,6 +13,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.pvryan.easycrypt.ECrypt;
+import com.pvryan.easycrypt.ECryptHashAlgorithms;
 
 public class StringFragment extends Fragment {
 
@@ -40,13 +41,14 @@ public class StringFragment extends Fragment {
 
         EditText edInput = (EditText) view.findViewById(R.id.edInput);
         EditText edPassword = (EditText) view.findViewById(R.id.edPassword);
+
         TextView tvResult = (TextView) view.findViewById(R.id.tvResult);
 
         view.findViewById(R.id.buttonHash).setOnClickListener(
                 buttonHash -> {
                     ProgressBar progressBar = new ProgressBar(buttonHash.getContext());
                     progressBar.setIndeterminate(true);
-                    eCrypt.hash(edInput.getText().toString(), ECrypt.HashAlgorithms.SHA_512,
+                    eCrypt.hash(edInput.getText().toString(), ECryptHashAlgorithms.SHA_512,
                             new ECrypt.ECryptResultListener() {
 
                                 @Override

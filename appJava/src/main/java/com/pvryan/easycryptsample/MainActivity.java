@@ -13,8 +13,6 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 
-import com.pvryan.easycrypt.ECrypt;
-
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
@@ -34,8 +32,6 @@ public class MainActivity extends AppCompatActivity {
      */
     private ViewPager mViewPager;
 
-    private ECrypt eCrypt = new ECrypt();
-
     private ArrayList<Fragment> fragments = new ArrayList<>();
 
     @Override
@@ -43,10 +39,12 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
+        ActivityCompat.requestPermissions(this,
+                new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
 
         fragments.add(StringFragment.newInstance());
         fragments.add(FileFragment.newInstance());
+        fragments.add(PasswordFragment.newInstance());
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -114,6 +112,8 @@ public class MainActivity extends AppCompatActivity {
                     return "String";
                 case 1:
                     return "File";
+                case 2:
+                    return "Password";
                 default:
                     return "Fragment " + position;
             }

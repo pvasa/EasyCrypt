@@ -24,6 +24,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.pvryan.easycrypt.ECrypt
+import com.pvryan.easycrypt.ECryptHashAlgorithms
 import kotlinx.android.synthetic.main.fragment_file.*
 import org.jetbrains.anko.AnkoLogger
 import org.jetbrains.anko.support.v4.onUiThread
@@ -89,7 +90,7 @@ class FragmentFile : Fragment(), AnkoLogger {
                         toast("Canceled by user.")
                     }
 
-                    eCrypt.hash(fis, ECrypt.HashAlgorithms.SHA_256,
+                    eCrypt.hash(fis, ECryptHashAlgorithms.SHA_256,
                             object : ECrypt.ECryptResultListener {
 
                                 override fun onProgress(newBytes: Int, bytesProcessed: Long) {
