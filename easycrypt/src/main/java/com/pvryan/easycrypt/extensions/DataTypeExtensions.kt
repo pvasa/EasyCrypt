@@ -44,12 +44,13 @@ fun String.isValidHex(): Boolean = (this.length % 2 == 0 && pHex.matcher(this).m
 
 @Throws(IllegalArgumentException::class)
 fun String.hexToByteArray(): ByteArray {
-    if (!this.isValidHex()) throw IllegalArgumentException()
-    val data = ByteArray(this.length / 2)
+    val trimmed = this.replace(" ", "")
+    if (!trimmed.isValidHex()) throw IllegalArgumentException("Invalid hex string.")
+    val data = ByteArray(trimmed.length / 2)
     var i = 0
-    while (i < this.length) {
-        data[i / 2] = ((Character.digit(this[i], 16) shl 4) +
-                Character.digit(this[i + 1], 16)).toByte()
+    while (i < trimmed.length) {
+        data[i / 2] = ((Character.digit(trimmed[i], 16) shl 4) +
+                Character.digit(trimmed[i + 1], 16)).toByte()
         i += 2
     }
     return data

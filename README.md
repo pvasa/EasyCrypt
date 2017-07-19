@@ -1,7 +1,7 @@
-[![CircleCI](https://img.shields.io/circleci/project/github/ryan652/EasyCrypt.svg?link=https://circleci.com/gh/ryan652/EasyCrypt&link=https://circleci.com/gh/ryan652/EasyCrypt)]()
-[![Bintray](https://img.shields.io/bintray/v/ryan652/easycrypt/easycrypt.svg?link=https://bintray.com/ryan652/easycrypt/easycrypt&link=https://bintray.com/ryan652/easycrypt/easycrypt)]()
-[![license](https://img.shields.io/github/license/ryan652/easycrypt.svg?link=https://github.com/ryan652/EasyCrypt/blob/master/LICENSE&link=https://github.com/ryan652/EasyCrypt/blob/master/LICENSE)]()
-[![GitHub issues](https://img.shields.io/github/issues/ryan652/easycrypt.svg?link=https://github.com/ryan652/EasyCrypt/issues&link=https://github.com/ryan652/EasyCrypt/issues)]()
+[![CircleCI](https://img.shields.io/circleci/project/github/ryan652/EasyCrypt.svg)](https://circleci.com/gh/ryan652/EasyCrypt)
+[![Bintray](https://img.shields.io/github/release/ryan652/easycrypt.svg)](https://github.com/ryan652/EasyCrypt/releases)
+[![License](https://img.shields.io/github/license/ryan652/easycrypt.svg)](LICENSE)
+[![GitHub issues](https://img.shields.io/github/issues/ryan652/easycrypt.svg)](https://github.com/ryan652/EasyCrypt/issues)
 
 # EasyCrypt
 Easily encrypt, decrypt, or hash data in a very secure way.
@@ -15,6 +15,16 @@ Easily encrypt, decrypt, or hash data in a very secure way.
 * Random IV generated on each encryption (16 bytes)
 * Supports MD5, SHA1, and SHA2 hash functions
 * SecureRandom fixes on Android below KitKat
+
+## Download
+Add in your app's build.gradle
+```gradle
+dependencies {
+    ...
+    compile "com.pvryan.easycrypt:easycrypt:1.0.3"
+    ...
+}
+```
 
 ## Usage
     val eCrypt = ECrypt()
