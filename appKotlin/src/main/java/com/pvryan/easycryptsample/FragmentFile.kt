@@ -100,7 +100,7 @@ class FragmentFile : Fragment(), AnkoLogger {
                                 override fun <T> onSuccess(result: T) {
                                     onUiThread {
                                         pDialog.dismiss()
-                                        tvResult.text = result as String
+                                        tvResultFile.text = result as String
                                     }
                                 }
 
@@ -131,7 +131,7 @@ class FragmentFile : Fragment(), AnkoLogger {
                         toast("Canceled by user.")
                     }
 
-                    eCrypt.encrypt(fis, edPassword.text.toString(),
+                    eCrypt.encrypt(fis, edPasswordFile.text.toString(),
                             object : ECrypt.ECryptResultListener {
 
                                 override fun onProgress(newBytes: Int, bytesProcessed: Long) {
@@ -141,7 +141,7 @@ class FragmentFile : Fragment(), AnkoLogger {
                                 override fun <T> onSuccess(result: T) {
                                     onUiThread {
                                         pDialog.dismiss()
-                                        tvResult.text = resources.getString(
+                                        tvResultFile.text = resources.getString(
                                                 R.string.success_file_encrypted,
                                                 (result as File).absolutePath)
                                     }
@@ -174,7 +174,7 @@ class FragmentFile : Fragment(), AnkoLogger {
                         toast("Canceled by user.")
                     }
 
-                    eCrypt.decrypt(fis, edPassword.text.toString(),
+                    eCrypt.decrypt(fis, edPasswordFile.text.toString(),
                             object : ECrypt.ECryptResultListener {
 
                                 override fun onProgress(newBytes: Int, bytesProcessed: Long) {
@@ -184,7 +184,7 @@ class FragmentFile : Fragment(), AnkoLogger {
                                 override fun <T> onSuccess(result: T) {
                                     onUiThread {
                                         pDialog.dismiss()
-                                        tvResult.text = resources.getString(
+                                        tvResultFile.text = resources.getString(
                                                 R.string.success_file_decrypted,
                                                 (result as File).absolutePath)
                                     }

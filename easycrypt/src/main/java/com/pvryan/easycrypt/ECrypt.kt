@@ -45,13 +45,12 @@ import javax.crypto.spec.SecretKeySpec
 /**
  * It provides methods to [encrypt], [decrypt], and [hash] data
  */
-class ECrypt {
+class ECrypt(transformation: ECryptTransformations = ECryptTransformations.AES_CBC_PKCS7Padding) {
 
-    private val TRANSFORMATION = "AES/CBC/PKCS5Padding"
     private var SECRET_KEY_FAC_ALGORITHM = "PBKDF2WithHmacSHA1"
     private val SECRET_KEY_SPEC_ALGORITHM = "AES"
 
-    private val cipher = Cipher.getInstance(TRANSFORMATION)
+    private val cipher = Cipher.getInstance(transformation.value)
     private val random: SecureRandom
 
     private val KEY_BITS_LENGTH = 256
@@ -175,8 +174,7 @@ class ECrypt {
 
                         if (body != null) {
 
-                            @Suppress("SENSELESS_COMPARISON")
-                            if (body.error != null && body.error.code != 200) {
+                            if (body.error != null) {
                                 resultListener.onFailure("Error response from random.org",
                                         InvalidParameterException(body.error.message))
                                 return
