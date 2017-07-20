@@ -22,7 +22,7 @@ import com.google.gson.JsonArray
  */
 data class RandomOrgResponse(
         val jsonrpc: String,
-        val error: Error,
+        val error: Error?,
         val result: Result,
         val id: Int
 ) {

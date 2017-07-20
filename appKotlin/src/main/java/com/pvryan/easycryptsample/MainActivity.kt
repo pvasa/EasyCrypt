@@ -33,7 +33,8 @@ class MainActivity : AppCompatActivity() {
     private val RC_PERMISSIONS = 1
     private val fragments = arrayListOf(
             FragmentString.newInstance(),
-            FragmentFile.newInstance()
+            FragmentFile.newInstance(),
+            FragmentPassword.newInstance()
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -69,7 +70,8 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         checkPermissions(RC_PERMISSIONS,
                 Manifest.permission.READ_EXTERNAL_STORAGE,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                Manifest.permission.INTERNET)
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
@@ -93,9 +95,9 @@ class MainActivity : AppCompatActivity() {
             return when (fragments[position]) {
                 is FragmentString -> "String"
                 is FragmentFile -> "File"
+                is FragmentPassword -> "Password"
                 else -> "Fragment $position"
             }
         }
-
     }
 }

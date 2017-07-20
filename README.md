@@ -8,13 +8,14 @@ Easily encrypt, decrypt, or hash data in a very secure way.
 
 ## Features
 * AES-256 encryption algorithm
-* CBC mode of operation
-* Block padding with PKCS5
+* CBC/CTR mode of operations
+* Block padding with PKCS7 (only with CBC)
 * Computationally secure random salt (of cipher block size)
 * Password stretching with PBKDF2
 * Random IV generated on each encryption (16 bytes)
 * Supports MD5, SHA1, and SHA2 hash functions
 * SecureRandom fixes on Android below KitKat
+* Generate key manually with SecureRandom or random.org
 
 ## Download
 Add in your app's build.gradle

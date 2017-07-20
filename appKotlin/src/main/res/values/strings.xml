@@ -23,5 +23,13 @@
     <string name="title_permissions">Permissions</string>
 
     <string name="message_permissions">Permissions required to run this app correctly. Grant to allow or Exit to close the app.</string>
+    <string name="ed_characters_to_use">Characters to use</string>
+    <string name="button_random_org">Random.org</string>
+    <string name="button_secure_random">SecureRandom</string>
+    <string name="ed_length_of_password">Length of password</string>
+    <string name="tv_generate_password_with">Generate password with,</string>
+    <string name="title_string">String</string>
+    <string name="title_file">File</string>
+    <string name="title_password">Password</string>
 
 </resources>
