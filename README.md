@@ -21,7 +21,7 @@ Add in your app's build.gradle
 ```gradle
 dependencies {
     ...
-    compile "com.pvryan.easycrypt:easycrypt:1.0.3"
+    compile "com.pvryan.easycrypt:easycrypt:1.0.4"
     ...
 }
 ```
@@ -103,6 +103,30 @@ eCrypt.hash(input, hashAlgorithm, // from ECrypt.HashAlgorithms
 | ByteArray       | String (outputFile, if provided) |
 | String          | String (outputFile, if provided) |
 | CharSequence    | String (outputFile, if provided) |
+
+#### Generate key with SecureRandom (pseudo-random)
+```kotlin
+val password = eCrypt.genSecureRandomPassword(length, charArrayOf(/*symbols to be used in password*/))
+```
+
+#### Generate key with Random.org (true random)
+```kotlin
+eCrypt.genRandomOrgPassword(
+        length,
+        "random-org-api-key", //TODO: Replace with your random.org api key
+        new ECrypt.ECryptPasswordListener() {
+
+            @Override
+            public void onFailure(@NonNull String message, @NonNull Exception e) {
+
+            }
+
+            @Override
+            public void onSuccess(@NonNull String password) {
+
+            }
+        });
+```
 
 ## License
 ```

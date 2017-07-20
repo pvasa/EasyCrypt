@@ -58,14 +58,19 @@ public class PasswordFragment extends Fragment {
             } catch (InvalidParameterException e) {
                 e.printStackTrace();
                 Toast.makeText(view.getContext(), e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+            } catch (NumberFormatException e) {
+                e.printStackTrace();
+                Toast.makeText(v.getContext(),
+                        "Too big number.", Toast.LENGTH_SHORT).show();
             }
         });
 
-        view.findViewById(R.id.buttonRandomOrg).setOnClickListener(v ->
+        view.findViewById(R.id.buttonRandomOrg).setOnClickListener(v -> {
 
+            try {
                 eCrypt.genRandomOrgPassword(
                         Integer.valueOf(edLength.getText().toString()),
-                        "43e7bf3d-1e81-4dcd-b335-1d9efc1661db",
+                        "",
                         new ECrypt.ECryptPasswordListener() {
 
                             @Override
@@ -79,6 +84,12 @@ public class PasswordFragment extends Fragment {
                             public void onSuccess(@NonNull String password) {
                                 result.setText(password);
                             }
-                        }));
+                        });
+            } catch (NumberFormatException e) {
+                e.printStackTrace();
+                Toast.makeText(v.getContext(),
+                        "Too big number.", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }
