@@ -12,12 +12,15 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.pvryan.easycrypt.ECrypt;
-import com.pvryan.easycrypt.ECryptHashAlgorithms;
+import com.pvryan.easycrypt.ECryptResultListener;
+import com.pvryan.easycrypt.hash.ECryptHash;
+import com.pvryan.easycrypt.hash.ECryptHashAlgorithms;
+import com.pvryan.easycrypt.symmetric.ECryptSymmetric;
 
 public class StringFragment extends Fragment {
 
-    private ECrypt eCrypt = new ECrypt();
+    private ECryptSymmetric eCryptSymmetric = new ECryptSymmetric();
+    private ECryptHash eCryptHash = new ECryptHash();
 
     public StringFragment() {
     }
@@ -48,8 +51,8 @@ public class StringFragment extends Fragment {
                 buttonHash -> {
                     ProgressBar progressBar = new ProgressBar(buttonHash.getContext());
                     progressBar.setIndeterminate(true);
-                    eCrypt.hash(edInput.getText().toString(), ECryptHashAlgorithms.SHA_512,
-                            new ECrypt.ECryptResultListener() {
+                    eCryptHash.calculate(edInput.getText().toString(), ECryptHashAlgorithms.SHA_512,
+                            new ECryptResultListener() {
 
                                 @Override
                                 public void onProgress(int newBytes, long bytesProcessed) {
@@ -77,8 +80,8 @@ public class StringFragment extends Fragment {
         view.findViewById(R.id.buttonEncrypt).setOnClickListener(buttonEncrypt -> {
                     ProgressBar progressBar = new ProgressBar(buttonEncrypt.getContext());
                     progressBar.setIndeterminate(true);
-                    eCrypt.encrypt(edInput.getText().toString(), edPassword.getText().toString(),
-                            new ECrypt.ECryptResultListener() {
+            eCryptSymmetric.encrypt(edInput.getText().toString(), edPassword.getText().toString(),
+                    new ECryptResultListener() {
 
                                 @Override
                                 public void onProgress(int newBytes, long bytesProcessed) {
@@ -106,8 +109,8 @@ public class StringFragment extends Fragment {
         view.findViewById(R.id.buttonDecrypt).setOnClickListener(buttonDecrypt -> {
                     ProgressBar progressBar = new ProgressBar(buttonDecrypt.getContext());
                     progressBar.setIndeterminate(true);
-                    eCrypt.decrypt(edInput.getText().toString(), edPassword.getText().toString(),
-                            new ECrypt.ECryptResultListener() {
+            eCryptSymmetric.decrypt(edInput.getText().toString(), edPassword.getText().toString(),
+                    new ECryptResultListener() {
 
                                 @Override
                                 public void onProgress(int newBytes, long bytesProcessed) {

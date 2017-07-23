@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+@file:Suppress("unused")
+
 package com.pvryan.easycrypt.extensions
 
 import android.util.Base64
@@ -39,7 +41,7 @@ fun ByteArray.asHexString(): String {
     return result.toString()
 }
 
-val pHex: Pattern = Pattern.compile("[0-9a-fA-F]+")
+private val pHex: Pattern = Pattern.compile("[0-9a-fA-F]+")
 fun String.isValidHex(): Boolean = (this.length % 2 == 0 && pHex.matcher(this).matches())
 
 @Throws(IllegalArgumentException::class)

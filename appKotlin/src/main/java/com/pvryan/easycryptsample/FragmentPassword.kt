@@ -22,14 +22,15 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.pvryan.easycrypt.ECrypt
+import com.pvryan.easycrypt.ECryptPasswordListener
+import com.pvryan.easycrypt.ECryptPasswords
 import kotlinx.android.synthetic.main.fragment_password.*
 import org.jetbrains.anko.support.v4.toast
 import java.security.InvalidParameterException
 
 class FragmentPassword : Fragment() {
 
-    private val eCrypt = ECrypt()
+    private val eCryptPasswords = ECryptPasswords()
 
     override fun onCreateView(inflater: LayoutInflater?, @Nullable container: ViewGroup?,
                               @Nullable savedInstanceState: Bundle?): View? {
@@ -43,11 +44,11 @@ class FragmentPassword : Fragment() {
             try {
                 val symbols: String = edChars.text.toString()
                 if (symbols.isNotEmpty()) {
-                    tvResult.text = eCrypt.genSecureRandomPassword(
+                    tvResult.text = eCryptPasswords.genSecureRandomPassword(
                             Integer.valueOf(edLength.text.toString()),
                             symbols.toCharArray())
                 } else {
-                    tvResult.text = eCrypt.genSecureRandomPassword(
+                    tvResult.text = eCryptPasswords.genSecureRandomPassword(
                             Integer.valueOf(edLength.text.toString()))
                 }
             } catch (e: InvalidParameterException) {
@@ -61,10 +62,10 @@ class FragmentPassword : Fragment() {
 
         buttonRandomOrg.setOnClickListener {
             try {
-                eCrypt.genRandomOrgPassword(
+                eCryptPasswords.genRandomOrgPassword(
                         Integer.valueOf(edLength.text.toString())!!,
                         "",
-                        object : ECrypt.ECryptPasswordListener {
+                        object : ECryptPasswordListener {
 
                             override fun onFailure(message: String, e: Exception) {
                                 Log.w(FragmentPassword::class.java.simpleName, message)

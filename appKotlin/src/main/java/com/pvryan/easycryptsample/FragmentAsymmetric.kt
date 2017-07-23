@@ -13,23 +13,22 @@
  * limitations under the License.
  */
 
-package com.pvryan.easycrypt.randomorg
+package com.pvryan.easycryptsample
 
-/**
- * Request structure for api.random.org
- */
-internal data class RandomOrgRequest(
-        val jsonrpc: String = "2.0",
-        val method: String = "generateIntegers",
-        val params: Params = RandomOrgRequest.Params(),
-        val id: Int = 679
-) {
-    data class Params(
-            val apiKey: String = "",
-            val n: Int = 32,
-            val min: Int = 0,
-            val max: Int = 255,
-            val replacement: Boolean = false,
-            val base: Int = 16
-    )
+import android.os.Bundle
+import android.support.v4.app.Fragment
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+
+class FragmentAsymmetric : Fragment() {
+
+    override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        return inflater?.inflate(R.layout.fragment_asymmetric, container, false)
+    }
+
+    override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
+
+    }
+
 }

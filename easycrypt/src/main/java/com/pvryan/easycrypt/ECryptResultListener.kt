@@ -13,23 +13,26 @@
  * limitations under the License.
  */
 
-package com.pvryan.easycrypt.randomorg
+package com.pvryan.easycrypt
 
 /**
- * Request structure for api.random.org
+ * Interface to listen for result from encryption, decryption, or hashing
  */
-internal data class RandomOrgRequest(
-        val jsonrpc: String = "2.0",
-        val method: String = "generateIntegers",
-        val params: Params = RandomOrgRequest.Params(),
-        val id: Int = 679
-) {
-    data class Params(
-            val apiKey: String = "",
-            val n: Int = 32,
-            val min: Int = 0,
-            val max: Int = 255,
-            val replacement: Boolean = false,
-            val base: Int = 16
-    )
+interface ECryptResultListener {
+    /**
+     * @param newBytes count processed after last block
+     * @param bytesProcessed count from total input
+     */
+    fun onProgress(newBytes: Int, bytesProcessed: Long) {}
+
+    /**
+     * @param result on successful execution of the calling method
+     */
+    fun <T> onSuccess(result: T)
+
+    /**
+     * @param message on failure
+     * @param e exception thrown by called method
+     */
+    fun onFailure(message: String, e: Exception)
 }

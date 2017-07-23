@@ -13,23 +13,16 @@
  * limitations under the License.
  */
 
-package com.pvryan.easycrypt.randomorg
+package com.pvryan.easycrypt.hash
 
 /**
- * Request structure for api.random.org
+ * Enum class defining available hashing algorithms for [ECryptHash.calculate] method
  */
-internal data class RandomOrgRequest(
-        val jsonrpc: String = "2.0",
-        val method: String = "generateIntegers",
-        val params: Params = RandomOrgRequest.Params(),
-        val id: Int = 679
-) {
-    data class Params(
-            val apiKey: String = "",
-            val n: Int = 32,
-            val min: Int = 0,
-            val max: Int = 255,
-            val replacement: Boolean = false,
-            val base: Int = 16
-    )
+enum class ECryptHashAlgorithms(val value: String) {
+    MD5("MD5"),
+    SHA_1("SHA-1"),
+    SHA_224("SHA-224"),
+    SHA_256("SHA-256"),
+    SHA_384("SHA-384"),
+    SHA_512("SHA-512");
 }

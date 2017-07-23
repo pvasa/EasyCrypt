@@ -57,3 +57,6 @@ freeline_project_description.json
 # Unused code
 *.unused
 .idea/vcs.xml
+/easycrypt/src/main/java/com/pvryan/easycrypt/ECryptAnalyzePassword.kt
+.idea/markdown-navigator.xml
+.idea/markdown-navigator/

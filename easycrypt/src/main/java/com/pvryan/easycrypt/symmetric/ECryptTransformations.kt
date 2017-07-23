@@ -13,23 +13,14 @@
  * limitations under the License.
  */
 
-package com.pvryan.easycrypt.randomorg
+package com.pvryan.easycrypt.symmetric
 
 /**
- * Request structure for api.random.org
+ * Transformations that can be used for encryption/decryption
  */
-internal data class RandomOrgRequest(
-        val jsonrpc: String = "2.0",
-        val method: String = "generateIntegers",
-        val params: Params = RandomOrgRequest.Params(),
-        val id: Int = 679
-) {
-    data class Params(
-            val apiKey: String = "",
-            val n: Int = 32,
-            val min: Int = 0,
-            val max: Int = 255,
-            val replacement: Boolean = false,
-            val base: Int = 16
-    )
+enum class ECryptTransformations(val value: String) {
+
+    AES_CTR_NoPadding("AES/CTR/NoPadding"),
+    AES_CBC_PKCS7Padding("AES/CBC/PKCS7Padding")
+
 }
