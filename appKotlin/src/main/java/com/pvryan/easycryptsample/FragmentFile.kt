@@ -23,8 +23,10 @@ import android.support.v4.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.pvryan.easycrypt.ECrypt
-import com.pvryan.easycrypt.ECryptHashAlgorithms
+import com.pvryan.easycrypt.ECryptResultListener
+import com.pvryan.easycrypt.hash.ECryptHash
+import com.pvryan.easycrypt.hash.ECryptHashAlgorithms
+import com.pvryan.easycrypt.symmetric.ECryptSymmetric
 import kotlinx.android.synthetic.main.fragment_file.*
 import org.jetbrains.anko.AnkoLogger
 import org.jetbrains.anko.support.v4.onUiThread
@@ -38,7 +40,8 @@ class FragmentFile : Fragment(), AnkoLogger {
     private val RC_HASH = 2
     private val RC_ENCRYPT = 3
     private val RC_DECRYPT = 4
-    private val eCrypt = ECrypt()
+    private val eCryptSymmetric = ECryptSymmetric()
+    private val eCryptHash = ECryptHash()
 
     override fun onCreateView(inflater: LayoutInflater?, @Nullable container: ViewGroup?,
                               @Nullable savedInstanceState: Bundle?): View? {
@@ -90,8 +93,8 @@ class FragmentFile : Fragment(), AnkoLogger {
                         toast("Canceled by user.")
                     }
 
-                    eCrypt.hash(fis, ECryptHashAlgorithms.SHA_256,
-                            object : ECrypt.ECryptResultListener {
+                    eCryptHash.calculate(fis, ECryptHashAlgorithms.SHA_256,
+                            object : ECryptResultListener {
 
                                 override fun onProgress(newBytes: Int, bytesProcessed: Long) {
                                     pDialog.progress = (bytesProcessed / 1024).toInt()
@@ -131,8 +134,8 @@ class FragmentFile : Fragment(), AnkoLogger {
                         toast("Canceled by user.")
                     }
 
-                    eCrypt.encrypt(fis, edPasswordFile.text.toString(),
-                            object : ECrypt.ECryptResultListener {
+                    eCryptSymmetric.encrypt(fis, edPasswordFile.text.toString(),
+                            object : ECryptResultListener {
 
                                 override fun onProgress(newBytes: Int, bytesProcessed: Long) {
                                     pDialog.progress = (bytesProcessed / 1024).toInt()
@@ -174,8 +177,8 @@ class FragmentFile : Fragment(), AnkoLogger {
                         toast("Canceled by user.")
                     }
 
-                    eCrypt.decrypt(fis, edPasswordFile.text.toString(),
-                            object : ECrypt.ECryptResultListener {
+                    eCryptSymmetric.decrypt(fis, edPasswordFile.text.toString(),
+                            object : ECryptResultListener {
 
                                 override fun onProgress(newBytes: Int, bytesProcessed: Long) {
                                     pDialog.progress = (bytesProcessed / 1024).toInt()

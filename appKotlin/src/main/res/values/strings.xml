@@ -31,5 +31,6 @@
     <string name="title_string">String</string>
     <string name="title_file">File</string>
     <string name="title_password">Password</string>
+    <string name="title_asymmetric">Asymmetric</string>
 
 </resources>

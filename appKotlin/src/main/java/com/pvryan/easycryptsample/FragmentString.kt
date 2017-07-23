@@ -21,17 +21,19 @@ import android.support.v4.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.pvryan.easycrypt.ECrypt
-import com.pvryan.easycrypt.ECryptHashAlgorithms
+import com.pvryan.easycrypt.ECryptResultListener
+import com.pvryan.easycrypt.hash.ECryptHash
+import com.pvryan.easycrypt.hash.ECryptHashAlgorithms
+import com.pvryan.easycrypt.symmetric.ECryptSymmetric
 import kotlinx.android.synthetic.main.fragment_string.*
 import org.jetbrains.anko.support.v4.indeterminateProgressDialog
 import org.jetbrains.anko.support.v4.onUiThread
 import org.jetbrains.anko.support.v4.toast
-import java.io.File
 
 class FragmentString : Fragment() {
 
-    private val eCrypt = ECrypt()
+    private val eCryptSymmetric = ECryptSymmetric()
+    private val eCryptHash = ECryptHash()
 
     override fun onCreateView(inflater: LayoutInflater?, @Nullable container: ViewGroup?,
                               @Nullable savedInstanceState: Bundle?): View? {
@@ -45,8 +47,8 @@ class FragmentString : Fragment() {
 
             val pDialog = indeterminateProgressDialog("Encrypting...")
 
-            eCrypt.encrypt(edInput.text, edPassword.text.toString(),
-                    object : ECrypt.ECryptResultListener {
+            eCryptSymmetric.encrypt(edInput.text, edPassword.text.toString(),
+                    object : ECryptResultListener {
 
                         override fun <T> onSuccess(result: T) {
                             onUiThread {
@@ -70,8 +72,8 @@ class FragmentString : Fragment() {
 
             val pDialog = indeterminateProgressDialog("Decrypting...")
 
-            eCrypt.decrypt(edInput.text, edPassword.text.toString(),
-                    object : ECrypt.ECryptResultListener {
+            eCryptSymmetric.decrypt(edInput.text, edPassword.text.toString(),
+                    object : ECryptResultListener {
 
                         override fun <T> onSuccess(result: T) {
                             onUiThread {
@@ -94,13 +96,11 @@ class FragmentString : Fragment() {
 
         buttonHash.setOnClickListener {
 
-            eCrypt.hash(edInput.text, ECryptHashAlgorithms.SHA_256,
-                    erl = object : ECrypt.ECryptResultListener {
+            eCryptHash.calculate(edInput.text, ECryptHashAlgorithms.SHA_512,
+                    erl = object : ECryptResultListener {
                         override fun <T> onSuccess(result: T) {
                             onUiThread {
-                                tvResult.text = resources.getString(
-                                        R.string.success_file_hashed,
-                                        (result as File).absolutePath)
+                                tvResult.text = result as String
                             }
                         }
 

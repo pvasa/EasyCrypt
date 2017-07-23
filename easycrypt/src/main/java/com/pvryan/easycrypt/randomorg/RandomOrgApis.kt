@@ -22,7 +22,7 @@ import retrofit2.http.POST
 /**
  * Interface for Retrofit api calls to api.random.org
  */
-interface RandomOrgApis {
+internal interface RandomOrgApis {
 
     /**
      * Request a new password to api.random.org

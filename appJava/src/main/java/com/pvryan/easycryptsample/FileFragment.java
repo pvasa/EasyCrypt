@@ -15,8 +15,10 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.pvryan.easycrypt.ECrypt;
-import com.pvryan.easycrypt.ECryptHashAlgorithms;
+import com.pvryan.easycrypt.ECryptResultListener;
+import com.pvryan.easycrypt.hash.ECryptHash;
+import com.pvryan.easycrypt.hash.ECryptHashAlgorithms;
+import com.pvryan.easycrypt.symmetric.ECryptSymmetric;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -28,7 +30,10 @@ public class FileFragment extends Fragment {
     private final int RC_HASH = 2;
     private final int RC_ENCRYPT = 3;
     private final int RC_DECRYPT = 4;
-    private ECrypt eCrypt = new ECrypt();
+
+    private ECryptSymmetric eCryptSymmetric = new ECryptSymmetric();
+    private ECryptHash eCryptHash = new ECryptHash();
+
     private EditText edPassword;
     private TextView tvResult;
     private ProgressBar pBar;
@@ -92,8 +97,8 @@ public class FileFragment extends Fragment {
                     pBar.setProgress(0);
                     pBar.setVisibility(View.VISIBLE);
 
-                    eCrypt.hash(fis, ECryptHashAlgorithms.SHA_512,
-                            new ECrypt.ECryptResultListener() {
+                    eCryptHash.calculate(fis, ECryptHashAlgorithms.SHA_512,
+                            new ECryptResultListener() {
 
                                 @Override
                                 public void onProgress(int newBytes, long bytesProcessed) {
@@ -141,8 +146,8 @@ public class FileFragment extends Fragment {
                     pBar.setProgress(0);
                     pBar.setVisibility(View.VISIBLE);
 
-                    eCrypt.encrypt(fis, edPassword.getText().toString(),
-                            new ECrypt.ECryptResultListener() {
+                    eCryptSymmetric.encrypt(fis, edPassword.getText().toString(),
+                            new ECryptResultListener() {
 
                                 @Override
                                 public void onProgress(int newBytes, long bytesProcessed) {
@@ -192,8 +197,8 @@ public class FileFragment extends Fragment {
                     pBar.setProgress(0);
                     pBar.setVisibility(View.VISIBLE);
 
-                    eCrypt.decrypt(fis, edPassword.getText().toString(),
-                            new ECrypt.ECryptResultListener() {
+                    eCryptSymmetric.decrypt(fis, edPassword.getText().toString(),
+                            new ECryptResultListener() {
 
                                 @Override
                                 public void onProgress(int newBytes, long bytesProcessed) {

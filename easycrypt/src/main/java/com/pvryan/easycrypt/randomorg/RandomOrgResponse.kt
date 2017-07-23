@@ -20,7 +20,7 @@ import com.google.gson.JsonArray
 /**
  * Response structure from api.random.org
  */
-data class RandomOrgResponse(
+internal data class RandomOrgResponse(
         val jsonrpc: String,
         val error: Error?,
         val result: Result,

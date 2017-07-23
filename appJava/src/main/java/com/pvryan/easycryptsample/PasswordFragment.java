@@ -12,13 +12,14 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.pvryan.easycrypt.ECrypt;
+import com.pvryan.easycrypt.ECryptPasswordListener;
+import com.pvryan.easycrypt.ECryptPasswords;
 
 import java.security.InvalidParameterException;
 
 public class PasswordFragment extends Fragment {
 
-    private ECrypt eCrypt = new ECrypt();
+    private ECryptPasswords eCryptPasswords = new ECryptPasswords();
 
     public PasswordFragment() {
     }
@@ -48,11 +49,11 @@ public class PasswordFragment extends Fragment {
             try {
                 String symbols;
                 if ((symbols = edCharacters.getText().toString()).length() > 0) {
-                    result.setText(eCrypt.genSecureRandomPassword(
+                    result.setText(eCryptPasswords.genSecureRandomPassword(
                             Integer.valueOf(edLength.getText().toString()),
                             symbols.toCharArray()));
                 } else {
-                    result.setText(eCrypt.genSecureRandomPassword(
+                    result.setText(eCryptPasswords.genSecureRandomPassword(
                             Integer.valueOf(edLength.getText().toString())));
                 }
             } catch (InvalidParameterException e) {
@@ -68,10 +69,10 @@ public class PasswordFragment extends Fragment {
         view.findViewById(R.id.buttonRandomOrg).setOnClickListener(v -> {
 
             try {
-                eCrypt.genRandomOrgPassword(
+                eCryptPasswords.genRandomOrgPassword(
                         Integer.valueOf(edLength.getText().toString()),
                         "",
-                        new ECrypt.ECryptPasswordListener() {
+                        new ECryptPasswordListener() {
 
                             @Override
                             public void onFailure(@NonNull String message, @NonNull Exception e) {

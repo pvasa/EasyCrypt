@@ -22,18 +22,22 @@ Add in your app's build.gradle
 ```gradle
 dependencies {
     ...
-    compile "com.pvryan.easycrypt:easycrypt:1.0.4"
+    compile "com.pvryan.easycrypt:easycrypt:1.0.5"
     ...
 }
 ```
 
 ## Usage
-    val eCrypt = ECrypt()
+```kotlin
+val eCryptSymmetric = ECryptSymmetric()
+val eCryptHash = ECryptHash()
+val eCryptPass = ECryptPasswords()
+```
 
 #### Encrypt data
 ```kotlin
-eCrypt.encrypt (input, password,
-    object : ECrypt.ECryptResultListener {
+eCryptSymmetric.encrypt (input, password,
+    object : ECryptResultListener {
 
         // Optional
         override fun onProgress(newBytes: Int, bytesProcessed: Long) {
@@ -54,8 +58,8 @@ eCrypt.encrypt (input, password,
 
 #### Decrypt data
 ```kotlin
-eCrypt.decrypt(input, password,
-        object : ECrypt.ECryptResultListener {
+eCryptSymmetric.decrypt(input, password,
+        object : ECryptResultListener {
 
             // Optional
             override fun onProgress(newBytes: Int, bytesProcessed: Long) {
@@ -76,8 +80,8 @@ eCrypt.decrypt(input, password,
 
 #### Hash data
 ```kotlin
-eCrypt.hash(input, hashAlgorithm, // from ECrypt.HashAlgorithms
-        object : ECrypt.ECryptResultListener {
+eCryptHash.calculate(input, hashAlgorithm, // from ECryptHashAlgorithms
+        object : ECryptResultListener {
 
             // Optional
             override fun onProgress(newBytes: Int, bytesProcessed: Long) {
@@ -107,15 +111,15 @@ eCrypt.hash(input, hashAlgorithm, // from ECrypt.HashAlgorithms
 
 #### Generate key with SecureRandom (pseudo-random)
 ```kotlin
-val password = eCrypt.genSecureRandomPassword(length, charArrayOf(/*symbols to be used in password*/))
+val password = eCryptPass.genSecureRandomPassword(length, charArrayOf(/*symbols to be used in password*/))
 ```
 
 #### Generate key with Random.org (true random)
 ```kotlin
-eCrypt.genRandomOrgPassword(
+eCryptPass.genRandomOrgPassword(
         length,
         "random-org-api-key", //TODO: Replace with your random.org api key
-        new ECrypt.ECryptPasswordListener() {
+        new ECryptPasswordListener() {
 
             @Override
             public void onFailure(@NonNull String message, @NonNull Exception e) {
