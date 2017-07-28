@@ -30,8 +30,5 @@ jobs:
       - store_test_results:
           path: app/build/test-results
       - run:
-          name: Maven install
-          command: ./gradlew install
-      - run:
-          name: Bintray upload
-          command: ./gradlew bintrayUpload
+          name: Gradle build and upload to bintray
+          command: ./gradlew clean build install bintrayUpload

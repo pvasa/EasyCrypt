@@ -13,7 +13,9 @@ ext {
     libraryDescription = 'Easy to use Android cryptography library.'
 
     siteUrl = 'https://github.com/ryan652/EasyCrypt'
+    gitIssues = 'https://github.com/ryan652/EasyCrypt/issues'
     gitUrl = 'https://github.com/ryan652/EasyCrypt.git'
+    gitRepo = 'ryan652/EasyCrypt'
 
     libraryVersion = '1.0.6'
 
