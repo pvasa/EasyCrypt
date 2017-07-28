@@ -63,11 +63,26 @@ public class FileFragment extends Fragment {
         pBar = (ProgressBar) getActivity().findViewById(R.id.progressBar);
 
         view.findViewById(R.id.buttonSelectHash)
-                .setOnClickListener(view1 -> selectFile(RC_HASH));
+                .setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view1) {
+                        FileFragment.this.selectFile(RC_HASH);
+                    }
+                });
         view.findViewById(R.id.buttonSelectEncrypt)
-                .setOnClickListener(view1 -> selectFile(RC_ENCRYPT));
+                .setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view1) {
+                        FileFragment.this.selectFile(RC_ENCRYPT);
+                    }
+                });
         view.findViewById(R.id.buttonSelectDecrypt)
-                .setOnClickListener(view1 -> selectFile(RC_DECRYPT));
+                .setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view1) {
+                        FileFragment.this.selectFile(RC_DECRYPT);
+                    }
+                });
     }
 
     private void selectFile(int requestCode) {
@@ -106,22 +121,28 @@ public class FileFragment extends Fragment {
                                 }
 
                                 @Override
-                                public <T> void onSuccess(T result) {
-                                    getActivity().runOnUiThread(() -> {
-                                        pBar.setVisibility(View.INVISIBLE);
-                                        tvResult.setText((String) result);
+                                public <T> void onSuccess(final T result) {
+                                    getActivity().runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            pBar.setVisibility(View.INVISIBLE);
+                                            tvResult.setText((String) result);
+                                        }
                                     });
                                 }
 
                                 @Override
-                                public void onFailure(@NonNull String message,
-                                                      @NonNull Exception e) {
+                                public void onFailure(@NonNull final String message,
+                                                      @NonNull final Exception e) {
                                     e.printStackTrace();
-                                    getActivity().runOnUiThread(() -> {
-                                        pBar.setVisibility(View.INVISIBLE);
-                                        Toast.makeText(getActivity(),
-                                                "Error: " + message,
-                                                Toast.LENGTH_SHORT).show();
+                                    getActivity().runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            pBar.setVisibility(View.INVISIBLE);
+                                            Toast.makeText(getActivity(),
+                                                    "Error: " + message,
+                                                    Toast.LENGTH_SHORT).show();
+                                        }
                                     });
                                 }
                             });
@@ -155,24 +176,30 @@ public class FileFragment extends Fragment {
                                 }
 
                                 @Override
-                                public void onFailure(@NonNull String message,
+                                public void onFailure(@NonNull final String message,
                                                       @NonNull Exception e) {
                                     e.printStackTrace();
-                                    getActivity().runOnUiThread(() -> {
-                                        pBar.setVisibility(View.INVISIBLE);
-                                        Toast.makeText(getActivity(),
-                                                "Error: " + message,
-                                                Toast.LENGTH_SHORT).show();
+                                    getActivity().runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            pBar.setVisibility(View.INVISIBLE);
+                                            Toast.makeText(getActivity(),
+                                                    "Error: " + message,
+                                                    Toast.LENGTH_SHORT).show();
+                                        }
                                     });
                                 }
 
                                 @Override
-                                public <T> void onSuccess(T result) {
-                                    getActivity().runOnUiThread(() -> {
-                                        pBar.setVisibility(View.INVISIBLE);
-                                        tvResult.setText(getResources().getString(
-                                                R.string.success_file_encrypted,
-                                                ((File) result).getAbsolutePath()));
+                                public <T> void onSuccess(final T result) {
+                                    getActivity().runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            pBar.setVisibility(View.INVISIBLE);
+                                            tvResult.setText(getResources().getString(
+                                                    R.string.success_file_encrypted,
+                                                    ((File) result).getAbsolutePath()));
+                                        }
                                     });
                                 }
                             });
@@ -206,24 +233,30 @@ public class FileFragment extends Fragment {
                                 }
 
                                 @Override
-                                public void onFailure(@NonNull String message,
+                                public void onFailure(@NonNull final String message,
                                                       @NonNull Exception e) {
                                     e.printStackTrace();
-                                    getActivity().runOnUiThread(() -> {
-                                        pBar.setVisibility(View.INVISIBLE);
-                                        Toast.makeText(getActivity(),
-                                                "Error: " + message,
-                                                Toast.LENGTH_SHORT).show();
+                                    getActivity().runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            pBar.setVisibility(View.INVISIBLE);
+                                            Toast.makeText(getActivity(),
+                                                    "Error: " + message,
+                                                    Toast.LENGTH_SHORT).show();
+                                        }
                                     });
                                 }
 
                                 @Override
-                                public <T> void onSuccess(T result) {
-                                    getActivity().runOnUiThread(() -> {
-                                        pBar.setVisibility(View.INVISIBLE);
-                                        tvResult.setText(getResources().getString(
-                                                R.string.success_file_decrypted,
-                                                ((File) result).getAbsolutePath()));
+                                public <T> void onSuccess(final T result) {
+                                    getActivity().runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            pBar.setVisibility(View.INVISIBLE);
+                                            tvResult.setText(getResources().getString(
+                                                    R.string.success_file_decrypted,
+                                                    ((File) result).getAbsolutePath()));
+                                        }
                                     });
                                 }
                             });

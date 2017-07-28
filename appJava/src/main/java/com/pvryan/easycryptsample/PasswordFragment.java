@@ -39,57 +39,63 @@ public class PasswordFragment extends Fragment {
     }
 
     @Override
-    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+    public void onViewCreated(final View view, @Nullable Bundle savedInstanceState) {
 
-        TextView result = (TextView) view.findViewById(R.id.tvResult);
-        EditText edCharacters = (EditText) view.findViewById(R.id.edChars);
-        EditText edLength = (EditText) view.findViewById(R.id.edLength);
+        final TextView result = (TextView) view.findViewById(R.id.tvResult);
+        final EditText edCharacters = (EditText) view.findViewById(R.id.edChars);
+        final EditText edLength = (EditText) view.findViewById(R.id.edLength);
 
-        view.findViewById(R.id.buttonSecureRandom).setOnClickListener(v -> {
-            try {
-                String symbols;
-                if ((symbols = edCharacters.getText().toString()).length() > 0) {
-                    result.setText(eCryptPasswords.genSecureRandomPassword(
-                            Integer.valueOf(edLength.getText().toString()),
-                            symbols.toCharArray()));
-                } else {
-                    result.setText(eCryptPasswords.genSecureRandomPassword(
-                            Integer.valueOf(edLength.getText().toString())));
+        view.findViewById(R.id.buttonSecureRandom).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+                    String symbols;
+                    if ((symbols = edCharacters.getText().toString()).length() > 0) {
+                        result.setText(eCryptPasswords.genSecureRandomPassword(
+                                Integer.valueOf(edLength.getText().toString()),
+                                symbols.toCharArray()));
+                    } else {
+                        result.setText(eCryptPasswords.genSecureRandomPassword(
+                                Integer.valueOf(edLength.getText().toString())));
+                    }
+                } catch (InvalidParameterException e) {
+                    e.printStackTrace();
+                    Toast.makeText(view.getContext(), e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+                } catch (NumberFormatException e) {
+                    e.printStackTrace();
+                    Toast.makeText(v.getContext(),
+                            "Too big number.", Toast.LENGTH_SHORT).show();
                 }
-            } catch (InvalidParameterException e) {
-                e.printStackTrace();
-                Toast.makeText(view.getContext(), e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
-            } catch (NumberFormatException e) {
-                e.printStackTrace();
-                Toast.makeText(v.getContext(),
-                        "Too big number.", Toast.LENGTH_SHORT).show();
             }
         });
 
-        view.findViewById(R.id.buttonRandomOrg).setOnClickListener(v -> {
+        view.findViewById(R.id.buttonRandomOrg).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
 
-            try {
-                eCryptPasswords.genRandomOrgPassword(
-                        Integer.valueOf(edLength.getText().toString()),
-                        "",
-                        new ECryptPasswordListener() {
+                try {
+                    eCryptPasswords.genRandomOrgPassword(
+                            Integer.valueOf(edLength.getText().toString()),
+                            "",
+                            new ECryptPasswordListener() {
 
-                            @Override
-                            public void onFailure(@NonNull String message, @NonNull Exception e) {
-                                Log.w(PasswordFragment.class.getSimpleName(), message);
-                                e.printStackTrace();
-                                Toast.makeText(view.getContext(), e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
-                            }
+                                @Override
+                                public void onFailure(@NonNull String message, @NonNull Exception e) {
+                                    Log.w(PasswordFragment.class.getSimpleName(), message);
+                                    e.printStackTrace();
+                                    Toast.makeText(view.getContext(), e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+                                }
 
-                            @Override
-                            public void onSuccess(@NonNull String password) {
-                                result.setText(password);
-                            }
-                        });
-            } catch (NumberFormatException e) {
-                e.printStackTrace();
-                Toast.makeText(v.getContext(),
-                        "Too big number.", Toast.LENGTH_SHORT).show();
+                                @Override
+                                public void onSuccess(@NonNull String password) {
+                                    result.setText(password);
+                                }
+                            });
+                } catch (NumberFormatException e) {
+                    e.printStackTrace();
+                    Toast.makeText(v.getContext(),
+                            "Too big number.", Toast.LENGTH_SHORT).show();
+                }
             }
         });
     }
