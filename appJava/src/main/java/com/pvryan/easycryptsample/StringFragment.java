@@ -42,96 +42,131 @@ public class StringFragment extends Fragment {
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
 
-        EditText edInput = (EditText) view.findViewById(R.id.edInput);
-        EditText edPassword = (EditText) view.findViewById(R.id.edPassword);
+        final EditText edInput = (EditText) view.findViewById(R.id.edInput);
+        final EditText edPassword = (EditText) view.findViewById(R.id.edPassword);
 
-        TextView tvResult = (TextView) view.findViewById(R.id.tvResult);
+        final TextView tvResult = (TextView) view.findViewById(R.id.tvResult);
 
         view.findViewById(R.id.buttonHash).setOnClickListener(
-                buttonHash -> {
-                    ProgressBar progressBar = new ProgressBar(buttonHash.getContext());
-                    progressBar.setIndeterminate(true);
-                    eCryptHash.calculate(edInput.getText().toString(), ECryptHashAlgorithms.SHA_512,
-                            new ECryptResultListener() {
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(final View buttonHash) {
+                        ProgressBar progressBar = new ProgressBar(buttonHash.getContext());
+                        progressBar.setIndeterminate(true);
+                        eCryptHash.calculate(edInput.getText().toString(), ECryptHashAlgorithms.SHA_512,
+                                new ECryptResultListener() {
 
-                                @Override
-                                public void onProgress(int newBytes, long bytesProcessed) {
-                                    // Not required for strings
-                                }
+                                    @Override
+                                    public void onProgress(int newBytes, long bytesProcessed) {
+                                        // Not required for strings
+                                    }
 
-                                @Override
-                                public void onFailure(@NonNull String message, @NonNull Exception e) {
-                                    getActivity().runOnUiThread(() ->
-                                            Toast.makeText(buttonHash.getContext(),
-                                                    message, Toast.LENGTH_SHORT).show());
-                                    e.printStackTrace();
-                                }
+                                    @Override
+                                    public void onFailure(@NonNull final String message, @NonNull Exception e) {
+                                        getActivity().runOnUiThread(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                Toast.makeText(buttonHash.getContext(),
+                                                        message, Toast.LENGTH_SHORT).show();
+                                            }
+                                        });
+                                        e.printStackTrace();
+                                    }
 
-                                @Override
-                                public <T> void onSuccess(T result) {
-                                    getActivity().runOnUiThread(() ->
-                                            tvResult.setText((String) result));
+                                    @Override
+                                    public <T> void onSuccess(final T result) {
+                                        getActivity().runOnUiThread(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                tvResult.setText((String) result);
+                                            }
+                                        });
+                                    }
                                 }
-                            }
-                    );
+                        );
+                    }
                 }
         );
 
-        view.findViewById(R.id.buttonEncrypt).setOnClickListener(buttonEncrypt -> {
-                    ProgressBar progressBar = new ProgressBar(buttonEncrypt.getContext());
-                    progressBar.setIndeterminate(true);
-            eCryptSymmetric.encrypt(edInput.getText().toString(), edPassword.getText().toString(),
-                    new ECryptResultListener() {
+        view.findViewById(R.id.buttonEncrypt).setOnClickListener(
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(final View buttonEncrypt) {
+                        ProgressBar progressBar = new ProgressBar(buttonEncrypt.getContext());
+                        progressBar.setIndeterminate(true);
+                        eCryptSymmetric.encrypt(edInput.getText().toString(), edPassword.getText().toString(),
+                                new ECryptResultListener() {
 
-                                @Override
-                                public void onProgress(int newBytes, long bytesProcessed) {
-                                    // Not required for strings
-                                }
+                                    @Override
+                                    public void onProgress(int newBytes, long bytesProcessed) {
+                                        // Not required for strings
+                                    }
 
-                                @Override
-                                public void onFailure(@NonNull String message, @NonNull Exception e) {
-                                    getActivity().runOnUiThread(() ->
-                                            Toast.makeText(buttonEncrypt.getContext(),
-                                                    message, Toast.LENGTH_SHORT).show());
-                                    e.printStackTrace();
-                                }
+                                    @Override
+                                    public void onFailure(@NonNull final String message, @NonNull Exception e) {
+                                        getActivity().runOnUiThread(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                Toast.makeText(buttonEncrypt.getContext(),
+                                                        message, Toast.LENGTH_SHORT).show();
+                                            }
+                                        });
+                                        e.printStackTrace();
+                                    }
 
-                                @Override
-                                public <T> void onSuccess(T result) {
-                                    getActivity().runOnUiThread(() ->
-                                            tvResult.setText((String) result));
+                                    @Override
+                                    public <T> void onSuccess(final T result) {
+                                        getActivity().runOnUiThread(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                tvResult.setText((String) result);
+                                            }
+                                        });
+                                    }
                                 }
-                            }
-                    );
+                        );
+                    }
                 }
         );
 
-        view.findViewById(R.id.buttonDecrypt).setOnClickListener(buttonDecrypt -> {
-                    ProgressBar progressBar = new ProgressBar(buttonDecrypt.getContext());
-                    progressBar.setIndeterminate(true);
-            eCryptSymmetric.decrypt(edInput.getText().toString(), edPassword.getText().toString(),
-                    new ECryptResultListener() {
+        view.findViewById(R.id.buttonDecrypt).setOnClickListener(
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(final View buttonDecrypt) {
+                        ProgressBar progressBar = new ProgressBar(buttonDecrypt.getContext());
+                        progressBar.setIndeterminate(true);
+                        eCryptSymmetric.decrypt(edInput.getText().toString(), edPassword.getText().toString(),
+                                new ECryptResultListener() {
 
-                                @Override
-                                public void onProgress(int newBytes, long bytesProcessed) {
-                                    // Not required for strings
-                                }
+                                    @Override
+                                    public void onProgress(int newBytes, long bytesProcessed) {
+                                        // Not required for strings
+                                    }
 
-                                @Override
-                                public void onFailure(@NonNull String message, @NonNull Exception e) {
-                                    getActivity().runOnUiThread(() ->
-                                            Toast.makeText(buttonDecrypt.getContext(),
-                                                    message, Toast.LENGTH_SHORT).show());
-                                    e.printStackTrace();
-                                }
+                                    @Override
+                                    public void onFailure(@NonNull final String message, @NonNull Exception e) {
+                                        getActivity().runOnUiThread(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                Toast.makeText(buttonDecrypt.getContext(),
+                                                        message, Toast.LENGTH_SHORT).show();
+                                            }
+                                        });
+                                        e.printStackTrace();
+                                    }
 
-                                @Override
-                                public <T> void onSuccess(T result) {
-                                    getActivity().runOnUiThread(() ->
-                                            tvResult.setText((String) result));
+                                    @Override
+                                    public <T> void onSuccess(final T result) {
+                                        getActivity().runOnUiThread(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                tvResult.setText((String) result);
+                                            }
+                                        });
+                                    }
                                 }
-                            }
-                    );
+                        );
+                    }
                 }
         );
     }
