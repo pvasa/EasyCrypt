@@ -17,12 +17,39 @@ Easily encrypt, decrypt, or hash data in a very secure way.
 * SecureRandom fixes on Android below KitKat
 * Generate key manually with SecureRandom or random.org
 
-## Download
+## Install in Java app
+Add in your project's build.gradle
+```gradle
+buildscript {
+    ...
+    dependencies {
+        ...
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.1.3-2"
+        classpath "org.jetbrains.kotlin:kotlin-android-extensions:1.1.3-2"
+    }
+    ...
+}
+```
+Add in your app's build.gradle
+```gradle
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+
+dependencies {
+    ...
+    compile "com.pvryan.easycrypt:easycrypt:1.0.6"
+    compile "org.jetbrains.kotlin:kotlin-stdlib:1.1.3-2"
+    compile "org.jetbrains.anko:anko-commons:0.10.1"
+    ...
+}
+```
+
+## Install in Kotlin app
 Add in your app's build.gradle
 ```gradle
 dependencies {
     ...
-    compile "com.pvryan.easycrypt:easycrypt:1.0.5"
+    compile "com.pvryan.easycrypt:easycrypt:1.0.6"
     ...
 }
 ```
