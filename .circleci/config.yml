@@ -3,13 +3,17 @@ jobs:
   build:
     working_directory: ~/code
     docker:
-      - image: circleci/android:api-25-alpha
+      - image: circleci/android:api-26-alpha
     environment:
       JVM_OPTS: -Xmx3200m
+      KEYSTORE: ${HOME}/${CIRCLE_PROJECT_REPONAME}/keystore.jks
     steps:
       - checkout
       - restore_cache:
           key: jars-{{ checksum "build.gradle" }}-{{ checksum  "app/build.gradle" }}
+      - run:
+          name: Download Keystore
+          command: ./download_keystore.sh
       - run:
           name: Download Dependencies
           command: ./gradlew androidDependencies
@@ -25,4 +29,9 @@ jobs:
           destination: reports
       - store_test_results:
           path: app/build/test-results
-
+      - run:
+          name: Maven install
+          command: ./gradlew install
+      - run:
+          name: Bintray upload
+          command: ./gradlew upload
