@@ -3,13 +3,16 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 apply from: 'https://raw.githubusercontent.com/ryan652/androidscripts/master/load-properties.gradle'
 
+def keyPass = "${keyPassword}"
+def storePass = "${storePassword}"
+
 android {
     signingConfigs {
         config {
             keyAlias "android-release"
-            keyPassword "${keyPassword}"
+            keyPassword keyPass
             storeFile file("${storeFilePath}/keystore.jks")
-            storePassword "${storePassword}"
+            storePassword storePass
         }
     }
     compileSdkVersion 25
