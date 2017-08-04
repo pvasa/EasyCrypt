@@ -15,78 +15,76 @@
 
 package com.pvryan.easycrypt.symmetric
 
+import com.pvryan.easycrypt.Constants
 import com.pvryan.easycrypt.ECryptResultListener
-import com.pvryan.easycrypt.extensions.toBase64
-import com.pvryan.easycrypt.extensions.toBase64String
+import com.pvryan.easycrypt.extensions.handleSuccess
 import java.io.File
+import java.io.FileInputStream
 import java.io.IOException
 import java.io.InputStream
+import java.security.InvalidParameterException
 import javax.crypto.Cipher
 import javax.crypto.CipherOutputStream
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
-import kotlin.system.exitProcess
 
-internal class ECryptSymmetricEncrypt<out T>
-(input: T,
- password: String,
- cipher: Cipher,
- getKey: (password: String, salt: ByteArray) -> SecretKeySpec,
- erl: ECryptResultListener,
- outputFile: File) : Constants() {
+internal object performEncrypt {
 
-    init {
+    @JvmSynthetic
+    internal fun <T> invoke(input: T,
+                            password: String,
+                            cipher: Cipher,
+                            getKey: (password: String, salt: ByteArray) -> SecretKeySpec,
+                            erl: ECryptResultListener,
+                            outputFile: File) {
 
-        val salt = ByteArray(SALT_BYTES_LENGTH)
-        random.nextBytes(salt)
+        if (outputFile.exists() && outputFile.absolutePath != Constants.DEF_ENCRYPTED_FILE_PATH) {
+            when (input) { is InputStream -> input.close()
+            }
+            erl.onFailure(Constants.MSG_OUTPUT_FILE_EXISTS, FileAlreadyExistsException(outputFile))
+            return
+        }
+
+        val salt = ByteArray(Constants.SALT_BYTES_LENGTH)
+        Constants.random.nextBytes(salt)
 
         val keySpec = getKey(password, salt)
 
         val iv = ByteArray(cipher.blockSize)
-        random.nextBytes(iv)
+        Constants.random.nextBytes(iv)
         val ivParams = IvParameterSpec(iv)
 
         cipher.init(Cipher.ENCRYPT_MODE, keySpec, ivParams)
 
         when (input) {
 
-            is ByteArray -> {
+            is ByteArray -> (iv.plus(salt).plus(cipher.doFinal(input)))
+                    .handleSuccess(erl, outputFile, true)
 
-                try {
-                    val output = iv.plus(salt).plus(cipher.doFinal(input))
+            is FileInputStream -> {
 
-                    if (outputFile.absolutePath != DEF_ENCRYPTED_FILE_PATH) {
-
-                        if (outputFile.exists()) {
-                            erl.onFailure(MSG_OUTPUT_FILE_EXISTS,
-                                    FileAlreadyExistsException(outputFile))
-                            exitProcess(1)
-                        }
-
-                        outputFile.outputStream().use {
-                            it.write(output.toBase64())
-                            it.flush()
-                            @Suppress("UNCHECKED_CAST")
-                            erl.onSuccess(outputFile as T)
-                        }
-                    } else {
-                        erl.onSuccess(output.toBase64String())
-                    }
-                } catch (e: IOException) {
-                    erl.onFailure(MSG_CANNOT_WRITE, e)
+                if (outputFile.exists()) {
+                    outputFile.delete()
                 }
-            }
-
-            is InputStream -> {
+                outputFile.createNewFile()
 
                 val fos = outputFile.outputStream()
-                var cos = CipherOutputStream(fos, cipher)
 
                 try {
                     fos.write(iv)
                     fos.write(salt)
-                    cos = CipherOutputStream(fos, cipher)
+                } catch (e: IOException) {
+                    fos.flush()
+                    fos.close()
+                    input.close()
+                    outputFile.delete()
+                    erl.onFailure(Constants.MSG_CANNOT_WRITE, e)
+                    return
+                }
 
+                val cos = CipherOutputStream(fos, cipher)
+
+                try {
                     val buffer = ByteArray(8192)
                     var bytesCopied: Long = 0
                     var read = input.read(buffer)
@@ -98,18 +96,20 @@ internal class ECryptSymmetricEncrypt<out T>
                         read = input.read(buffer)
                     }
 
-                    @Suppress("UNCHECKED_CAST")
-                    erl.onSuccess(outputFile as T)
-
                 } catch (e: IOException) {
                     outputFile.delete()
-                    erl.onFailure(MSG_CANNOT_WRITE, e)
+                    erl.onFailure(Constants.MSG_CANNOT_WRITE, e)
+                    return
                 } finally {
                     cos.flush()
                     cos.close()
                     input.close()
                 }
+                erl.onSuccess(outputFile)
             }
+
+            else -> erl.onFailure(Constants.MSG_INPUT_TYPE_NOT_SUPPORTED, InvalidParameterException())
+
         }
     }
 }

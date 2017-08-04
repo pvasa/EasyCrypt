@@ -15,12 +15,10 @@
 
 package com.pvryan.easycrypt.symmetric
 
+import com.pvryan.easycrypt.Constants
 import com.pvryan.easycrypt.ECryptResultListener
-import com.pvryan.easycrypt.extensions.asString
-import com.pvryan.easycrypt.extensions.fromBase64
-import java.io.File
-import java.io.IOException
-import java.io.InputStream
+import com.pvryan.easycrypt.extensions.handleSuccess
+import java.io.*
 import java.security.InvalidParameterException
 import javax.crypto.BadPaddingException
 import javax.crypto.Cipher
@@ -28,77 +26,60 @@ import javax.crypto.CipherInputStream
 import javax.crypto.IllegalBlockSizeException
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
-import kotlin.system.exitProcess
 
-@Suppress("UNCHECKED_CAST")
-internal class ECryptSymmetricDecrypt<out T>
-(input: T,
- password: String,
- cipher: Cipher,
- getKey: (password: String, salt: ByteArray) -> SecretKeySpec,
- erl: ECryptResultListener,
- outputFile: File) : Constants() {
+internal object performDecrypt {
 
-    init {
+    @JvmSynthetic
+    internal fun <T> invoke(input: T,
+                            password: String,
+                            cipher: Cipher,
+                            getKey: (password: String, salt: ByteArray) -> SecretKeySpec,
+                            erl: ECryptResultListener,
+                            outputFile: File) {
+
+        if (outputFile.exists() && outputFile.absolutePath != Constants.DEF_DECRYPTED_FILE_PATH) {
+            when (input) { is InputStream -> input.close()
+            }
+            erl.onFailure(Constants.MSG_OUTPUT_FILE_EXISTS, FileAlreadyExistsException(outputFile))
+            return
+        }
 
         val IV_BYTES_LENGTH = cipher.blockSize
 
         when (input) {
 
-            is ByteArray -> {
+            is ByteArrayInputStream -> {
 
-                val decodedBytes: ByteArray = try {
-                    input.fromBase64()
-                } catch (e: IllegalArgumentException) {
-                    erl.onFailure(MSG_INVALID_INPUT_DATA, e)
-                    byteArrayOf()
-                    exitProcess(1)
+                val IV = ByteArray(IV_BYTES_LENGTH)
+                val salt = ByteArray(Constants.SALT_BYTES_LENGTH)
+
+                if (IV_BYTES_LENGTH != input.read(IV) || Constants.SALT_BYTES_LENGTH != input.read(salt)) {
+                    input.close()
+                    erl.onFailure(Constants.MSG_INVALID_INPUT_DATA, BadPaddingException())
+                    return
                 }
 
-                decodedBytes.inputStream().use {
+                val ivParams = IvParameterSpec(IV)
+                val key = getKey(password, salt)
 
-                    val IV = ByteArray(IV_BYTES_LENGTH)
-                    val salt = ByteArray(SALT_BYTES_LENGTH)
+                try {
+                    cipher.init(Cipher.DECRYPT_MODE, key, ivParams)
 
-                    if (IV_BYTES_LENGTH != it.read(IV) || SALT_BYTES_LENGTH != it.read(salt)) {
-                        erl.onFailure(MSG_INVALID_INPUT_DATA, BadPaddingException())
-                        exitProcess(1)
-                    }
+                    val secureBytes = input.readBytes()
+                    cipher.doFinal(secureBytes).handleSuccess(erl, outputFile, false)
 
-                    val ivParams = IvParameterSpec(IV)
-                    val key = getKey(password, salt)
-
-                    try {
-                        cipher.init(Cipher.DECRYPT_MODE, key, ivParams)
-
-                        val secureBytes = it.readBytes()
-                        val plainBytes = cipher.doFinal(secureBytes)
-
-                        if (outputFile.absolutePath != DEF_DECRYPTED_FILE_PATH) {
-                            outputFile.outputStream().use {
-                                it.write(plainBytes)
-                                it.flush()
-                            }
-                            erl.onSuccess(outputFile as T)
-                        } else {
-                            erl.onSuccess(plainBytes.asString() as T)
-                        }
-                    } catch (e: BadPaddingException) {
-                        erl.onFailure(MSG_INVALID_INPUT_DATA, e)
-                    } catch (e: IllegalBlockSizeException) {
-                        erl.onFailure(MSG_INVALID_INPUT_DATA, e)
-                    }
+                } catch (e: BadPaddingException) {
+                    erl.onFailure(Constants.MSG_INVALID_INPUT_DATA, e)
+                } catch (e: IllegalBlockSizeException) {
+                    erl.onFailure(Constants.MSG_INVALID_INPUT_DATA, e)
+                } finally {
+                    input.close()
                 }
             }
 
-            is InputStream -> {
+            is FileInputStream -> {
 
                 if (outputFile.exists()) {
-                    if (outputFile.absolutePath != DEF_DECRYPTED_FILE_PATH) {
-                        erl.onFailure(MSG_OUTPUT_FILE_EXISTS,
-                                FileAlreadyExistsException(outputFile))
-                        exitProcess(1)
-                    }
                     outputFile.delete()
                 }
                 outputFile.createNewFile()
@@ -107,17 +88,19 @@ internal class ECryptSymmetricDecrypt<out T>
                 val fos = outputFile.outputStream()
 
                 val iv = ByteArray(IV_BYTES_LENGTH)
-                val salt = ByteArray(SALT_BYTES_LENGTH)
+                val salt = ByteArray(Constants.SALT_BYTES_LENGTH)
 
                 try {
                     if (IV_BYTES_LENGTH != input.read(iv) ||
-                            SALT_BYTES_LENGTH != input.read(salt)) {
-                        erl.onFailure(MSG_INVALID_INPUT_DATA, BadPaddingException())
-                        exitProcess(1)
+                            Constants.SALT_BYTES_LENGTH != input.read(salt)) {
+                        input.close()
+                        erl.onFailure(Constants.MSG_INVALID_INPUT_DATA, BadPaddingException())
+                        return
                     }
                 } catch (e: IOException) {
-                    erl.onFailure(MSG_CANNOT_READ, e)
-                    exitProcess(1)
+                    input.close()
+                    erl.onFailure(Constants.MSG_CANNOT_READ, e)
+                    return
                 }
 
                 val key = getKey(password, salt)
@@ -139,19 +122,19 @@ internal class ECryptSymmetricDecrypt<out T>
                         read = cis.read(buffer)
                     }
 
-                    erl.onSuccess(outputFile as T)
-
                 } catch (e: IOException) {
                     outputFile.delete()
-                    erl.onFailure(MSG_CANNOT_WRITE, e)
+                    erl.onFailure(Constants.MSG_CANNOT_WRITE, e)
+                    return
                 } finally {
                     fos.flush()
                     fos.close()
                     cis?.close()
                 }
+                erl.onSuccess(outputFile)
             }
 
-            else -> erl.onFailure(MSG_INPUT_TYPE_NOT_SUPPORTED, InvalidParameterException())
+            else -> erl.onFailure(Constants.MSG_INPUT_TYPE_NOT_SUPPORTED, InvalidParameterException())
 
         }
     }

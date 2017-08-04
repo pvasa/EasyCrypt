@@ -16,6 +16,9 @@ Easily encrypt, decrypt, or hash data in a very secure way.
 * Supports MD5, SHA1, and SHA2 hash functions
 * SecureRandom fixes on Android below KitKat
 * Generate key manually with SecureRandom or random.org
+* Asymmetric encryption with RSA
+* Auto handle large data by using hybrid asymmetric encryption
+* Supported RSA key sizes are 2048 bits and 4096 bits
 
 ## Install in Java app
 Add in your project's build.gradle
@@ -37,7 +40,7 @@ apply plugin: 'kotlin-android-extensions'
 
 dependencies {
     ...
-    compile "com.pvryan.easycrypt:easycrypt:1.0.6"
+    compile "com.pvryan.easycrypt:easycrypt:1.1.0"
     compile "org.jetbrains.kotlin:kotlin-stdlib:1.1.3-2"
     compile "org.jetbrains.anko:anko-commons:0.10.1"
     ...
@@ -49,7 +52,7 @@ Add in your app's build.gradle
 ```gradle
 dependencies {
     ...
-    compile "com.pvryan.easycrypt:easycrypt:1.0.6"
+    compile "com.pvryan.easycrypt:easycrypt:1.1.0"
     ...
 }
 ```
@@ -57,10 +60,12 @@ dependencies {
 ## Usage
 ```kotlin
 val eCryptSymmetric = ECryptSymmetric()
+val eCryptAsymmetric = ECryptAsymmetric()
 val eCryptHash = ECryptHash()
 val eCryptPass = ECryptPasswords()
 ```
 
+### Symmetric key encryption
 #### Encrypt data
 ```kotlin
 eCryptSymmetric.encrypt (input, password,
@@ -105,6 +110,62 @@ eCryptSymmetric.decrypt(input, password,
 )
 ```
 
+### Asymmetric key encryption
+#### Encrypt data
+```kotlin
+eCryptAsymmetric.generateKeyPair(object : ECryptRSAKeyPairListener {
+
+     override fun onSuccess(keyPair: KeyPair) {
+         privateKey = keyPair.private as RSAPrivateKey // Save private key
+         eCryptAsymmetric.encrypt(input, keyPair.public as RSAPublicKey,
+                 object : ECryptResultListener {
+
+                     // Optional
+                     override fun onProgress(newBytes: Int, bytesProcessed: Long) {
+
+                     }
+
+                     override fun <T> onSuccess(result: T) {
+
+                     }
+
+                     override fun onFailure(message: String, e: Exception) {
+
+                     }
+                 },
+                 outputFile // Optional
+         )
+     }
+
+     override fun onFailure(message: String, e: Exception) {
+         e.printStackTrace()
+     }
+
+ }, keySize = eCryptAsymmetric.KeySizes._4096)
+```
+
+#### Decrypt data
+```kotlin
+eCryptAsymmetric.decrypt(input, privateKey,
+        object : ECryptResultListener {
+
+            // Optional
+            override fun onProgress(newBytes: Int, bytesProcessed: Long) {
+
+            }
+
+            override fun <T> onSuccess(result: T) {
+
+            }
+
+            override fun onFailure(message: String, e: Exception) {
+
+            }
+        },
+        outputFile // Optional
+)
+```
+
 #### Hash data
 ```kotlin
 eCryptHash.calculate(input, hashAlgorithm, // from ECryptHashAlgorithms
@@ -127,14 +188,16 @@ eCryptHash.calculate(input, hashAlgorithm, // from ECryptHashAlgorithms
 )
 ```
 
-------------------------------------------------------
-| Input           | Output                           |
-|-----------------|----------------------------------|
-| File            | outputFile                       |
-| FileInputStream | outputFile                       |
-| ByteArray       | String (outputFile, if provided) |
-| String          | String (outputFile, if provided) |
-| CharSequence    | String (outputFile, if provided) |
+--------------------------------------------------------------
+| Input                 | Output                             |
+|-----------------------|------------------------------------|
+| File                  | outputFile                         |
+| FileInputStream       | outputFile                         |
+| ByteArray             | String or outputFile (if provided) |
+| ByteArrayInputStream  | String or outputFile (if provided) |
+| String                | String or outputFile (if provided) |
+| CharSequence          | String or outputFile (if provided) |
+| Anything else         | InvalidParameterException          |
 
 #### Generate key with SecureRandom (pseudo-random)
 ```kotlin

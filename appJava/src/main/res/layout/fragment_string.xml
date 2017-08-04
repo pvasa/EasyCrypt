@@ -12,72 +12,112 @@
      limitations under the License.
 -->
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
-
-    <EditText
-        android:id="@+id/edInput"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="32dp"
-        android:layout_marginStart="32dp"
-        android:layout_marginTop="16dp"
-        android:hint="@string/ed_string_to_encrypt_decrypt_hash"
-        android:inputType="textMultiLine"
-        android:maxLines="6" />
-
-    <EditText
-        android:id="@+id/edPassword"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="32dp"
-        android:layout_marginStart="32dp"
-        android:layout_marginTop="16dp"
-        android:hint="@string/ed_password"
-        android:inputType="textPassword" />
-
-    <TextView
-        android:id="@+id/tvResult"
-        style="?android:attr/textAppearanceMedium"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="32dp"
-        android:layout_marginStart="32dp"
-        android:layout_marginTop="16dp"
-        android:textIsSelectable="true" />
+    android:layout_height="match_parent">
 
     <LinearLayout
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginEnd="32dp"
-        android:layout_marginStart="32dp"
-        android:layout_marginTop="16dp"
-        android:orientation="horizontal">
+        android:orientation="vertical">
 
-        <Button
-            android:id="@+id/buttonHash"
-            style="?android:attr/buttonBarButtonStyle"
+        <ProgressBar
+            android:id="@+id/progressBarS"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="invisible" />
+
+        <RadioGroup
+            android:id="@+id/rgTypeS"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/button_hash" />
+            android:layout_marginEnd="32dp"
+            android:layout_marginStart="32dp"
+            android:layout_marginTop="16dp"
+            android:orientation="horizontal">
 
-        <Button
-            android:id="@+id/buttonEncrypt"
-            style="?android:attr/buttonBarButtonStyle"
+            <RadioButton
+                android:id="@+id/rbSymmetricS"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="2dp"
+                android:checked="true"
+                android:text="Symmetric" />
+
+            <RadioButton
+                android:id="@+id/rbAsymmetricS"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="2dp"
+                android:text="Asymmetric" />
+
+        </RadioGroup>
+
+        <EditText
+            android:id="@+id/edInputS"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="32dp"
+            android:layout_marginStart="32dp"
+            android:layout_marginTop="16dp"
+            android:hint="@string/ed_string_to_encrypt_decrypt_hash"
+            android:inputType="textMultiLine"
+            android:maxLines="6" />
+
+        <EditText
+            android:id="@+id/edPasswordS"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="32dp"
+            android:layout_marginStart="32dp"
+            android:layout_marginTop="16dp"
+            android:hint="@string/ed_password"
+            android:inputType="textPassword" />
+
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/button_encrypt" />
+            android:layout_gravity="center_horizontal"
+            android:layout_marginEnd="32dp"
+            android:layout_marginStart="32dp"
+            android:layout_marginTop="16dp"
+            android:orientation="horizontal">
 
-        <Button
-            android:id="@+id/buttonDecrypt"
-            style="?android:attr/buttonBarButtonStyle"
-            android:layout_width="wrap_content"
+            <Button
+                android:id="@+id/buttonHashS"
+                style="?android:attr/buttonBarButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/button_hash" />
+
+            <Button
+                android:id="@+id/buttonEncryptS"
+                style="?android:attr/buttonBarButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/button_encrypt" />
+
+            <Button
+                android:id="@+id/buttonDecryptS"
+                style="?android:attr/buttonBarButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/button_decrypt" />
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tvResultS"
+            style="?android:attr/textAppearanceMedium"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/button_decrypt" />
+            android:layout_marginEnd="32dp"
+            android:layout_marginStart="32dp"
+            android:layout_marginTop="16dp"
+            android:longClickable="true"
+            android:textIsSelectable="false" />
 
     </LinearLayout>
 
-</LinearLayout>
+</ScrollView>

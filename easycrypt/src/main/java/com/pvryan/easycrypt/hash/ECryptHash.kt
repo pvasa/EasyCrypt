@@ -15,9 +15,10 @@
 
 package com.pvryan.easycrypt.hash
 
+import com.pvryan.easycrypt.Constants
 import com.pvryan.easycrypt.ECryptResultListener
+import com.pvryan.easycrypt.extensions.asByteArray
 import com.pvryan.easycrypt.extensions.asHexString
-import com.pvryan.easycrypt.symmetric.Constants
 import org.jetbrains.anko.doAsync
 import org.jetbrains.annotations.NotNull
 import java.io.File
@@ -27,8 +28,6 @@ import java.security.InvalidParameterException
 import java.security.MessageDigest
 
 class ECryptHash {
-
-    private val c = Constants()
 
     /**
      * Decrypts the input data using AES algorithm in CBC mode with PKCS5Padding padding
@@ -51,7 +50,7 @@ class ECryptHash {
     fun <T> calculate(@NotNull input: T,
                       @NotNull algorithm: ECryptHashAlgorithms = ECryptHashAlgorithms.SHA_512,
                       @NotNull erl: ECryptResultListener,
-                      @NotNull outputFile: File = File(c.DEF_HASH_FILE_PATH)) {
+                      @NotNull outputFile: File = File(Constants.DEF_HASH_FILE_PATH)) {
         doAsync {
 
             val digest: MessageDigest = MessageDigest.getInstance(algorithm.value)
@@ -59,11 +58,12 @@ class ECryptHash {
             when (input) {
 
                 is String -> {
-                    calculate(input.toByteArray().inputStream(), algorithm, erl, outputFile)
+                    calculate(input.asByteArray().inputStream(), algorithm, erl, outputFile)
                 }
 
                 is CharSequence -> {
-                    calculate(input.toString().toByteArray().inputStream(), algorithm, erl, outputFile)
+                    calculate(input.toString().asByteArray().inputStream(),
+                            algorithm, erl, outputFile)
                 }
 
                 is File -> {
@@ -72,9 +72,9 @@ class ECryptHash {
 
                 is ByteArray -> {
                     val hash = digest.digest(input).asHexString()
-                    if (outputFile.absolutePath != c.DEF_HASH_FILE_PATH) {
+                    if (outputFile.absolutePath != Constants.DEF_HASH_FILE_PATH) {
                         outputFile.outputStream().use {
-                            it.write(hash.toByteArray())
+                            it.write(hash.asByteArray())
                             it.flush()
                         }
                         erl.onSuccess(outputFile)
@@ -105,9 +105,9 @@ class ECryptHash {
 
                         val hash = digest.digest().asHexString()
 
-                        if (outputFile.absolutePath != c.DEF_HASH_FILE_PATH) {
+                        if (outputFile.absolutePath != Constants.DEF_HASH_FILE_PATH) {
                             outputFile.outputStream().use {
-                                it.write(hash.toByteArray())
+                                it.write(hash.asByteArray())
                                 it.flush()
                             }
                             erl.onSuccess(outputFile)
@@ -116,13 +116,13 @@ class ECryptHash {
                         }
 
                     } catch (e: IOException) {
-                        erl.onFailure(c.MSG_CANNOT_READ, e)
+                        erl.onFailure(Constants.MSG_CANNOT_READ, e)
                     } finally {
                         input.close()
                     }
                 }
 
-                else -> erl.onFailure(c.MSG_INPUT_TYPE_NOT_SUPPORTED, InvalidParameterException())
+                else -> erl.onFailure(Constants.MSG_INPUT_TYPE_NOT_SUPPORTED, InvalidParameterException())
             }
         }
     }

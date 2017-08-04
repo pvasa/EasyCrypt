@@ -16,10 +16,14 @@
 package com.pvryan.easycrypt.symmetric
 
 import android.os.Build
+import com.pvryan.easycrypt.Constants
 import com.pvryan.easycrypt.ECryptResultListener
 import com.pvryan.easycrypt.PRNGFixes
+import com.pvryan.easycrypt.extensions.asByteArray
+import com.pvryan.easycrypt.extensions.fromBase64
 import org.jetbrains.anko.doAsync
 import org.jetbrains.annotations.NotNull
+import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
@@ -36,10 +40,8 @@ import javax.crypto.spec.SecretKeySpec
 /**
  * Secure symmetric encryption with AES256.
  */
-class ECryptSymmetric(transformation: ECryptTransformations
-                      = ECryptTransformations.AES_CBC_PKCS7Padding) {
-
-    private val c = Constants()
+class ECryptSymmetric(transformation: ECryptSymmetricTransformations
+                      = ECryptSymmetricTransformations.AES_CBC_PKCS7Padding) {
 
     private val cipher = Cipher.getInstance(transformation.value)
 
@@ -53,26 +55,27 @@ class ECryptSymmetric(transformation: ECryptTransformations
     private fun getKey(password: String = String(), salt: ByteArray): SecretKeySpec {
 
         val pbeKeySpec: PBEKeySpec = PBEKeySpec(
-                password.trim().toCharArray(), salt, c.ITERATIONS, c.KEY_BITS_LENGTH)
+                password.trim().toCharArray(), salt, Constants.ITERATIONS, Constants.KEY_BITS_LENGTH)
 
         val keyFactory: SecretKeyFactory =
-                SecretKeyFactory.getInstance(c.SECRET_KEY_FAC_ALGORITHM)
+                SecretKeyFactory.getInstance(Constants.SECRET_KEY_FAC_ALGORITHM)
 
         val keyBytes: ByteArray = keyFactory.generateSecret(pbeKeySpec).encoded
 
-        return SecretKeySpec(keyBytes, c.SECRET_KEY_SPEC_ALGORITHM)
+        return SecretKeySpec(keyBytes, Constants.SECRET_KEY_SPEC_ALGORITHM)
     }
 
     /**
-     * Encrypts the input data using AES algorithm in CBC mode with PKCS5Padding padding
+     * Symmetrically encrypts the input data using AES algorithm in CBC mode with PKCS7Padding padding
      * and posts response to [ECryptResultListener.onSuccess] if successful or
      * posts error to [ECryptResultListener.onFailure] if failed.
      * Encryption progress is posted to [ECryptResultListener.onProgress].
      * Result can be a String or a File depending on the data type of [input] and parameter [outputFile].
      *
-     * @param T which can be either of [String], [CharSequence], [ByteArray], [InputStream], or [File]
-     * @param input input data to be encrypted
-     * @param password password string used to encrypt input
+     * @param T which can be either of [String], [CharSequence],
+     * [ByteArray], [InputStream], or [File]
+     * @param input data to be encrypted
+     * @param password string used to encrypt input
      * @param erl listener interface of type [ECryptResultListener] where result and progress will be posted
      * @param outputFile optional output file. If provided, result will be written to this file
      *
@@ -91,7 +94,7 @@ class ECryptSymmetric(transformation: ECryptTransformations
     fun <T> encrypt(@NotNull input: T,
                     @NotNull password: String,
                     @NotNull erl: ECryptResultListener,
-                    @NotNull outputFile: File = File(c.DEF_ENCRYPTED_FILE_PATH)) {
+                    @NotNull outputFile: File = File(Constants.DEF_ENCRYPTED_FILE_PATH)) {
         doAsync {
 
             if (password.trim().isNullOrBlank()) {
@@ -100,53 +103,43 @@ class ECryptSymmetric(transformation: ECryptTransformations
             }
 
             when (input) {
+
                 is String -> {
-                    encrypt(input.toByteArray(), password, erl, outputFile)
+                    encrypt(input.asByteArray(), password, erl, outputFile)
                     return@doAsync
                 }
+
                 is CharSequence -> {
-                    encrypt(input.toString().toByteArray(), password, erl, outputFile)
+                    encrypt(input.toString().asByteArray(), password, erl, outputFile)
                     return@doAsync
                 }
+
+                is ByteArrayInputStream -> {
+                    encrypt(input.readBytes(), password, erl, outputFile)
+                    return@doAsync
+                }
+
                 is File -> {
                     if (!input.exists() || input.isDirectory) {
-                        erl.onFailure(c.MSG_NO_SUCH_FILE, NoSuchFileException(input))
+                        erl.onFailure(Constants.MSG_NO_SUCH_FILE, NoSuchFileException(input))
                     } else {
                         val encryptedFile =
-                                if (outputFile.absolutePath == c.DEF_ENCRYPTED_FILE_PATH)
-                                    File(input.absolutePath + c.ECRYPT_FILE_EXT)
+                                if (outputFile.absolutePath == Constants.DEF_ENCRYPTED_FILE_PATH)
+                                    File(input.absolutePath + Constants.ECRYPT_FILE_EXT)
                                 else outputFile
                         encrypt(input.inputStream(), password, erl, encryptedFile)
                     }
                     return@doAsync
                 }
-                is InputStream -> {
-                    if (outputFile.exists()) {
-                        if (outputFile.absolutePath != c.DEF_ENCRYPTED_FILE_PATH) {
-                            erl.onFailure(c.MSG_OUTPUT_FILE_EXISTS,
-                                    FileAlreadyExistsException(outputFile))
-                            return@doAsync
-                        }
-                        outputFile.delete()
-                    }
-                    outputFile.createNewFile()
-                }
-                is ByteArray -> {
-                }
-                else -> {
-                    erl.onFailure(c.MSG_INPUT_TYPE_NOT_SUPPORTED, InvalidParameterException())
-                    return@doAsync
-                }
+
+                else -> performEncrypt.invoke(input, password, cipher,
+                        { pass, salt -> getKey(pass, salt) }, erl, outputFile)
             }
-
-            ECryptSymmetricEncrypt(input, password, cipher,
-                    { pass, salt -> getKey(pass, salt) }, erl, outputFile)
-
         }
     }
 
     /**
-     * Decrypts the input data using AES algorithm in CBC mode with PKCS5Padding padding
+     * Symmetrically decrypts the input data using AES algorithm in CBC mode with PKCS7Padding padding
      * and posts response to [ECryptResultListener.onSuccess] if successful or
      * posts error to [ECryptResultListener.onFailure] if failed.
      * Decryption progress is posted to [ECryptResultListener.onProgress].
@@ -154,7 +147,7 @@ class ECryptSymmetric(transformation: ECryptTransformations
      *
      * @param input input data to be decrypted. It can be of type
      * [String], [CharSequence], [ByteArray], [InputStream], or [File]
-     * @param password password string used to encrypt input
+     * @param password password string used to performEncrypt input
      * @param erl listener interface of type [ECryptResultListener] where result and progress will be posted
      * @param outputFile optional output file. If provided, result will be written to this file
      *
@@ -177,8 +170,9 @@ class ECryptSymmetric(transformation: ECryptTransformations
     fun <T> decrypt(@NotNull input: T,
                     @NotNull password: String,
                     @NotNull erl: ECryptResultListener,
-                    @NotNull outputFile: File = File(c.DEF_DECRYPTED_FILE_PATH)) {
+                    @NotNull outputFile: File = File(Constants.DEF_DECRYPTED_FILE_PATH)) {
         doAsync {
+
             if (password.trim().isNullOrBlank()) {
                 erl.onFailure("Password is null or blank.", InvalidKeyException())
                 return@doAsync
@@ -187,29 +181,43 @@ class ECryptSymmetric(transformation: ECryptTransformations
             when (input) {
 
                 is String -> {
-                    decrypt(input.toByteArray(), password, erl, outputFile)
+                    try {
+                        decrypt(input.fromBase64().inputStream(), password, erl, outputFile)
+                    } catch (e: IllegalArgumentException) {
+                        erl.onFailure(Constants.MSG_INVALID_INPUT_DATA, e)
+                    }
                 }
 
                 is CharSequence -> {
-                    decrypt(input.toString().toByteArray(), password, erl, outputFile)
+                    try {
+                        decrypt(input.toString().fromBase64().inputStream(),
+                                password, erl, outputFile)
+                    } catch (e: IllegalArgumentException) {
+                        erl.onFailure(Constants.MSG_INVALID_INPUT_DATA, e)
+                    }
+                }
+
+                is ByteArray -> {
+                    decrypt(input.inputStream(), password, erl, outputFile)
+                    return@doAsync
                 }
 
                 is File -> {
 
                     if (!input.exists() || input.isDirectory) {
-                        erl.onFailure(c.MSG_NO_SUCH_FILE, NoSuchFileException(input))
+                        erl.onFailure(Constants.MSG_NO_SUCH_FILE, NoSuchFileException(input))
                         return@doAsync
                     }
 
                     val decryptedFile =
-                            if (outputFile.absolutePath == c.DEF_DECRYPTED_FILE_PATH)
-                                File(input.absoluteFile.toString().removeSuffix(c.ECRYPT_FILE_EXT))
+                            if (outputFile.absolutePath == Constants.DEF_DECRYPTED_FILE_PATH)
+                                File(input.absoluteFile.toString().removeSuffix(Constants.ECRYPT_FILE_EXT))
                             else outputFile
 
                     decrypt(input.inputStream(), password, erl, decryptedFile)
                 }
 
-                else -> ECryptSymmetricDecrypt(input, password, cipher,
+                else -> performDecrypt.invoke(input, password, cipher,
                         { pass, salt -> getKey(pass, salt) }, erl, outputFile)
 
             }

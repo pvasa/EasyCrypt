@@ -6,11 +6,10 @@ jobs:
       - image: circleci/android:api-25-alpha
     environment:
       JVM_OPTS: -Xmx3200m
-      KEYSTORE: ${HOME}/${CIRCLE_PROJECT_REPONAME}/keystore.jks
     steps:
       - checkout
       - restore_cache:
-          key: jars-{{ checksum "build.gradle" }}-{{ checksum  "app/build.gradle" }}
+          key: jars-{{ checksum "build.gradle" }}-{{ checksum  "easycrypt/build.gradle" }}
       - run:
           name: Download Keystore
           command: bash ./download_keystore.sh
@@ -20,15 +19,15 @@ jobs:
       - save_cache:
           paths:
             - ~/.gradle
-          key: jars-{{ checksum "build.gradle" }}-{{ checksum  "app/build.gradle" }}
+          key: jars-{{ checksum "build.gradle" }}-{{ checksum  "easycrypt/build.gradle" }}
       - run:
           name: Run Tests
           command: ./gradlew lint test
       - store_artifacts:
-          path: app/build/reports
+          path: easycrypt/build/reports
           destination: reports
       - store_test_results:
-          path: app/build/test-results
+          path: easycrypt/build/test-results
       - run:
-          name: Gradle build and upload to bintray
-          command: ./gradlew clean build install bintrayUpload
+          name: Gradle install and upload to bintray
+          command: ./gradlew install bintrayUpload

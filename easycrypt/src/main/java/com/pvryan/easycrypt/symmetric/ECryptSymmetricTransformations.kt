@@ -13,22 +13,14 @@
  * limitations under the License.
  */
 
-package com.pvryan.easycryptsample
+package com.pvryan.easycrypt.symmetric
 
-import android.os.Bundle
-import android.support.v4.app.Fragment
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+/**
+ * Transformations that can be used for symmetric encryption/decryption
+ */
+enum class ECryptSymmetricTransformations(val value: String) {
 
-class FragmentAsymmetric : Fragment() {
-
-    override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return inflater?.inflate(R.layout.fragment_asymmetric, container, false)
-    }
-
-    override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
-
-    }
+    AES_CTR_NoPadding("AES/CTR/NoPadding"),
+    AES_CBC_PKCS7Padding("AES/CBC/PKCS7Padding")
 
 }

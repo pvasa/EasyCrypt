@@ -24,23 +24,29 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.pvryan.easycrypt.ECryptResultListener
+import com.pvryan.easycrypt.asymmetric.ECryptAsymmetric
+import com.pvryan.easycrypt.asymmetric.ECryptRSAKeyPairListener
 import com.pvryan.easycrypt.hash.ECryptHash
 import com.pvryan.easycrypt.hash.ECryptHashAlgorithms
 import com.pvryan.easycrypt.symmetric.ECryptSymmetric
 import kotlinx.android.synthetic.main.fragment_file.*
 import org.jetbrains.anko.AnkoLogger
+import org.jetbrains.anko.support.v4.longToast
 import org.jetbrains.anko.support.v4.onUiThread
-import org.jetbrains.anko.support.v4.progressDialog
 import org.jetbrains.anko.support.v4.toast
 import java.io.File
-import java.io.FileNotFoundException
+import java.security.KeyPair
+import java.security.interfaces.RSAPrivateKey
+import java.security.interfaces.RSAPublicKey
 
-class FragmentFile : Fragment(), AnkoLogger {
+class FragmentFile : Fragment(), AnkoLogger, ECryptResultListener {
 
     private val RC_HASH = 2
     private val RC_ENCRYPT = 3
     private val RC_DECRYPT = 4
     private val eCryptSymmetric = ECryptSymmetric()
+    private val eCryptAsymmetric = ECryptAsymmetric()
+    private lateinit var privateKey: RSAPrivateKey
     private val eCryptHash = ECryptHash()
 
     override fun onCreateView(inflater: LayoutInflater?, @Nullable container: ViewGroup?,
@@ -54,156 +60,78 @@ class FragmentFile : Fragment(), AnkoLogger {
 
     override fun onViewCreated(view: View?, @Nullable savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        buttonSelectHash.setOnClickListener {
+
+        rgTypeF.setOnCheckedChangeListener { _, id ->
+            when (id) {
+                R.id.rbSymmetricF -> edPasswordF.visibility = View.VISIBLE
+                R.id.rbAsymmetricF -> edPasswordF.visibility = View.GONE
+            }
+        }
+
+        buttonSelectHashF.setOnClickListener {
             selectFile(RC_HASH)
         }
-        buttonSelectEncrypt.setOnClickListener {
+        buttonSelectEncryptF.setOnClickListener {
             selectFile(RC_ENCRYPT)
         }
-        buttonSelectDecrypt.setOnClickListener {
+        buttonSelectDecryptF.setOnClickListener {
             selectFile(RC_DECRYPT)
         }
     }
 
     fun selectFile(requestCode: Int) {
-
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
-
         intent.addCategory(Intent.CATEGORY_OPENABLE)
-
         intent.type = "*/*"
-
         startActivityForResult(intent, requestCode)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
 
-        if (resultCode == Activity.RESULT_OK) when (requestCode) {
+        if (resultCode == Activity.RESULT_OK) {
 
-            RC_HASH -> {
-                try {
+            val fis = context.contentResolver.openInputStream(data?.data)
 
-                    val fis = context.contentResolver.openInputStream(data?.data)
+            when (requestCode) {
 
-                    val pDialog = progressDialog("Hashing file...")
-                    pDialog.max = fis.available() / 1024
-                    pDialog.setProgressNumberFormat(null)
-                    pDialog.setOnCancelListener {
-                        fis.close()
-                        toast("Canceled by user.")
-                    }
-
-                    eCryptHash.calculate(fis, ECryptHashAlgorithms.SHA_256,
-                            object : ECryptResultListener {
-
-                                override fun onProgress(newBytes: Int, bytesProcessed: Long) {
-                                    pDialog.progress = (bytesProcessed / 1024).toInt()
-                                }
-
-                                override fun <T> onSuccess(result: T) {
-                                    onUiThread {
-                                        pDialog.dismiss()
-                                        tvResultFile.text = result as String
-                                    }
-                                }
-
-                                override fun onFailure(message: String, e: Exception) {
-                                    e.printStackTrace()
-                                    onUiThread {
-                                        pDialog.dismiss()
-                                        toast("Error: $message")
-                                    }
-                                }
-                            })
-                } catch (e: FileNotFoundException) {
-                    e.printStackTrace()
-                    toast("File not found.")
+                RC_HASH -> {
+                    eCryptHash.calculate(fis, ECryptHashAlgorithms.SHA_256, this)
                 }
-            }
 
-            RC_ENCRYPT -> {
-                try {
+                RC_ENCRYPT -> {
+                    when (rgTypeF.checkedRadioButtonId) {
 
-                    val fis = context.contentResolver.openInputStream(data?.data)
+                        R.id.rbSymmetricF ->
+                            eCryptSymmetric.encrypt(fis, edPasswordF.text.toString(), this)
 
-                    val pDialog = progressDialog("Encrypting file...")
-                    pDialog.max = fis.available() / 1024
-                    pDialog.setProgressNumberFormat(null)
-                    pDialog.setOnCancelListener {
-                        fis.close()
-                        toast("Canceled by user.")
-                    }
-
-                    eCryptSymmetric.encrypt(fis, edPasswordFile.text.toString(),
-                            object : ECryptResultListener {
-
-                                override fun onProgress(newBytes: Int, bytesProcessed: Long) {
-                                    pDialog.progress = (bytesProcessed / 1024).toInt()
-                                }
-
-                                override fun <T> onSuccess(result: T) {
-                                    onUiThread {
-                                        pDialog.dismiss()
-                                        tvResultFile.text = resources.getString(
-                                                R.string.success_file_encrypted,
-                                                (result as File).absolutePath)
-                                    }
+                        R.id.rbAsymmetricF -> {
+                            eCryptAsymmetric.generateKeyPair(object : ECryptRSAKeyPairListener {
+                                override fun onSuccess(keyPair: KeyPair) {
+                                    privateKey = keyPair.private as RSAPrivateKey
+                                    eCryptAsymmetric.encrypt(fis,
+                                            keyPair.public as RSAPublicKey, this@FragmentFile)
                                 }
 
                                 override fun onFailure(message: String, e: Exception) {
                                     e.printStackTrace()
                                     onUiThread {
-                                        pDialog.dismiss()
-                                        toast("Error: $message")
+                                        progressBarF.visibility = View.INVISIBLE
+                                        longToast("Error: $message")
                                     }
                                 }
                             })
-                } catch (e: FileNotFoundException) {
-                    e.printStackTrace()
-                    toast("File not found.")
+                        }
+                    }
                 }
-            }
 
-            RC_DECRYPT -> {
-                try {
+                RC_DECRYPT -> {
+                    when (rgTypeF.checkedRadioButtonId) {
 
-                    val fis = context.contentResolver.openInputStream(data?.data)
+                        R.id.rbSymmetricF ->
+                            eCryptSymmetric.decrypt(fis, edPasswordF.text.toString(), this)
 
-                    val pDialog = progressDialog("Decrypting file...")
-                    pDialog.max = fis.available() / 1024
-                    pDialog.setProgressNumberFormat(null)
-                    pDialog.setOnCancelListener {
-                        fis.close()
-                        toast("Canceled by user.")
+                        R.id.rbAsymmetricF -> eCryptAsymmetric.decrypt(fis, privateKey, this)
                     }
-
-                    eCryptSymmetric.decrypt(fis, edPasswordFile.text.toString(),
-                            object : ECryptResultListener {
-
-                                override fun onProgress(newBytes: Int, bytesProcessed: Long) {
-                                    pDialog.progress = (bytesProcessed / 1024).toInt()
-                                }
-
-                                override fun <T> onSuccess(result: T) {
-                                    onUiThread {
-                                        pDialog.dismiss()
-                                        tvResultFile.text = resources.getString(
-                                                R.string.success_file_decrypted,
-                                                (result as File).absolutePath)
-                                    }
-                                }
-
-                                override fun onFailure(message: String, e: Exception) {
-                                    e.printStackTrace()
-                                    onUiThread {
-                                        pDialog.dismiss()
-                                        toast("Error: $message")
-                                    }
-                                }
-                            })
-                } catch (e: FileNotFoundException) {
-                    e.printStackTrace()
-                    toast("File not found.")
                 }
             }
         }
@@ -211,6 +139,27 @@ class FragmentFile : Fragment(), AnkoLogger {
 
     companion object {
         fun newInstance(): Fragment = FragmentFile()
+    }
+
+    override fun onProgress(newBytes: Int, bytesProcessed: Long) {
+        progressBarF.progress = (bytesProcessed / 1024).toInt()
+    }
+
+    override fun <T> onSuccess(result: T) {
+        onUiThread {
+            progressBarF.visibility = View.INVISIBLE
+            tvResultF.text = resources.getString(
+                    R.string.success_file_decrypted,
+                    (result as File).absolutePath)
+        }
+    }
+
+    override fun onFailure(message: String, e: Exception) {
+        e.printStackTrace()
+        onUiThread {
+            progressBarF.visibility = View.INVISIBLE
+            toast("Error: $message")
+        }
     }
 
 }

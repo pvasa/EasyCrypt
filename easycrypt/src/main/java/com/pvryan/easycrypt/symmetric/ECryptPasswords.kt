@@ -1,9 +1,9 @@
-package com.pvryan.easycrypt
+package com.pvryan.easycrypt.symmetric
 
+import com.pvryan.easycrypt.Constants
 import com.pvryan.easycrypt.randomorg.RandomOrgApis
 import com.pvryan.easycrypt.randomorg.RandomOrgRequest
 import com.pvryan.easycrypt.randomorg.RandomOrgResponse
-import com.pvryan.easycrypt.symmetric.Constants
 import org.jetbrains.anko.doAsync
 import org.jetbrains.annotations.NotNull
 import retrofit2.Call
@@ -16,8 +16,6 @@ import java.security.InvalidParameterException
 import java.security.SecureRandom
 
 class ECryptPasswords {
-
-    private val c = Constants()
 
     /**
      * Generate pseudo-random password using Java's [SecureRandom] number generator.
@@ -33,14 +31,14 @@ class ECryptPasswords {
     @JvmOverloads
     fun genSecureRandomPassword(@NotNull length: Int,
                                 @NotNull symbols: CharArray =
-                                c.STANDARD_SYMBOLS.toCharArray()): String {
+                                Constants.STANDARD_SYMBOLS.toCharArray()): String {
 
         if (length < 1 || length > 4096) throw InvalidParameterException(
                 "Invalid length. Valid range is 1 to 4096.")
 
         val password = CharArray(length)
         for (i in 0..length - 1) {
-            password[i] = symbols[c.random.nextInt(symbols.size - 1)]
+            password[i] = symbols[Constants.random.nextInt(symbols.size - 1)]
         }
         return password.joinToString("")
     }

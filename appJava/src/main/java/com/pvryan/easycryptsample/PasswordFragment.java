@@ -1,5 +1,8 @@
 package com.pvryan.easycryptsample;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -12,14 +15,19 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.pvryan.easycrypt.ECryptPasswordListener;
-import com.pvryan.easycrypt.ECryptPasswords;
+import com.pvryan.easycrypt.symmetric.ECryptPasswordListener;
+import com.pvryan.easycrypt.symmetric.ECryptPasswords;
 
 import java.security.InvalidParameterException;
 
 public class PasswordFragment extends Fragment {
 
     private ECryptPasswords eCryptPasswords = new ECryptPasswords();
+
+    private TextView tvResult;
+    private EditText edCharacters, edLength;
+
+    private ClipboardManager clipboard;
 
     public PasswordFragment() {
     }
@@ -41,9 +49,22 @@ public class PasswordFragment extends Fragment {
     @Override
     public void onViewCreated(final View view, @Nullable Bundle savedInstanceState) {
 
-        final TextView result = (TextView) view.findViewById(R.id.tvResult);
-        final EditText edCharacters = (EditText) view.findViewById(R.id.edChars);
-        final EditText edLength = (EditText) view.findViewById(R.id.edLength);
+        clipboard = (ClipboardManager) getActivity().getSystemService(Context.CLIPBOARD_SERVICE);
+
+        tvResult = (TextView) view.findViewById(R.id.tvResult);
+        tvResult.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                ClipData data = ClipData.newPlainText("result", ((TextView) v).getText());
+                clipboard.setPrimaryClip(data);
+                Toast.makeText(getActivity(),
+                        "Result copied to clipboard", Toast.LENGTH_LONG).show();
+                return true;
+            }
+        });
+
+        edCharacters = (EditText) view.findViewById(R.id.edChars);
+        edLength = (EditText) view.findViewById(R.id.edLength);
 
         view.findViewById(R.id.buttonSecureRandom).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -51,11 +72,11 @@ public class PasswordFragment extends Fragment {
                 try {
                     String symbols;
                     if ((symbols = edCharacters.getText().toString()).length() > 0) {
-                        result.setText(eCryptPasswords.genSecureRandomPassword(
+                        tvResult.setText(eCryptPasswords.genSecureRandomPassword(
                                 Integer.valueOf(edLength.getText().toString()),
                                 symbols.toCharArray()));
                     } else {
-                        result.setText(eCryptPasswords.genSecureRandomPassword(
+                        tvResult.setText(eCryptPasswords.genSecureRandomPassword(
                                 Integer.valueOf(edLength.getText().toString())));
                     }
                 } catch (InvalidParameterException e) {
@@ -88,7 +109,7 @@ public class PasswordFragment extends Fragment {
 
                                 @Override
                                 public void onSuccess(@NonNull String password) {
-                                    result.setText(password);
+                                    tvResult.setText(password);
                                 }
                             });
                 } catch (NumberFormatException e) {

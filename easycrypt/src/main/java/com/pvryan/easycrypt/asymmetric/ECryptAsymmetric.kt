@@ -15,65 +15,212 @@
 
 package com.pvryan.easycrypt.asymmetric
 
-import com.pvryan.easycrypt.extensions.asString
+import com.pvryan.easycrypt.Constants
+import com.pvryan.easycrypt.ECryptResultListener
+import com.pvryan.easycrypt.extensions.asByteArray
 import com.pvryan.easycrypt.extensions.fromBase64
-import com.pvryan.easycrypt.extensions.toBase64String
-import java.security.*
+import org.jetbrains.anko.doAsync
+import org.jetbrains.annotations.NotNull
+import java.io.ByteArrayInputStream
+import java.io.File
+import java.io.IOException
+import java.io.InputStream
+import java.security.InvalidParameterException
+import java.security.KeyPairGenerator
+import java.security.SecureRandom
+import java.security.interfaces.RSAPrivateKey
+import java.security.interfaces.RSAPublicKey
 import javax.crypto.Cipher
 
 /**
- *
+ * Secure asymmetric encryption with RSA.
  */
 class ECryptAsymmetric {
 
     private val ASYMMETRIC_ALGORITHM = "RSA"
-    private val SIGNATURE_ALGORITHM = "SHA512withRSA"
-    private val KEY_SIZE = 2048
+    private val TRANSFORMATION = "RSA/NONE/OAEPwithSHA-256andMGF1Padding"
+//    private val SIGNATURE_ALGORITHM = "SHA512withRSA"
 
-    private val cipher = Cipher.getInstance(ASYMMETRIC_ALGORITHM)
+    private val cipher = Cipher.getInstance(TRANSFORMATION)
     private val random = SecureRandom()
 
-    fun generateKeyPair(): KeyPair {
-
-        val generator = KeyPairGenerator.getInstance(ASYMMETRIC_ALGORITHM)
-        generator.initialize(KEY_SIZE, random)
-        return generator.generateKeyPair()
-
+    /**
+     * Generate a key pair with keys of specified length (default 4096) for RSA algorithm.
+     *
+     * @param kpl listener interface of type [ECryptRSAKeyPairListener]
+     * where generated keypair will be posted
+     * @param keySize of type [KeySizes] which can be 2048 or 4096 (default)
+     */
+    @JvmOverloads
+    fun generateKeyPair(kpl: ECryptRSAKeyPairListener,
+                        keySize: KeySizes = KeySizes._4096) {
+        doAsync {
+            val generator = KeyPairGenerator.getInstance(ASYMMETRIC_ALGORITHM)
+            generator.initialize(keySize.value, random)
+            val keyPair = generator.generateKeyPair()
+            kpl.onSuccess(keyPair)
+        }
     }
 
-    fun encrypt(plainText: String, publicKey: PublicKey): String {
+    /**
+     * Encrypts the input data using RSA algorithm with OAEPwithSHA-256andMGF1Padding padding
+     * and posts response to [ECryptResultListener.onSuccess] if successful or
+     * posts error to [ECryptResultListener.onFailure] if failed.
+     * Encryption progress is posted to [ECryptResultListener.onProgress].
+     * Result can be a String or a File depending on the data type of [input] and parameter [outputFile].
+     *
+     * @param T which can be either of [String], [CharSequence], [ByteArray], [InputStream], or [File]
+     * @param input data to be encrypted
+     * @param publicKey to encrypt the input
+     * @param erl listener interface of type [ECryptResultListener] where result and progress will be posted
+     * @param outputFile optional output file. If provided, result will be written to this file
+     *
+     * @exception NoSuchFileException if input is a File which does not exists or is a Directory
+     * @exception InvalidParameterException if input data type is not supported
+     * @exception IOException if cannot read or write to a file
+     * @exception FileAlreadyExistsException if output file is provided and already exists
+     */
+    @JvmOverloads
+    fun <T> encrypt(@NotNull input: T,
+                    @NotNull publicKey: RSAPublicKey,
+                    @NotNull erl: ECryptResultListener,
+                    @NotNull outputFile: File = File(Constants.DEF_ENCRYPTED_FILE_PATH)) {
 
-        cipher.init(Cipher.ENCRYPT_MODE, publicKey)
-        val cipherText = cipher.doFinal(plainText.toByteArray())
+        doAsync {
+            cipher.init(Cipher.ENCRYPT_MODE, publicKey)
 
-        return cipherText.toBase64String()
+            when (input) {
+
+                is ByteArrayInputStream -> {
+                    encrypt(input.readBytes(), publicKey, erl, outputFile)
+                    return@doAsync
+                }
+
+                is String -> {
+                    encrypt(input.asByteArray(), publicKey, erl, outputFile)
+                    return@doAsync
+                }
+
+                is CharSequence -> {
+                    encrypt(input.toString().asByteArray(), publicKey, erl, outputFile)
+                    return@doAsync
+                }
+
+                is File -> {
+                    if (!input.exists() || input.isDirectory) {
+                        erl.onFailure(Constants.MSG_NO_SUCH_FILE, NoSuchFileException(input))
+                    } else {
+                        val encryptedFile =
+                                if (outputFile.absolutePath == Constants.DEF_ENCRYPTED_FILE_PATH)
+                                    File(input.absolutePath + Constants.ECRYPT_FILE_EXT)
+                                else outputFile
+                        encrypt(input.inputStream(), publicKey, erl, encryptedFile)
+                    }
+                    return@doAsync
+                }
+
+                else -> performEncrypt.invoke(input, publicKey, cipher, erl, outputFile)
+
+            }
+        }
     }
 
-    fun decrypt(cipherText: String, privateKey: PrivateKey): String {
+    /**
+     * Decrypts the input data using RSA algorithm with OAEPwithSHA-256andMGF1Padding padding
+     * and posts response to [ECryptResultListener.onSuccess] if successful or
+     * posts error to [ECryptResultListener.onFailure] if failed.
+     * Decryption progress is posted to [ECryptResultListener.onProgress].
+     * Result can be a String or a File depending on the data type of [input] and parameter [outputFile]
+     *
+     * @param input input data to be decrypted. It can be of type
+     * [String], [CharSequence], [ByteArray], [InputStream], or [File]
+     * @param erl listener interface of type [ECryptResultListener] where result and progress will be posted
+     * @param outputFile optional output file. If provided, result will be written to this file
+     *
+     * @exception NoSuchFileException if input is a File which does not exists or is a Directory
+     * @exception InvalidParameterException if input data type is not supported
+     * @exception IOException if cannot read or write to a file
+     * @exception FileAlreadyExistsException if output file is provided and already exists
+     * @exception IllegalArgumentException if input data is not in valid format
+     */
+    @JvmOverloads
+    fun <T> decrypt(@NotNull input: T,
+                    @NotNull privateKey: RSAPrivateKey,
+                    @NotNull erl: ECryptResultListener,
+                    @NotNull outputFile: File = File(Constants.DEF_DECRYPTED_FILE_PATH)) {
 
-        val bytes = cipherText.toByteArray().fromBase64()
-        cipher.init(Cipher.DECRYPT_MODE, privateKey)
+        doAsync {
+            cipher.init(Cipher.DECRYPT_MODE, privateKey)
 
-        return cipher.doFinal(bytes).asString()
+            when (input) {
+
+                is ByteArrayInputStream -> {
+                    decrypt(input.readBytes(), privateKey, erl, outputFile)
+                    return@doAsync
+                }
+
+                is String -> {
+                    try {
+                        decrypt(input.fromBase64(), privateKey, erl, outputFile)
+                    } catch (e: IllegalArgumentException) {
+                        erl.onFailure(Constants.MSG_INVALID_INPUT_DATA, e)
+                    }
+                    return@doAsync
+                }
+
+                is CharSequence -> {
+                    try {
+                        decrypt(input.toString().fromBase64(), privateKey, erl, outputFile)
+                    } catch (e: IllegalArgumentException) {
+                        erl.onFailure(Constants.MSG_INVALID_INPUT_DATA, e)
+                    }
+                    return@doAsync
+                }
+
+                is File -> {
+                    if (!input.exists() || input.isDirectory) {
+                        erl.onFailure(Constants.MSG_NO_SUCH_FILE, NoSuchFileException(input))
+                    } else {
+                        val decryptedFile =
+                                if (outputFile.absolutePath == Constants.DEF_ENCRYPTED_FILE_PATH)
+                                    File(input.absolutePath + Constants.ECRYPT_FILE_EXT)
+                                else outputFile
+                        decrypt(input.inputStream(), privateKey, erl, decryptedFile)
+                    }
+                    return@doAsync
+                }
+
+                else -> performDecrypt.invoke(input, privateKey, cipher, erl, outputFile)
+
+            }
+        }
     }
 
-    fun sign(plainText: String, privateKey: PrivateKey): String {
+    /*private fun sign(input: String, privateKey: PrivateKey): String {
 
         val privateSignature = Signature.getInstance(SIGNATURE_ALGORITHM)
         privateSignature.initSign(privateKey)
-        privateSignature.update(plainText.toByteArray())
+        privateSignature.update(input.asByteArray())
 
         return privateSignature.sign().toBase64String()
     }
 
-    fun verify(plainText: String, signature: String, publicKey: PublicKey): Boolean {
+    private fun verify(input: String, signature: String, publicKey: PublicKey): Boolean {
         val publicSignature = Signature.getInstance(SIGNATURE_ALGORITHM)
         publicSignature.initVerify(publicKey)
-        publicSignature.update(plainText.toByteArray())
+        publicSignature.update(input.asByteArray())
 
-        val signatureBytes = signature.toByteArray().fromBase64()
+        val signatureBytes = signature.fromBase64()
 
         return publicSignature.verify(signatureBytes)
+    }*/
+
+    /**
+     * Key sizes that can be used for generating RSA key pairs
+     */
+    enum class KeySizes(val value: Int) {
+        _2048(2048),
+        _4096(4096) // Default
     }
 
 }

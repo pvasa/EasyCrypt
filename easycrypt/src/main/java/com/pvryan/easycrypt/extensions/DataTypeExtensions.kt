@@ -18,14 +18,15 @@
 package com.pvryan.easycrypt.extensions
 
 import android.util.Base64
+import android.util.Log
+import com.pvryan.easycrypt.Constants
+import com.pvryan.easycrypt.ECryptResultListener
+import java.io.File
+import java.io.IOException
+import java.security.interfaces.RSAKey
 import java.util.regex.Pattern
 
-fun ByteArray.toBase64(): ByteArray = Base64.encode(this, Base64.URL_SAFE)
 fun ByteArray.toBase64String(): String = Base64.encodeToString(this, Base64.URL_SAFE)
-
-@Throws(IllegalArgumentException::class)
-fun ByteArray.fromBase64(): ByteArray = Base64.decode(this, Base64.URL_SAFE)
-
 fun ByteArray.asString(): String = this.toString(Charsets.UTF_8)
 
 private val HEX_CHARS = "0123456789ABCDEF".toCharArray()
@@ -40,6 +41,35 @@ fun ByteArray.asHexString(): String {
     }
     return result.toString()
 }
+
+fun ByteArray.handleSuccess(erl: ECryptResultListener, outputFile: File, isEncrypted: Boolean) {
+
+    if (outputFile.absolutePath != Constants.DEF_ENCRYPTED_FILE_PATH &&
+            outputFile.absolutePath != Constants.DEF_DECRYPTED_FILE_PATH) {
+
+        try {
+            outputFile.outputStream().use {
+                it.write(this)
+                it.flush()
+            }
+        } catch (e: IOException) {
+            erl.onFailure(Constants.MSG_CANNOT_WRITE, e)
+        }
+
+    } else {
+        if (isEncrypted)
+            erl.onSuccess(this.toBase64String())
+        else {
+            Log.i("HERE", "RESULT " + this.asString())
+            erl.onSuccess(this.asString())
+        }
+    }
+}
+
+@Throws(IllegalArgumentException::class)
+fun String.asByteArray(): ByteArray = this.toByteArray(Charsets.UTF_8)
+
+fun String.fromBase64(): ByteArray = Base64.decode(this.asByteArray(), Base64.URL_SAFE)
 
 private val pHex: Pattern = Pattern.compile("[0-9a-fA-F]+")
 fun String.isValidHex(): Boolean = (this.length % 2 == 0 && pHex.matcher(this).matches())
@@ -56,4 +86,13 @@ fun String.hexToByteArray(): ByteArray {
         i += 2
     }
     return data
+}
+
+fun RSAKey.size(): Int = this.modulus.bitLength()
+fun RSAKey.allowedInputSize(): Int {
+    val keyLength = this.size().toDouble()
+    val hashOutputLength = 256
+    return (Math.floor(keyLength / 8)
+            - (2 * (hashOutputLength / 8)) - 2).toInt() // OAEPwithSHA-256 padding
+    //return (Math.floor(keyLength / 8) - 11).toInt() // PKCS#1 padding
 }
