@@ -1,7 +1,9 @@
 package com.pvryan.easycryptsample;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -9,18 +11,37 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ProgressBar;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.pvryan.easycrypt.ECryptResultListener;
+import com.pvryan.easycrypt.asymmetric.ECryptAsymmetric;
+import com.pvryan.easycrypt.asymmetric.ECryptRSAKeyPairListener;
 import com.pvryan.easycrypt.hash.ECryptHash;
 import com.pvryan.easycrypt.hash.ECryptHashAlgorithms;
 import com.pvryan.easycrypt.symmetric.ECryptSymmetric;
 
-public class StringFragment extends Fragment {
+import org.jetbrains.annotations.NotNull;
+
+import java.security.KeyPair;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
+
+public class StringFragment extends Fragment implements ECryptResultListener {
 
     private ECryptSymmetric eCryptSymmetric = new ECryptSymmetric();
+    private ECryptAsymmetric eCryptAsymmetric = new ECryptAsymmetric();
+    private RSAPrivateKey privateKey;
     private ECryptHash eCryptHash = new ECryptHash();
+
+    private EditText edInput;
+    private EditText edPassword;
+    private TextView tvResult;
+    private RadioGroup rgType;
+    private ProgressBar pBar;
+
+    private ClipboardManager clipboard;
 
     public StringFragment() {
     }
@@ -42,132 +63,138 @@ public class StringFragment extends Fragment {
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
 
-        final EditText edInput = (EditText) view.findViewById(R.id.edInput);
-        final EditText edPassword = (EditText) view.findViewById(R.id.edPassword);
+        clipboard = (ClipboardManager) getActivity().getSystemService(Context.CLIPBOARD_SERVICE);
 
-        final TextView tvResult = (TextView) view.findViewById(R.id.tvResult);
+        edInput = (EditText) view.findViewById(R.id.edInputS);
+        edPassword = (EditText) view.findViewById(R.id.edPasswordS);
+        tvResult = (TextView) view.findViewById(R.id.tvResultS);
+        tvResult.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                ClipData data = ClipData.newPlainText("result", ((TextView) v).getText());
+                clipboard.setPrimaryClip(data);
+                Toast.makeText(getActivity(),
+                        "Result copied to clipboard", Toast.LENGTH_LONG).show();
+                return true;
+            }
+        });
 
-        view.findViewById(R.id.buttonHash).setOnClickListener(
+        pBar = (ProgressBar) view.findViewById(R.id.progressBarS);
+        pBar.setIndeterminate(true);
+
+        rgType = (RadioGroup) view.findViewById(R.id.rgTypeS);
+
+        rgType.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                switch (checkedId) {
+                    case R.id.rbSymmetricS:
+                        edPassword.setVisibility(View.VISIBLE);
+                        break;
+                    case R.id.rbAsymmetricS:
+                        edPassword.setVisibility(View.GONE);
+                        break;
+                }
+            }
+        });
+
+        view.findViewById(R.id.buttonHashS).setOnClickListener(
                 new View.OnClickListener() {
                     @Override
                     public void onClick(final View buttonHash) {
-                        ProgressBar progressBar = new ProgressBar(buttonHash.getContext());
-                        progressBar.setIndeterminate(true);
-                        eCryptHash.calculate(edInput.getText().toString(), ECryptHashAlgorithms.SHA_512,
-                                new ECryptResultListener() {
-
-                                    @Override
-                                    public void onProgress(int newBytes, long bytesProcessed) {
-                                        // Not required for strings
-                                    }
-
-                                    @Override
-                                    public void onFailure(@NonNull final String message, @NonNull Exception e) {
-                                        getActivity().runOnUiThread(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                Toast.makeText(buttonHash.getContext(),
-                                                        message, Toast.LENGTH_SHORT).show();
-                                            }
-                                        });
-                                        e.printStackTrace();
-                                    }
-
-                                    @Override
-                                    public <T> void onSuccess(final T result) {
-                                        getActivity().runOnUiThread(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                tvResult.setText((String) result);
-                                            }
-                                        });
-                                    }
-                                }
-                        );
+                        pBar.setVisibility(View.VISIBLE);
+                        pBar.setIndeterminate(true);
+                        eCryptHash.calculate(edInput.getText().toString(),
+                                ECryptHashAlgorithms.SHA_512, StringFragment.this);
                     }
                 }
         );
 
-        view.findViewById(R.id.buttonEncrypt).setOnClickListener(
+        view.findViewById(R.id.buttonEncryptS).setOnClickListener(
                 new View.OnClickListener() {
                     @Override
                     public void onClick(final View buttonEncrypt) {
-                        ProgressBar progressBar = new ProgressBar(buttonEncrypt.getContext());
-                        progressBar.setIndeterminate(true);
-                        eCryptSymmetric.encrypt(edInput.getText().toString(), edPassword.getText().toString(),
-                                new ECryptResultListener() {
-
+                        pBar.setVisibility(View.VISIBLE);
+                        pBar.setIndeterminate(true);
+                        switch (rgType.getCheckedRadioButtonId()) {
+                            case R.id.rbSymmetricS:
+                                eCryptSymmetric.encrypt(edInput.getText().toString(),
+                                        edPassword.getText().toString(), StringFragment.this);
+                                break;
+                            case R.id.rbAsymmetricS:
+                                eCryptAsymmetric.generateKeyPair(new ECryptRSAKeyPairListener() {
                                     @Override
-                                    public void onProgress(int newBytes, long bytesProcessed) {
-                                        // Not required for strings
-                                    }
-
-                                    @Override
-                                    public void onFailure(@NonNull final String message, @NonNull Exception e) {
-                                        getActivity().runOnUiThread(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                Toast.makeText(buttonEncrypt.getContext(),
-                                                        message, Toast.LENGTH_SHORT).show();
-                                            }
-                                        });
+                                    public void onFailure(@NotNull final String message, @NotNull Exception e) {
                                         e.printStackTrace();
-                                    }
-
-                                    @Override
-                                    public <T> void onSuccess(final T result) {
                                         getActivity().runOnUiThread(new Runnable() {
                                             @Override
                                             public void run() {
-                                                tvResult.setText((String) result);
+                                                pBar.setVisibility(View.INVISIBLE);
+                                                Toast.makeText(getActivity(), message,
+                                                        Toast.LENGTH_LONG).show();
                                             }
                                         });
                                     }
-                                }
-                        );
+
+                                    @Override
+                                    public void onSuccess(@NotNull KeyPair keyPair) {
+                                        privateKey = (RSAPrivateKey) keyPair.getPrivate();
+                                        eCryptAsymmetric.encrypt(edInput.getText().toString(),
+                                                (RSAPublicKey) keyPair.getPublic(), StringFragment.this);
+                                    }
+                                });
+                                break;
+                        }
                     }
                 }
         );
 
-        view.findViewById(R.id.buttonDecrypt).setOnClickListener(
+        view.findViewById(R.id.buttonDecryptS).setOnClickListener(
                 new View.OnClickListener() {
                     @Override
                     public void onClick(final View buttonDecrypt) {
                         ProgressBar progressBar = new ProgressBar(buttonDecrypt.getContext());
                         progressBar.setIndeterminate(true);
-                        eCryptSymmetric.decrypt(edInput.getText().toString(), edPassword.getText().toString(),
-                                new ECryptResultListener() {
-
-                                    @Override
-                                    public void onProgress(int newBytes, long bytesProcessed) {
-                                        // Not required for strings
-                                    }
-
-                                    @Override
-                                    public void onFailure(@NonNull final String message, @NonNull Exception e) {
-                                        getActivity().runOnUiThread(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                Toast.makeText(buttonDecrypt.getContext(),
-                                                        message, Toast.LENGTH_SHORT).show();
-                                            }
-                                        });
-                                        e.printStackTrace();
-                                    }
-
-                                    @Override
-                                    public <T> void onSuccess(final T result) {
-                                        getActivity().runOnUiThread(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                tvResult.setText((String) result);
-                                            }
-                                        });
-                                    }
-                                }
-                        );
+                        switch (rgType.getCheckedRadioButtonId()) {
+                            case R.id.rbSymmetricS:
+                                eCryptSymmetric.decrypt(edInput.getText().toString(),
+                                        edPassword.getText().toString(), StringFragment.this);
+                                break;
+                            case R.id.rbAsymmetricS:
+                                eCryptAsymmetric.decrypt(edInput.getText().toString(),
+                                        privateKey, StringFragment.this);
+                                break;
+                        }
                     }
                 }
         );
+    }
+
+    @Override
+    public <T> void onSuccess(final T result) {
+        getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                tvResult.setText((String) result);
+                pBar.setVisibility(View.INVISIBLE);
+            }
+        });
+    }
+
+    @Override
+    public void onFailure(@NotNull final String message, @NotNull Exception e) {
+        e.printStackTrace();
+        getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(getActivity(), message, Toast.LENGTH_LONG).show();
+                pBar.setVisibility(View.INVISIBLE);
+            }
+        });
+    }
+
+    @Override
+    public void onProgress(int newBytes, long bytesProcessed) {
+        // Not required for strings
     }
 }

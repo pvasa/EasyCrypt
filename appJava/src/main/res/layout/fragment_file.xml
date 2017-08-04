@@ -17,8 +17,44 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
+    <ProgressBar
+        android:id="@+id/progressBarF"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="32dp"
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="16dp"
+        android:visibility="invisible" />
+
+    <RadioGroup
+        android:id="@+id/rgTypeF"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="32dp"
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="16dp"
+        android:orientation="horizontal">
+
+        <RadioButton
+            android:id="@+id/rbSymmetricF"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="2dp"
+            android:checked="true"
+            android:text="Symmetric" />
+
+        <RadioButton
+            android:id="@+id/rbAsymmetricF"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="2dp"
+            android:text="Asymmetric" />
+
+    </RadioGroup>
+
     <EditText
-        android:id="@+id/edPasswordFile"
+        android:id="@+id/edPasswordF"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginEnd="32dp"
@@ -47,7 +83,7 @@
         android:orientation="horizontal">
 
         <Button
-            android:id="@+id/buttonSelectHash"
+            android:id="@+id/buttonSelectHashF"
             style="?android:attr/buttonBarButtonStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -55,7 +91,7 @@
             android:text="@string/button_select_hash" />
 
         <Button
-            android:id="@+id/buttonSelectEncrypt"
+            android:id="@+id/buttonSelectEncryptF"
             style="?android:attr/buttonBarButtonStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -63,7 +99,7 @@
             android:text="@string/button_select_encrypt" />
 
         <Button
-            android:id="@+id/buttonSelectDecrypt"
+            android:id="@+id/buttonSelectDecryptF"
             style="?android:attr/buttonBarButtonStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -72,18 +108,8 @@
 
     </LinearLayout>
 
-    <ProgressBar
-        android:id="@+id/progressBar"
-        style="?android:attr/progressBarStyleHorizontal"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="32dp"
-        android:layout_marginStart="32dp"
-        android:layout_marginTop="16dp"
-        android:visibility="invisible" />
-
     <TextView
-        android:id="@+id/tvResultFile"
+        android:id="@+id/tvResultF"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="32dp"

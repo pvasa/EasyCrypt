@@ -22,8 +22,8 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.pvryan.easycrypt.ECryptPasswordListener
-import com.pvryan.easycrypt.ECryptPasswords
+import com.pvryan.easycrypt.symmetric.ECryptPasswordListener
+import com.pvryan.easycrypt.symmetric.ECryptPasswords
 import kotlinx.android.synthetic.main.fragment_password.*
 import org.jetbrains.anko.support.v4.toast
 import java.security.InvalidParameterException

@@ -1,0 +1,160 @@
+/**
+ * Copyright 2017 Priyank Vasa
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.pvryan.easycrypt.asymmetric
+
+import com.pvryan.easycrypt.Constants
+import com.pvryan.easycrypt.ECryptResultListener
+import com.pvryan.easycrypt.extensions.allowedInputSize
+import com.pvryan.easycrypt.extensions.asByteArray
+import com.pvryan.easycrypt.extensions.fromBase64
+import com.pvryan.easycrypt.extensions.handleSuccess
+import com.pvryan.easycrypt.symmetric.ECryptPasswords
+import com.pvryan.easycrypt.symmetric.ECryptSymmetric
+import java.io.File
+import java.io.FileInputStream
+import java.io.IOException
+import java.io.InputStream
+import java.security.InvalidParameterException
+import java.security.interfaces.RSAPublicKey
+import javax.crypto.Cipher
+
+internal object performEncrypt {
+
+    @JvmSynthetic
+    internal fun <T> invoke(input: T,
+                            publicKey: RSAPublicKey,
+                            cipher: Cipher,
+                            erl: ECryptResultListener,
+                            outputFile: File = File(Constants.DEF_ENCRYPTED_FILE_PATH)) {
+
+        if (outputFile.exists() && outputFile.absolutePath != Constants.DEF_ENCRYPTED_FILE_PATH) {
+            when (input) { is InputStream -> input.close()
+            }
+            erl.onFailure(Constants.MSG_OUTPUT_FILE_EXISTS, FileAlreadyExistsException(outputFile))
+            return
+        }
+
+        when (input) {
+
+            is ByteArray -> {
+
+                if (input.size > publicKey.allowedInputSize()) {
+
+                    val password = ECryptPasswords()
+                            .genSecureRandomPassword(Constants.PASSWORD_LENGTH)
+
+                    ECryptSymmetric().encrypt(input, password, object : ECryptResultListener {
+
+                        override fun <T> onSuccess(result: T) {
+
+                            invoke(password.asByteArray(), publicKey,
+                                    cipher, object : ECryptResultListener {
+
+                                @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")
+                                override fun <T> onSuccess(cipherPass: T) {
+                                    ((cipherPass as String).fromBase64()
+                                            .plus((result as String).fromBase64()))
+                                            .handleSuccess(erl, outputFile, true)
+                                }
+
+                                override fun onFailure(message: String, e: Exception) {
+                                    erl.onFailure(message, e)
+                                }
+                            }, outputFile)
+                        }
+
+                        override fun onFailure(message: String, e: Exception) {
+                            erl.onFailure(message, e)
+                        }
+                    })
+
+                } else {
+                    cipher.doFinal(input).handleSuccess(erl, outputFile, true)
+                }
+            }
+
+            is FileInputStream -> {
+
+                if (outputFile.exists()) {
+                    outputFile.delete()
+                }
+                outputFile.createNewFile()
+
+                val password = ECryptPasswords()
+                        .genSecureRandomPassword(Constants.PASSWORD_LENGTH)
+
+                File(Constants.DEF_EXT_TEMP_DIR_PATH).mkdirs()
+                val tempFile = File(Constants.DEF_EXT_TEMP_DIR_PATH, Constants.ENCRYPTED_FILE_NAME + Constants.ECRYPT_FILE_EXT)
+                if (tempFile.exists()) tempFile.delete()
+
+                ECryptSymmetric().encrypt(input, password, object : ECryptResultListener {
+
+                    override fun onProgress(newBytes: Int, bytesProcessed: Long) {
+                        erl.onProgress(newBytes, bytesProcessed)
+                    }
+
+                    override fun <T> onSuccess(result: T) {
+
+                        invoke(password.asByteArray(),
+                                publicKey, cipher, object : ECryptResultListener {
+
+                            @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")
+                            override fun <T> onSuccess(passCipher: T) {
+
+                                val fos = outputFile.outputStream()
+
+                                val asOutputFile = result as File
+
+                                asOutputFile.inputStream().use {
+
+                                    try {
+                                        val passBytes = (passCipher as String).fromBase64()
+                                        fos.write(passBytes, 0, passBytes.size)
+                                        val buffer = ByteArray(8192)
+                                        var read = it.read(buffer)
+                                        while (read > -1) {
+                                            fos.write(buffer, 0, read)
+                                            read = it.read(buffer)
+                                        }
+                                    } catch (e: IOException) {
+                                        erl.onFailure(Constants.MSG_CANNOT_WRITE, e)
+                                        return
+                                    } finally {
+                                        fos.flush()
+                                        fos.close()
+                                        asOutputFile.delete()
+                                    }
+                                    erl.onSuccess(outputFile)
+                                }
+                            }
+
+                            override fun onFailure(message: String, e: Exception) {
+                                erl.onFailure(message, e)
+                            }
+                        })
+                    }
+
+                    override fun onFailure(message: String, e: Exception) {
+                        erl.onFailure(message, e)
+                    }
+                }, tempFile)
+            }
+
+            else -> erl.onFailure(Constants.MSG_INPUT_TYPE_NOT_SUPPORTED, InvalidParameterException())
+
+        }
+    }
+}
