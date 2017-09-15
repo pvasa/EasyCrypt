@@ -12,11 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.pvryan.easycryptsample
 
 import android.Manifest
 import android.os.Bundle
+import android.os.Environment
 import android.support.design.widget.TabLayout
 import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentManager
@@ -27,6 +27,7 @@ import android.view.MenuItem
 import com.pvryan.easycryptsample.extensions.checkPermissions
 import com.pvryan.easycryptsample.extensions.handlePermissionResults
 import kotlinx.android.synthetic.main.activity_main.*
+import java.io.File
 
 class MainActivity : AppCompatActivity() {
 
@@ -36,6 +37,8 @@ class MainActivity : AppCompatActivity() {
             FragmentFile.newInstance(),
             FragmentPassword.newInstance()
     )
+    private val outputDir = Environment.getExternalStorageDirectory().absolutePath +
+            File.separator + "ECryptSample"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,6 +51,7 @@ class MainActivity : AppCompatActivity() {
         viewPager.addOnPageChangeListener(TabLayout.TabLayoutOnPageChangeListener(tabs))
         tabs.addOnTabSelectedListener(TabLayout.ViewPagerOnTabSelectedListener(viewPager))
 
+        File(outputDir).mkdirs()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {

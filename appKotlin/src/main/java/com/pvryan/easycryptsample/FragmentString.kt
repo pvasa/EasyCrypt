@@ -19,31 +19,37 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.os.Bundle
+import android.os.Environment
 import android.support.annotation.Nullable
 import android.support.v4.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.RadioGroup
-import com.pvryan.easycrypt.ECryptResultListener
-import com.pvryan.easycrypt.asymmetric.ECryptAsymmetric
-import com.pvryan.easycrypt.asymmetric.ECryptRSAKeyPairListener
-import com.pvryan.easycrypt.hash.ECryptHash
-import com.pvryan.easycrypt.hash.ECryptHashAlgorithms
-import com.pvryan.easycrypt.symmetric.ECryptSymmetric
+import com.pvryan.easycrypt.ECKeys
+import com.pvryan.easycrypt.ECResultListener
+import com.pvryan.easycrypt.asymmetric.ECAsymmetric
+import com.pvryan.easycrypt.asymmetric.ECRSAKeyPairListener
+import com.pvryan.easycrypt.asymmetric.ECVerifiedListener
+import com.pvryan.easycrypt.hash.ECHash
+import com.pvryan.easycrypt.hash.ECHashAlgorithms
+import com.pvryan.easycrypt.symmetric.ECSymmetric
 import kotlinx.android.synthetic.main.fragment_string.*
 import org.jetbrains.anko.support.v4.longToast
 import org.jetbrains.anko.support.v4.onUiThread
+import java.io.File
 import java.security.KeyPair
 import java.security.interfaces.RSAPrivateKey
 import java.security.interfaces.RSAPublicKey
 
-class FragmentString : Fragment(), ECryptResultListener {
+class FragmentString : Fragment(), ECResultListener {
 
-    private val eCryptSymmetric = ECryptSymmetric()
-    private val eCryptAsymmetric = ECryptAsymmetric()
-    private val eCryptHash = ECryptHash()
+    private val eCryptSymmetric = ECSymmetric()
+    private val eCryptAsymmetric = ECAsymmetric()
+    private val eCryptHash = ECHash()
+    private val eCryptKeys = ECKeys()
     private lateinit var privateKey: RSAPrivateKey
+    private lateinit var publicKey: RSAPublicKey
 
     override fun onCreateView(inflater: LayoutInflater?, @Nullable container: ViewGroup?,
                               @Nullable savedInstanceState: Bundle?): View? {
@@ -55,8 +61,14 @@ class FragmentString : Fragment(), ECryptResultListener {
 
         rgTypeS.setOnCheckedChangeListener { _: RadioGroup, id: Int ->
             when (id) {
-                R.id.rbSymmetricS -> edPasswordS.visibility = View.VISIBLE
-                R.id.rbAsymmetricS -> edPasswordS.visibility = View.GONE
+                R.id.rbSymmetricS -> {
+                    edPasswordS.visibility = View.VISIBLE
+                    llSignVerifyS.visibility = View.GONE
+                }
+                R.id.rbAsymmetricS -> {
+                    edPasswordS.visibility = View.GONE
+                    llSignVerifyS.visibility = View.VISIBLE
+                }
             }
         }
 
@@ -66,6 +78,10 @@ class FragmentString : Fragment(), ECryptResultListener {
             clipboard.primaryClip = data
             longToast("Result copied to clipboard")
             true
+        }
+
+        buttonHashS.setOnClickListener {
+            eCryptHash.calculate(edInputS.text, ECHashAlgorithms.SHA_512, this)
         }
 
         buttonEncryptS.setOnClickListener {
@@ -79,8 +95,8 @@ class FragmentString : Fragment(), ECryptResultListener {
                 }
 
                 R.id.rbAsymmetricS -> {
-                    eCryptAsymmetric.generateKeyPair(object : ECryptRSAKeyPairListener {
-                        override fun onSuccess(keyPair: KeyPair) {
+                    eCryptKeys.genRSAKeyPair(object : ECRSAKeyPairListener {
+                        override fun onGenerated(keyPair: KeyPair) {
                             privateKey = keyPair.private as RSAPrivateKey
                             eCryptAsymmetric.encrypt(edInputS.text.toString(),
                                     keyPair.public as RSAPublicKey, this@FragmentString)
@@ -112,8 +128,52 @@ class FragmentString : Fragment(), ECryptResultListener {
             }
         }
 
-        buttonHashS.setOnClickListener {
-            eCryptHash.calculate(edInputS.text, ECryptHashAlgorithms.SHA_512, this)
+        buttonSignS.setOnClickListener {
+
+            val sigFile = File(Environment.getExternalStorageDirectory(),
+                    "ECryptSample/sample.sig")
+            if (sigFile.exists()) sigFile.delete()
+
+            eCryptKeys.genRSAKeyPair(object : ECRSAKeyPairListener {
+
+                override fun onGenerated(keyPair: KeyPair) {
+                    publicKey = keyPair.public as RSAPublicKey
+                    eCryptAsymmetric.sign(edInputS.text,
+                            keyPair.private as RSAPrivateKey,
+                            this@FragmentString,
+                            sigFile)
+                }
+
+                override fun onFailure(message: String, e: Exception) {
+                    e.printStackTrace()
+                    onUiThread {
+                        longToast("Failed to generate RSA key pair. Try again.")
+                    }
+                }
+            })
+        }
+
+        buttonVerifyS.setOnClickListener {
+
+            eCryptAsymmetric.verify(edInputS.text.toString(), publicKey,
+                    File(Environment.getExternalStorageDirectory(), "ECryptSample/sample.sig"),
+                    object : ECVerifiedListener {
+                        override fun onSuccess(verified: Boolean) {
+                            onUiThread {
+                                if (verified) tvResultS.text = getString(R.string.msg_valid)
+                                else tvResultS.text = getString(R.string.msg_invalid)
+                            }
+                        }
+
+                        override fun onFailure(message: String, e: Exception) {
+                            e.printStackTrace()
+                            onUiThread {
+                                progressBarS.visibility = View.INVISIBLE
+                                longToast("Error: $message")
+                            }
+                        }
+
+                    })
         }
     }
 
@@ -124,7 +184,16 @@ class FragmentString : Fragment(), ECryptResultListener {
     override fun <T> onSuccess(result: T) {
         onUiThread {
             progressBarS.visibility = View.INVISIBLE
-            tvResultS.text = result as String
+            tvResultS.text = when (result) {
+
+                is File -> resources.getString(
+                        R.string.success_result_to_file,
+                        (result as File).absolutePath)
+
+                is String -> result
+
+                else -> "Undefined"
+            }
         }
     }
 

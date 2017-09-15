@@ -18,17 +18,20 @@ package com.pvryan.easycryptsample
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.os.Environment
 import android.support.annotation.Nullable
 import android.support.v4.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.pvryan.easycrypt.ECryptResultListener
-import com.pvryan.easycrypt.asymmetric.ECryptAsymmetric
-import com.pvryan.easycrypt.asymmetric.ECryptRSAKeyPairListener
-import com.pvryan.easycrypt.hash.ECryptHash
-import com.pvryan.easycrypt.hash.ECryptHashAlgorithms
-import com.pvryan.easycrypt.symmetric.ECryptSymmetric
+import com.pvryan.easycrypt.ECKeys
+import com.pvryan.easycrypt.ECResultListener
+import com.pvryan.easycrypt.asymmetric.ECAsymmetric
+import com.pvryan.easycrypt.asymmetric.ECRSAKeyPairListener
+import com.pvryan.easycrypt.asymmetric.ECVerifiedListener
+import com.pvryan.easycrypt.hash.ECHash
+import com.pvryan.easycrypt.hash.ECHashAlgorithms
+import com.pvryan.easycrypt.symmetric.ECSymmetric
 import kotlinx.android.synthetic.main.fragment_file.*
 import org.jetbrains.anko.AnkoLogger
 import org.jetbrains.anko.support.v4.longToast
@@ -39,15 +42,19 @@ import java.security.KeyPair
 import java.security.interfaces.RSAPrivateKey
 import java.security.interfaces.RSAPublicKey
 
-class FragmentFile : Fragment(), AnkoLogger, ECryptResultListener {
+class FragmentFile : Fragment(), AnkoLogger, ECResultListener {
 
     private val RC_HASH = 2
     private val RC_ENCRYPT = 3
     private val RC_DECRYPT = 4
-    private val eCryptSymmetric = ECryptSymmetric()
-    private val eCryptAsymmetric = ECryptAsymmetric()
+    private val RC_SIGN = 5
+    private val RC_VERIFY = 6
+    private val eCryptSymmetric = ECSymmetric()
+    private val eCryptAsymmetric = ECAsymmetric()
+    private val eCryptHash = ECHash()
+    private val eCryptKeys = ECKeys()
     private lateinit var privateKey: RSAPrivateKey
-    private val eCryptHash = ECryptHash()
+    private lateinit var publicKey: RSAPublicKey
 
     override fun onCreateView(inflater: LayoutInflater?, @Nullable container: ViewGroup?,
                               @Nullable savedInstanceState: Bundle?): View? {
@@ -63,8 +70,14 @@ class FragmentFile : Fragment(), AnkoLogger, ECryptResultListener {
 
         rgTypeF.setOnCheckedChangeListener { _, id ->
             when (id) {
-                R.id.rbSymmetricF -> edPasswordF.visibility = View.VISIBLE
-                R.id.rbAsymmetricF -> edPasswordF.visibility = View.GONE
+                R.id.rbSymmetricF -> {
+                    edPasswordF.visibility = View.VISIBLE
+                    llSignVerifyF.visibility = View.GONE
+                }
+                R.id.rbAsymmetricF -> {
+                    edPasswordF.visibility = View.GONE
+                    llSignVerifyF.visibility = View.VISIBLE
+                }
             }
         }
 
@@ -77,9 +90,15 @@ class FragmentFile : Fragment(), AnkoLogger, ECryptResultListener {
         buttonSelectDecryptF.setOnClickListener {
             selectFile(RC_DECRYPT)
         }
+        buttonSignF.setOnClickListener {
+            selectFile(RC_SIGN)
+        }
+        buttonVerifyF.setOnClickListener {
+            selectFile(RC_VERIFY)
+        }
     }
 
-    fun selectFile(requestCode: Int) {
+    private fun selectFile(requestCode: Int) {
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
         intent.addCategory(Intent.CATEGORY_OPENABLE)
         intent.type = "*/*"
@@ -92,10 +111,12 @@ class FragmentFile : Fragment(), AnkoLogger, ECryptResultListener {
 
             val fis = context.contentResolver.openInputStream(data?.data)
 
+            progressBarF.visibility = View.VISIBLE
+
             when (requestCode) {
 
                 RC_HASH -> {
-                    eCryptHash.calculate(fis, ECryptHashAlgorithms.SHA_256, this)
+                    eCryptHash.calculate(fis, ECHashAlgorithms.SHA_256, this)
                 }
 
                 RC_ENCRYPT -> {
@@ -105,8 +126,8 @@ class FragmentFile : Fragment(), AnkoLogger, ECryptResultListener {
                             eCryptSymmetric.encrypt(fis, edPasswordF.text.toString(), this)
 
                         R.id.rbAsymmetricF -> {
-                            eCryptAsymmetric.generateKeyPair(object : ECryptRSAKeyPairListener {
-                                override fun onSuccess(keyPair: KeyPair) {
+                            eCryptKeys.genRSAKeyPair(object : ECRSAKeyPairListener {
+                                override fun onGenerated(keyPair: KeyPair) {
                                     privateKey = keyPair.private as RSAPrivateKey
                                     eCryptAsymmetric.encrypt(fis,
                                             keyPair.public as RSAPublicKey, this@FragmentFile)
@@ -133,6 +154,52 @@ class FragmentFile : Fragment(), AnkoLogger, ECryptResultListener {
                         R.id.rbAsymmetricF -> eCryptAsymmetric.decrypt(fis, privateKey, this)
                     }
                 }
+
+                RC_SIGN -> {
+                    val sigFile = File(Environment.getExternalStorageDirectory(),
+                            "ECryptSample/sample.sig")
+                    if (sigFile.exists()) sigFile.delete()
+
+                    eCryptKeys.genRSAKeyPair(object : ECRSAKeyPairListener {
+
+                        override fun onGenerated(keyPair: KeyPair) {
+                            publicKey = keyPair.public as RSAPublicKey
+                            eCryptAsymmetric.sign(fis,
+                                    keyPair.private as RSAPrivateKey,
+                                    this@FragmentFile,
+                                    sigFile)
+                        }
+
+                        override fun onFailure(message: String, e: Exception) {
+                            e.printStackTrace()
+                            onUiThread {
+                                longToast("Failed to generate RSA key pair. Try again.")
+                            }
+                        }
+                    })
+                }
+
+                RC_VERIFY -> {
+                    eCryptAsymmetric.verify(fis, publicKey,
+                            File(Environment.getExternalStorageDirectory(), "ECryptSample/sample.sig"),
+                            object : ECVerifiedListener {
+                                override fun onSuccess(verified: Boolean) {
+                                    onUiThread {
+                                        if (verified) tvResultF.text = getString(R.string.msg_valid)
+                                        else tvResultF.text = getString(R.string.msg_invalid)
+                                        progressBarF.visibility = View.INVISIBLE
+                                    }
+                                }
+
+                                override fun onFailure(message: String, e: Exception) {
+                                    e.printStackTrace()
+                                    onUiThread {
+                                        progressBarF.visibility = View.INVISIBLE
+                                        toast("Error: $message")
+                                    }
+                                }
+                            })
+                }
             }
         }
     }
@@ -148,9 +215,16 @@ class FragmentFile : Fragment(), AnkoLogger, ECryptResultListener {
     override fun <T> onSuccess(result: T) {
         onUiThread {
             progressBarF.visibility = View.INVISIBLE
-            tvResultF.text = resources.getString(
-                    R.string.success_file_decrypted,
-                    (result as File).absolutePath)
+            tvResultF.text = when (result) {
+
+                is File -> resources.getString(
+                        R.string.success_result_to_file,
+                        (result as File).absolutePath)
+
+                is String -> result
+
+                else -> "Undefined"
+            }
         }
     }
 

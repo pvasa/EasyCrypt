@@ -16,7 +16,7 @@
 package com.pvryan.easycrypt.hash
 
 import com.pvryan.easycrypt.Constants
-import com.pvryan.easycrypt.ECryptResultListener
+import com.pvryan.easycrypt.ECResultListener
 import com.pvryan.easycrypt.extensions.asByteArray
 import com.pvryan.easycrypt.extensions.asHexString
 import org.jetbrains.anko.doAsync
@@ -27,13 +27,13 @@ import java.io.InputStream
 import java.security.InvalidParameterException
 import java.security.MessageDigest
 
-class ECryptHash {
+class ECHash {
 
     /**
      * Decrypts the input data using AES algorithm in CBC mode with PKCS5Padding padding
-     * and posts response to [ECryptResultListener.onSuccess] if successful or
-     * posts error to [ECryptResultListener.onFailure] if failed.
-     * Hashing progress is posted to [ECryptResultListener.onProgress].
+     * and posts response to [ECResultListener.onSuccess] if successful or
+     * posts error to [ECResultListener.onFailure] if failed.
+     * Hashing progress is posted to [ECResultListener.onProgress].
      * Result is either returned as a Hex string or Hex string returned in [outputFile] if provided.
      *
      * @param input input data to be hashed. It can be of type
@@ -48,8 +48,8 @@ class ECryptHash {
      */
     @JvmOverloads
     fun <T> calculate(@NotNull input: T,
-                      @NotNull algorithm: ECryptHashAlgorithms = ECryptHashAlgorithms.SHA_512,
-                      @NotNull erl: ECryptResultListener,
+                      @NotNull algorithm: ECHashAlgorithms = ECHashAlgorithms.SHA_512,
+                      @NotNull erl: ECResultListener,
                       @NotNull outputFile: File = File(Constants.DEF_HASH_FILE_PATH)) {
         doAsync {
 
@@ -116,13 +116,13 @@ class ECryptHash {
                         }
 
                     } catch (e: IOException) {
-                        erl.onFailure(Constants.MSG_CANNOT_READ, e)
+                        erl.onFailure(Constants.ERR_CANNOT_READ, e)
                     } finally {
                         input.close()
                     }
                 }
 
-                else -> erl.onFailure(Constants.MSG_INPUT_TYPE_NOT_SUPPORTED, InvalidParameterException())
+                else -> erl.onFailure(Constants.ERR_INPUT_TYPE_NOT_SUPPORTED, InvalidParameterException())
             }
         }
     }

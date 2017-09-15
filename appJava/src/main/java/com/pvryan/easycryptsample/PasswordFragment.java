@@ -15,14 +15,14 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.pvryan.easycrypt.symmetric.ECryptPasswordListener;
-import com.pvryan.easycrypt.symmetric.ECryptPasswords;
+import com.pvryan.easycrypt.ECKeys;
+import com.pvryan.easycrypt.symmetric.ECPasswordListener;
 
 import java.security.InvalidParameterException;
 
 public class PasswordFragment extends Fragment {
 
-    private ECryptPasswords eCryptPasswords = new ECryptPasswords();
+    private ECKeys ECKeys = new ECKeys();
 
     private TextView tvResult;
     private EditText edCharacters, edLength;
@@ -72,11 +72,11 @@ public class PasswordFragment extends Fragment {
                 try {
                     String symbols;
                     if ((symbols = edCharacters.getText().toString()).length() > 0) {
-                        tvResult.setText(eCryptPasswords.genSecureRandomPassword(
+                        tvResult.setText(ECKeys.genSecureRandomPassword(
                                 Integer.valueOf(edLength.getText().toString()),
                                 symbols.toCharArray()));
                     } else {
-                        tvResult.setText(eCryptPasswords.genSecureRandomPassword(
+                        tvResult.setText(ECKeys.genSecureRandomPassword(
                                 Integer.valueOf(edLength.getText().toString())));
                     }
                 } catch (InvalidParameterException e) {
@@ -95,10 +95,10 @@ public class PasswordFragment extends Fragment {
             public void onClick(View v) {
 
                 try {
-                    eCryptPasswords.genRandomOrgPassword(
+                    ECKeys.genRandomOrgPassword(
                             Integer.valueOf(edLength.getText().toString()),
                             "",
-                            new ECryptPasswordListener() {
+                            new ECPasswordListener() {
 
                                 @Override
                                 public void onFailure(@NonNull String message, @NonNull Exception e) {
@@ -108,7 +108,7 @@ public class PasswordFragment extends Fragment {
                                 }
 
                                 @Override
-                                public void onSuccess(@NonNull String password) {
+                                public void onGenerated(@NonNull String password) {
                                     tvResult.setText(password);
                                 }
                             });

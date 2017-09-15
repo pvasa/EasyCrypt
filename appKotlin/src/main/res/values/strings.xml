@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">EasyCryptSample</string>
+    <string name="app_name">EasyCryptSampleKotlin</string>
     <string name="action_settings">Settings</string>
 
     <string name="tv_select_file_to">Select file to,</string>
@@ -16,9 +16,7 @@
     <string name="button_grant">Grant</string>
     <string name="button_exit">Exit</string>
 
-    <string name="success_file_encrypted">Successfully encrypted data to file\n%s</string>
-    <string name="success_file_decrypted">Successfully decrypted data to file\n%s</string>
-    <string name="success_file_hashed">Successfully hashed data to file\n%s</string>
+    <string name="success_result_to_file">Successfully saved result to file\n%s</string>
 
     <string name="title_permissions">Permissions</string>
 
@@ -32,5 +30,11 @@
     <string name="title_file">File</string>
     <string name="title_password">Password</string>
     <string name="title_asymmetric">Asymmetric</string>
+    <string name="rb_symmetric">Symmetric</string>
+    <string name="rb_asymmetric">Asymmetric</string>
+    <string name="button_sign">Sign</string>
+    <string name="button_verify">Verify</string>
+    <string name="msg_valid">Data verified. Valid.</string>
+    <string name="msg_invalid">Cannot verify data. Invalid.</string>
 
 </resources>

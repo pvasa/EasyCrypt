@@ -13,26 +13,14 @@
  * limitations under the License.
  */
 
-package com.pvryan.easycrypt
+package com.pvryan.easycrypt.symmetric
 
 /**
- * Interface to listen for result from encryption, decryption, or hashing
+ * Transformations that can be used for symmetric encryption/decryption
  */
-interface ECryptResultListener {
-    /**
-     * @param newBytes count processed after last block
-     * @param bytesProcessed count from total input
-     */
-    fun onProgress(newBytes: Int, bytesProcessed: Long) {}
+enum class ECSymmetricTransformations(val value: String) {
 
-    /**
-     * @param result on successful execution of the calling method
-     */
-    fun <T> onSuccess(result: T)
+    AES_CTR_NoPadding("AES/CTR/NoPadding"),
+    AES_CBC_PKCS7Padding("AES/CBC/PKCS7Padding")
 
-    /**
-     * @param message on failure
-     * @param e exception thrown by called method
-     */
-    fun onFailure(message: String, e: Exception)
 }

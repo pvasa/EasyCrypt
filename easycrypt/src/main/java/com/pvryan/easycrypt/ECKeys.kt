@@ -1,9 +1,11 @@
-package com.pvryan.easycrypt.symmetric
+package com.pvryan.easycrypt
 
-import com.pvryan.easycrypt.Constants
+import com.pvryan.easycrypt.asymmetric.ECAsymmetric.KeySizes
+import com.pvryan.easycrypt.asymmetric.ECRSAKeyPairListener
 import com.pvryan.easycrypt.randomorg.RandomOrgApis
 import com.pvryan.easycrypt.randomorg.RandomOrgRequest
 import com.pvryan.easycrypt.randomorg.RandomOrgResponse
+import com.pvryan.easycrypt.symmetric.ECPasswordListener
 import org.jetbrains.anko.doAsync
 import org.jetbrains.annotations.NotNull
 import retrofit2.Call
@@ -13,14 +15,15 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.net.HttpURLConnection
 import java.security.InvalidParameterException
+import java.security.KeyPairGenerator
 import java.security.SecureRandom
 
-class ECryptPasswords {
+class ECKeys {
 
     /**
      * Generate pseudo-random password using Java's [SecureRandom] number generator.
      *
-     * @param length of password to be generated
+     * @param length of password to be onGenerated
      * @param symbols (optional) to be used in the password
      *
      * @return [String] password of specified [length]
@@ -37,7 +40,7 @@ class ECryptPasswords {
                 "Invalid length. Valid range is 1 to 4096.")
 
         val password = CharArray(length)
-        for (i in 0..length - 1) {
+        for (i in 0 until length) {
             password[i] = symbols[Constants.random.nextInt(symbols.size - 1)]
         }
         return password.joinToString("")
@@ -45,16 +48,16 @@ class ECryptPasswords {
 
     /**
      * Generate true random password using random.org service
-     * and posts response to [ECryptPasswordListener.onSuccess] if successful or
-     * posts error to [ECryptPasswordListener.onFailure] if failed.
+     * and posts response to [ECPasswordListener.onGenerated] if successful or
+     * posts error to [ECPasswordListener.onFailure] if failed.
      * Result is a [String] password of specified [length].
      *
-     * @param length of password to be generated (range 1 to 4096)
+     * @param length of password to be onGenerated (range 1 to 4096)
      * @param randomOrgApiKey provided by api.random.org/api-keys/beta
-     * @param resultListener listener interface of type [ECryptPasswordListener] where generated password will be posted
+     * @param resultListener listener interface of type [ECPasswordListener] where onGenerated password will be posted
      */
     fun genRandomOrgPassword(@NotNull length: Int, @NotNull randomOrgApiKey: String,
-                             @NotNull resultListener: ECryptPasswordListener) {
+                             @NotNull resultListener: ECPasswordListener) {
 
         if (length < 1 || length > 4096) {
             resultListener.onFailure(
@@ -110,8 +113,8 @@ class ECryptPasswords {
                             }
 
                             if (oddLength)
-                                resultListener.onSuccess(randomKeyHex.toString().dropLast(1))
-                            else resultListener.onSuccess(randomKeyHex.toString())
+                                resultListener.onGenerated(randomKeyHex.toString().dropLast(1))
+                            else resultListener.onGenerated(randomKeyHex.toString())
 
                         } else {
                             resultListener.onFailure("Random.org error.",
@@ -125,6 +128,24 @@ class ECryptPasswords {
                     }
                 }
             })
+        }
+    }
+
+    /**
+     * Generate a key pair with keys of specified length (default 4096) for RSA algorithm.
+     *
+     * @param kpl listener interface of type [ECRSAKeyPairListener]
+     * where onGenerated keypair will be posted
+     * @param keySize of type [KeySizes] which can be 2048 or 4096 (default)
+     */
+    @JvmOverloads
+    fun genRSAKeyPair(kpl: ECRSAKeyPairListener,
+                      keySize: KeySizes = KeySizes._4096) {
+        doAsync {
+            val generator = KeyPairGenerator.getInstance(Constants.ASYMMETRIC_ALGORITHM)
+            generator.initialize(keySize.value, Constants.random)
+            val keyPair = generator.generateKeyPair()
+            kpl.onGenerated(keyPair)
         }
     }
 }

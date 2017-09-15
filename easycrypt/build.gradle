@@ -17,7 +17,7 @@ ext {
     gitUrl = 'https://github.com/ryan652/EasyCrypt.git'
     gitRepo = 'ryan652/EasyCrypt'
 
-    libraryVersion = '1.1.0'
+    libraryVersion = '1.2.0'
 
     developerId = 'ryan652'
     developerName = 'Priyank Vasa'
@@ -45,7 +45,7 @@ android {
     compileSdkVersion 25
     buildToolsVersion "25.0.3"
     defaultConfig {
-        minSdkVersion 10
+        minSdkVersion 14
         targetSdkVersion 25
         versionCode 1
         versionName "1.1.0"
@@ -71,6 +71,7 @@ dependencies {
     implementation "org.jetbrains.anko:anko-commons:$anko_version"
     implementation 'com.squareup.retrofit2:retrofit:2.3.0'
     implementation 'com.squareup.retrofit2:converter-gson:2.2.0'
+    implementation 'com.nulab-inc:zxcvbn:1.2.3'
 }
 repositories {
     jcenter()

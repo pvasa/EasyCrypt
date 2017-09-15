@@ -12,17 +12,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package com.pvryan.easycrypt.hash
+package com.pvryan.easycrypt.asymmetric
 
 /**
- * Enum class defining available hashing algorithms for [ECryptHash.calculate] method
+ * Interface to listen for result from [ECAsymmetric.verify]
  */
-enum class ECryptHashAlgorithms(val value: String) {
-    MD5("MD5"),
-    SHA_1("SHA-1"),
-    SHA_224("SHA-224"),
-    SHA_256("SHA-256"),
-    SHA_384("SHA-384"),
-    SHA_512("SHA-512");
+interface ECVerifiedListener {
+
+    /**
+     * @param newBytes count processed after last block
+     * @param bytesProcessed count from total input
+     */
+    fun onProgress(newBytes: Int, bytesProcessed: Long) {}
+
+    /**
+     * @param verified on successful execution of the calling method
+     */
+    fun onSuccess(verified: Boolean)
+
+    /**
+     * @param message on failure
+     * @param e exception thrown by called method
+     */
+    fun onFailure(message: String, e: Exception)
 }
