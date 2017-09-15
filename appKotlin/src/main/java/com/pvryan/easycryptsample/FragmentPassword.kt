@@ -22,15 +22,15 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.pvryan.easycrypt.symmetric.ECryptPasswordListener
-import com.pvryan.easycrypt.symmetric.ECryptPasswords
+import com.pvryan.easycrypt.ECKeys
+import com.pvryan.easycrypt.symmetric.ECPasswordListener
 import kotlinx.android.synthetic.main.fragment_password.*
 import org.jetbrains.anko.support.v4.toast
 import java.security.InvalidParameterException
 
 class FragmentPassword : Fragment() {
 
-    private val eCryptPasswords = ECryptPasswords()
+    private val eCryptPasswords = ECKeys()
 
     override fun onCreateView(inflater: LayoutInflater?, @Nullable container: ViewGroup?,
                               @Nullable savedInstanceState: Bundle?): View? {
@@ -65,7 +65,7 @@ class FragmentPassword : Fragment() {
                 eCryptPasswords.genRandomOrgPassword(
                         Integer.valueOf(edLength.text.toString())!!,
                         "",
-                        object : ECryptPasswordListener {
+                        object : ECPasswordListener {
 
                             override fun onFailure(message: String, e: Exception) {
                                 Log.w(FragmentPassword::class.java.simpleName, message)
@@ -73,7 +73,7 @@ class FragmentPassword : Fragment() {
                                 toast(e.localizedMessage)
                             }
 
-                            override fun onSuccess(password: String) {
+                            override fun onGenerated(password: String) {
                                 tvResult.text = password
                             }
                         })

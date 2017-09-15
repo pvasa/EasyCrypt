@@ -37,6 +37,10 @@ internal open class Constants {
 
         val ITERATIONS = 10000
 
+        val ASYMMETRIC_ALGORITHM = "RSA"
+        val ASYMMETRIC_TRANSFORMATION = "RSA/NONE/OAEPwithSHA-256andMGF1Padding"
+        val SIGNATURE_ALGORITHM = "SHA512withRSA"
+
         private val HASH_FILE_EXT = ".txt"
         val ECRYPT_FILE_EXT = ".ecrypt"
 
@@ -57,12 +61,14 @@ internal open class Constants {
         val DEF_ENCRYPTED_FILE_PATH = DEF_EXT_FILE_PATH + ENCRYPTED_FILE_NAME + ECRYPT_FILE_EXT
         val DEF_DECRYPTED_FILE_PATH = DEF_EXT_FILE_PATH + DECRYPTED_FILE_NAME + ECRYPT_FILE_EXT
 
-        val MSG_INPUT_TYPE_NOT_SUPPORTED = "Input type not supported."
-        val MSG_INVALID_INPUT_DATA = "Invalid input data."
-        val MSG_NO_SUCH_FILE = "File does not exist."
-        val MSG_CANNOT_WRITE = "Cannot write to file."
-        val MSG_CANNOT_READ = "Cannot read from file."
-        val MSG_OUTPUT_FILE_EXISTS = "Output file already exists."
+        val ERR_VERIFY_EXCEPTION = "Cannot use provided signature to verify input data."
+        val ERR_SIGN_EXCEPTION = "This signature algorithm is unable to process the input data provided."
+        val ERR_INPUT_TYPE_NOT_SUPPORTED = "Input type not supported."
+        val ERR_INVALID_INPUT_DATA = "Invalid input data."
+        val ERR_NO_SUCH_FILE = "File does not exist."
+        val ERR_CANNOT_WRITE = "Cannot write to file."
+        val ERR_CANNOT_READ = "Cannot read from file."
+        val ERR_OUTPUT_FILE_EXISTS = "Output file already exists."
 
         val STANDARD_SYMBOLS =
                 "ABCDEFGHIJKLMNOPQRSTUVWXYZ" +

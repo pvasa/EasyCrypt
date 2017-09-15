@@ -108,6 +108,33 @@
 
     </LinearLayout>
 
+    <LinearLayout
+        android:id="@+id/llSignVerifyF"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginEnd="32dp"
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="16dp"
+        android:orientation="horizontal"
+        android:visibility="gone">
+
+        <Button
+            android:id="@+id/buttonSignF"
+            style="?android:attr/buttonBarButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/button_sign" />
+
+        <Button
+            android:id="@+id/buttonVerifyF"
+            style="?android:attr/buttonBarButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/button_verify" />
+
+    </LinearLayout>
+
     <TextView
         android:id="@+id/tvResultF"
         android:layout_width="wrap_content"

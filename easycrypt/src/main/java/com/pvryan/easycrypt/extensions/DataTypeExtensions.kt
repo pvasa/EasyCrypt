@@ -18,18 +18,18 @@
 package com.pvryan.easycrypt.extensions
 
 import android.util.Base64
-import android.util.Log
 import com.pvryan.easycrypt.Constants
-import com.pvryan.easycrypt.ECryptResultListener
+import com.pvryan.easycrypt.ECResultListener
 import java.io.File
 import java.io.IOException
 import java.security.interfaces.RSAKey
 import java.util.regex.Pattern
 
 fun ByteArray.toBase64String(): String = Base64.encodeToString(this, Base64.URL_SAFE)
+fun ByteArray.toBase64(): ByteArray = Base64.encode(this, Base64.URL_SAFE)
 fun ByteArray.asString(): String = this.toString(Charsets.UTF_8)
 
-private val HEX_CHARS = "0123456789ABCDEF".toCharArray()
+private val HEX_CHARS = charArrayOf('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F')
 fun ByteArray.asHexString(): String {
     val result = StringBuffer()
     forEach {
@@ -42,25 +42,27 @@ fun ByteArray.asHexString(): String {
     return result.toString()
 }
 
-fun ByteArray.handleSuccess(erl: ECryptResultListener, outputFile: File, isEncrypted: Boolean) {
+fun ByteArray.handleSuccess(erl: ECResultListener, outputFile: File, asBase64String: Boolean) {
 
     if (outputFile.absolutePath != Constants.DEF_ENCRYPTED_FILE_PATH &&
             outputFile.absolutePath != Constants.DEF_DECRYPTED_FILE_PATH) {
 
         try {
             outputFile.outputStream().use {
-                it.write(this)
+                if (asBase64String)
+                    it.write(this.toBase64())
+                else it.write(this)
                 it.flush()
             }
+            erl.onSuccess(outputFile)
         } catch (e: IOException) {
-            erl.onFailure(Constants.MSG_CANNOT_WRITE, e)
+            erl.onFailure(Constants.ERR_CANNOT_WRITE, e)
         }
 
     } else {
-        if (isEncrypted)
+        if (asBase64String)
             erl.onSuccess(this.toBase64String())
         else {
-            Log.i("HERE", "RESULT " + this.asString())
             erl.onSuccess(this.asString())
         }
     }

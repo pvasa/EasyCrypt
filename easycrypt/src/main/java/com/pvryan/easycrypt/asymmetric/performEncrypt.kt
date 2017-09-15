@@ -12,22 +12,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.pvryan.easycrypt.asymmetric
 
 import com.pvryan.easycrypt.Constants
-import com.pvryan.easycrypt.ECryptResultListener
+import com.pvryan.easycrypt.ECKeys
+import com.pvryan.easycrypt.ECResultListener
 import com.pvryan.easycrypt.extensions.allowedInputSize
 import com.pvryan.easycrypt.extensions.asByteArray
 import com.pvryan.easycrypt.extensions.fromBase64
 import com.pvryan.easycrypt.extensions.handleSuccess
-import com.pvryan.easycrypt.symmetric.ECryptPasswords
-import com.pvryan.easycrypt.symmetric.ECryptSymmetric
+import com.pvryan.easycrypt.symmetric.ECSymmetric
 import java.io.File
 import java.io.FileInputStream
 import java.io.IOException
 import java.io.InputStream
-import java.security.InvalidParameterException
 import java.security.interfaces.RSAPublicKey
 import javax.crypto.Cipher
 
@@ -37,13 +35,13 @@ internal object performEncrypt {
     internal fun <T> invoke(input: T,
                             publicKey: RSAPublicKey,
                             cipher: Cipher,
-                            erl: ECryptResultListener,
+                            erl: ECResultListener,
                             outputFile: File = File(Constants.DEF_ENCRYPTED_FILE_PATH)) {
 
         if (outputFile.exists() && outputFile.absolutePath != Constants.DEF_ENCRYPTED_FILE_PATH) {
             when (input) { is InputStream -> input.close()
             }
-            erl.onFailure(Constants.MSG_OUTPUT_FILE_EXISTS, FileAlreadyExistsException(outputFile))
+            erl.onFailure(Constants.ERR_OUTPUT_FILE_EXISTS, FileAlreadyExistsException(outputFile))
             return
         }
 
@@ -53,15 +51,15 @@ internal object performEncrypt {
 
                 if (input.size > publicKey.allowedInputSize()) {
 
-                    val password = ECryptPasswords()
+                    val password = ECKeys()
                             .genSecureRandomPassword(Constants.PASSWORD_LENGTH)
 
-                    ECryptSymmetric().encrypt(input, password, object : ECryptResultListener {
+                    ECSymmetric().encrypt(input, password, object : ECResultListener {
 
                         override fun <T> onSuccess(result: T) {
 
                             invoke(password.asByteArray(), publicKey,
-                                    cipher, object : ECryptResultListener {
+                                    cipher, object : ECResultListener {
 
                                 @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")
                                 override fun <T> onSuccess(cipherPass: T) {
@@ -93,14 +91,14 @@ internal object performEncrypt {
                 }
                 outputFile.createNewFile()
 
-                val password = ECryptPasswords()
+                val password = ECKeys()
                         .genSecureRandomPassword(Constants.PASSWORD_LENGTH)
 
                 File(Constants.DEF_EXT_TEMP_DIR_PATH).mkdirs()
                 val tempFile = File(Constants.DEF_EXT_TEMP_DIR_PATH, Constants.ENCRYPTED_FILE_NAME + Constants.ECRYPT_FILE_EXT)
                 if (tempFile.exists()) tempFile.delete()
 
-                ECryptSymmetric().encrypt(input, password, object : ECryptResultListener {
+                ECSymmetric().encrypt(input, password, object : ECResultListener {
 
                     override fun onProgress(newBytes: Int, bytesProcessed: Long) {
                         erl.onProgress(newBytes, bytesProcessed)
@@ -109,7 +107,7 @@ internal object performEncrypt {
                     override fun <T> onSuccess(result: T) {
 
                         invoke(password.asByteArray(),
-                                publicKey, cipher, object : ECryptResultListener {
+                                publicKey, cipher, object : ECResultListener {
 
                             @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")
                             override fun <T> onSuccess(passCipher: T) {
@@ -130,7 +128,7 @@ internal object performEncrypt {
                                             read = it.read(buffer)
                                         }
                                     } catch (e: IOException) {
-                                        erl.onFailure(Constants.MSG_CANNOT_WRITE, e)
+                                        erl.onFailure(Constants.ERR_CANNOT_WRITE, e)
                                         return
                                     } finally {
                                         fos.flush()
@@ -152,9 +150,6 @@ internal object performEncrypt {
                     }
                 }, tempFile)
             }
-
-            else -> erl.onFailure(Constants.MSG_INPUT_TYPE_NOT_SUPPORTED, InvalidParameterException())
-
         }
     }
 }

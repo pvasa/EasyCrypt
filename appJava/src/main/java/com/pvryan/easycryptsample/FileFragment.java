@@ -7,6 +7,7 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -14,17 +15,20 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.pvryan.easycrypt.ECryptResultListener;
-import com.pvryan.easycrypt.asymmetric.ECryptAsymmetric;
-import com.pvryan.easycrypt.asymmetric.ECryptRSAKeyPairListener;
-import com.pvryan.easycrypt.hash.ECryptHash;
-import com.pvryan.easycrypt.hash.ECryptHashAlgorithms;
-import com.pvryan.easycrypt.symmetric.ECryptSymmetric;
+import com.pvryan.easycrypt.ECKeys;
+import com.pvryan.easycrypt.ECResultListener;
+import com.pvryan.easycrypt.asymmetric.ECAsymmetric;
+import com.pvryan.easycrypt.asymmetric.ECRSAKeyPairListener;
+import com.pvryan.easycrypt.asymmetric.ECVerifiedListener;
+import com.pvryan.easycrypt.hash.ECHash;
+import com.pvryan.easycrypt.hash.ECHashAlgorithms;
+import com.pvryan.easycrypt.symmetric.ECSymmetric;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -36,17 +40,22 @@ import java.security.KeyPair;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 
-public class FileFragment extends Fragment implements ECryptResultListener {
+public class FileFragment extends Fragment implements ECResultListener {
 
     private final int RC_HASH = 2;
     private final int RC_ENCRYPT = 3;
     private final int RC_DECRYPT = 4;
+    private final int RC_SIGN = 5;
+    private final int RC_VERIFY = 6;
 
-    private ECryptSymmetric eCryptSymmetric = new ECryptSymmetric();
-    private ECryptAsymmetric eCryptAsymmetric = new ECryptAsymmetric();
+    private ECSymmetric eCSymmetric = new ECSymmetric();
+    private ECAsymmetric eCAsymmetric = new ECAsymmetric();
+    private ECHash eCHash = new ECHash();
+    private ECKeys eCKeys = new ECKeys();
     private RSAPrivateKey privateKey;
-    private ECryptHash eCryptHash = new ECryptHash();
+    private RSAPublicKey publicKey;
 
+    private LinearLayout llSignVerifyF;
     private EditText edPassword;
     private TextView tvResult;
     private RadioGroup rgType;
@@ -72,6 +81,7 @@ public class FileFragment extends Fragment implements ECryptResultListener {
 
         clipboard = (ClipboardManager) getActivity().getSystemService(Context.CLIPBOARD_SERVICE);
 
+        llSignVerifyF = (LinearLayout) view.findViewById(R.id.llSignVerifyF);
         edPassword = (EditText) view.findViewById(R.id.edPasswordF);
         tvResult = (TextView) view.findViewById(R.id.tvResultF);
         tvResult.setOnLongClickListener(new View.OnLongClickListener() {
@@ -94,9 +104,11 @@ public class FileFragment extends Fragment implements ECryptResultListener {
                 switch (checkedId) {
                     case R.id.rbSymmetricF:
                         edPassword.setVisibility(View.VISIBLE);
+                        llSignVerifyF.setVisibility(View.GONE);
                         break;
                     case R.id.rbAsymmetricF:
                         edPassword.setVisibility(View.GONE);
+                        llSignVerifyF.setVisibility(View.VISIBLE);
                         break;
                 }
             }
@@ -121,6 +133,20 @@ public class FileFragment extends Fragment implements ECryptResultListener {
                     @Override
                     public void onClick(View view1) {
                         selectFile(RC_DECRYPT);
+                    }
+                });
+        view.findViewById(R.id.buttonSelectSignF)
+                .setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view1) {
+                        selectFile(RC_SIGN);
+                    }
+                });
+        view.findViewById(R.id.buttonSelectVerifyF)
+                .setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view1) {
+                        selectFile(RC_VERIFY);
                     }
                 });
     }
@@ -148,8 +174,8 @@ public class FileFragment extends Fragment implements ECryptResultListener {
                     pBar.setProgress(0);
                     pBar.setVisibility(View.VISIBLE);
 
-                    eCryptHash.calculate(fis, ECryptHashAlgorithms.SHA_512,
-                            new ECryptResultListener() {
+                    eCHash.calculate(fis, ECHashAlgorithms.SHA_512,
+                            new ECResultListener() {
 
                                 @Override
                                 public void onProgress(int newBytes, long bytesProcessed) {
@@ -206,16 +232,16 @@ public class FileFragment extends Fragment implements ECryptResultListener {
                     switch (rgType.getCheckedRadioButtonId()) {
 
                         case R.id.rbSymmetricF:
-                            eCryptSymmetric.encrypt(fis, edPassword.getText().toString(),
+                            eCSymmetric.encrypt(fis, edPassword.getText().toString(),
                                     FileFragment.this);
                             break;
 
                         case R.id.rbAsymmetricF:
-                            eCryptAsymmetric.generateKeyPair(new ECryptRSAKeyPairListener() {
+                            eCKeys.genRSAKeyPair(new ECRSAKeyPairListener() {
                                 @Override
-                                public void onSuccess(@NotNull KeyPair keyPair) {
+                                public void onGenerated(@NotNull KeyPair keyPair) {
                                     privateKey = (RSAPrivateKey) keyPair.getPrivate();
-                                    eCryptAsymmetric.encrypt(fis,
+                                    eCAsymmetric.encrypt(fis,
                                             (RSAPublicKey) keyPair.getPublic(),
                                             FileFragment.this);
                                 }
@@ -261,12 +287,12 @@ public class FileFragment extends Fragment implements ECryptResultListener {
                     switch (rgType.getCheckedRadioButtonId()) {
 
                         case R.id.rbSymmetricF:
-                            eCryptSymmetric.decrypt(fis, edPassword.getText().toString(),
+                            eCSymmetric.decrypt(fis, edPassword.getText().toString(),
                                     FileFragment.this);
                             break;
 
                         case R.id.rbAsymmetricF:
-                            eCryptAsymmetric.decrypt(fis, privateKey, FileFragment.this);
+                            eCAsymmetric.decrypt(fis, privateKey, FileFragment.this);
                             break;
                     }
 
@@ -281,6 +307,111 @@ public class FileFragment extends Fragment implements ECryptResultListener {
                 }
                 break;
             }
+
+            case RC_SIGN:
+                try {
+                    final File sigFile = new File(Environment.getExternalStorageDirectory(),
+                            "ECryptSample/sample.sig");
+                    if (sigFile.exists()) sigFile.delete();
+
+                    final InputStream fis = contentResolver.openInputStream(data.getData());
+
+                    pBar.setMax(fis.available() / 1024);
+                    pBar.setProgress(0);
+                    pBar.setVisibility(View.VISIBLE);
+
+                    eCKeys.genRSAKeyPair(new ECRSAKeyPairListener() {
+                        @Override
+                        public void onFailure(@NotNull final String message, @NotNull Exception e) {
+                            e.printStackTrace();
+                            getActivity().runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Toast.makeText(getActivity(),
+                                            "Error: " + message,
+                                            Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                        }
+
+                        @Override
+                        public void onGenerated(@NotNull KeyPair keyPair) {
+                            publicKey = (RSAPublicKey) keyPair.getPublic();
+                            eCAsymmetric.sign(fis,
+                                    (RSAPrivateKey) keyPair.getPrivate(),
+                                    FileFragment.this, sigFile);
+                        }
+                    }, ECAsymmetric.KeySizes._4096);
+
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                    pBar.setVisibility(View.INVISIBLE);
+                    Toast.makeText(getActivity(),
+                            "File not found.", Toast.LENGTH_SHORT).show();
+                } catch (NullPointerException | IOException e) {
+                    pBar.setVisibility(View.INVISIBLE);
+                    e.printStackTrace();
+                }
+                break;
+
+            case RC_VERIFY:
+                try {
+                    InputStream fis = contentResolver.openInputStream(data.getData());
+
+                    pBar.setMax(fis.available() / 1024);
+                    pBar.setProgress(0);
+                    pBar.setVisibility(View.VISIBLE);
+
+                    eCAsymmetric.verify(fis, publicKey,
+                            new File(Environment.getExternalStorageDirectory(),
+                                    "ECryptSample/sample.sig"),
+                            new ECVerifiedListener() {
+                                @Override
+                                public void onProgress(int newBytes, final long bytesProcessed) {
+                                    getActivity().runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            pBar.setProgress((int) bytesProcessed / 1024);
+                                        }
+                                    });
+                                }
+
+                                @Override
+                                public void onSuccess(final boolean verified) {
+                                    getActivity().runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            if (verified) tvResult.setText(R.string.msg_valid);
+                                            else tvResult.setText(R.string.msg_invalid);
+                                            pBar.setVisibility(View.INVISIBLE);
+                                        }
+                                    });
+                                }
+
+                                @Override
+                                public void onFailure(@NotNull final String message, @NotNull Exception e) {
+                                    e.printStackTrace();
+                                    getActivity().runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            pBar.setVisibility(View.INVISIBLE);
+                                            Toast.makeText(getActivity(),
+                                                    "Error: " + message,
+                                                    Toast.LENGTH_SHORT).show();
+                                        }
+                                    });
+                                }
+                            });
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                    pBar.setVisibility(View.INVISIBLE);
+                    Toast.makeText(getActivity(),
+                            "File not found.", Toast.LENGTH_SHORT).show();
+                } catch (NullPointerException | IOException e) {
+                    pBar.setVisibility(View.INVISIBLE);
+                    e.printStackTrace();
+                }
+                break;
         }
     }
 
@@ -290,9 +421,13 @@ public class FileFragment extends Fragment implements ECryptResultListener {
             @Override
             public void run() {
                 pBar.setVisibility(View.INVISIBLE);
-                tvResult.setText(getResources().getString(
-                        R.string.success_file_encrypted,
-                        ((File) result).getAbsolutePath()));
+                if (result instanceof File)
+                    tvResult.setText(getResources().getString(
+                            R.string.success_result_to_file,
+                            ((File) result).getAbsolutePath()));
+                else if (result instanceof String)
+                    tvResult.setText((String) result);
+                else tvResult.setText(R.string.result_undefined);
             }
         });
     }

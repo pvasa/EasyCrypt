@@ -4,7 +4,7 @@
 [![GitHub issues](https://img.shields.io/github/issues/ryan652/easycrypt.svg)](https://github.com/ryan652/EasyCrypt/issues)
 
 # EasyCrypt
-Easily encrypt, decrypt, or hash data in a very secure way.
+Secure and efficient cryptography library for Android. (Auto fix SecureRandom bugs in API 18 and below.)
 
 ## Features
 * AES-256 encryption algorithm
@@ -14,8 +14,7 @@ Easily encrypt, decrypt, or hash data in a very secure way.
 * Password stretching with PBKDF2
 * Random IV generated on each encryption (16 bytes)
 * Supports MD5, SHA1, and SHA2 hash functions
-* SecureRandom fixes on Android below KitKat
-* Generate key manually with SecureRandom or random.org
+* Generate secure keys with SecureRandom or random.org
 * Asymmetric encryption with RSA
 * Auto handle large data by using hybrid asymmetric encryption
 * Supported RSA key sizes are 2048 bits and 4096 bits
@@ -40,8 +39,8 @@ apply plugin: 'kotlin-android-extensions'
 
 dependencies {
     ...
-    compile "com.pvryan.easycrypt:easycrypt:1.1.0"
-    compile "org.jetbrains.kotlin:kotlin-stdlib:1.1.3-2"
+    compile "com.pvryan.easycrypt:easycrypt:1.2.0"
+    compile "org.jetbrains.kotlin:kotlin-stdlib:1.1.4-3"
     compile "org.jetbrains.anko:anko-commons:0.10.1"
     ...
 }
@@ -52,24 +51,24 @@ Add in your app's build.gradle
 ```gradle
 dependencies {
     ...
-    compile "com.pvryan.easycrypt:easycrypt:1.1.0"
+    compile "com.pvryan.easycrypt:easycrypt:1.2.0"
     ...
 }
 ```
 
 ## Usage
 ```kotlin
-val eCryptSymmetric = ECryptSymmetric()
-val eCryptAsymmetric = ECryptAsymmetric()
-val eCryptHash = ECryptHash()
-val eCryptPass = ECryptPasswords()
+val eCryptSymmetric = ECSymmetric()
+val eCryptAsymmetric = ECAsymmetric()
+val eCryptHash = ECHash()
+val eCryptPass = ECPasswords()
 ```
 
 ### Symmetric key encryption
 #### Encrypt data
 ```kotlin
 eCryptSymmetric.encrypt (input, password,
-    object : ECryptResultListener {
+    object : ECResultListener {
 
         // Optional
         override fun onProgress(newBytes: Int, bytesProcessed: Long) {
@@ -91,7 +90,7 @@ eCryptSymmetric.encrypt (input, password,
 #### Decrypt data
 ```kotlin
 eCryptSymmetric.decrypt(input, password,
-        object : ECryptResultListener {
+        object : ECResultListener {
 
             // Optional
             override fun onProgress(newBytes: Int, bytesProcessed: Long) {
@@ -113,12 +112,12 @@ eCryptSymmetric.decrypt(input, password,
 ### Asymmetric key encryption
 #### Encrypt data
 ```kotlin
-eCryptAsymmetric.generateKeyPair(object : ECryptRSAKeyPairListener {
+eCryptAsymmetric.generateKeyPair(object : ECRSAKeyPairListener {
 
      override fun onSuccess(keyPair: KeyPair) {
          privateKey = keyPair.private as RSAPrivateKey // Save private key
          eCryptAsymmetric.encrypt(input, keyPair.public as RSAPublicKey,
-                 object : ECryptResultListener {
+                 object : ECResultListener {
 
                      // Optional
                      override fun onProgress(newBytes: Int, bytesProcessed: Long) {
@@ -147,7 +146,7 @@ eCryptAsymmetric.generateKeyPair(object : ECryptRSAKeyPairListener {
 #### Decrypt data
 ```kotlin
 eCryptAsymmetric.decrypt(input, privateKey,
-        object : ECryptResultListener {
+        object : ECResultListener {
 
             // Optional
             override fun onProgress(newBytes: Int, bytesProcessed: Long) {
@@ -166,10 +165,59 @@ eCryptAsymmetric.decrypt(input, privateKey,
 )
 ```
 
+#### Sign data
+```kotlin
+eCryptKeys.genRSAKeyPair(object : ECRSAKeyPairListener {
+
+    override fun onGenerated(keyPair: KeyPair) {
+
+        publicKey = keyPair.public as RSAPublicKey
+
+        eCryptAsymmetric.sign(input,
+                keyPair.private as RSAPrivateKey,
+                object : ECResultListener {
+
+                    // Optional
+                    override fun onProgress(newBytes: Int, bytesProcessed: Long) {
+
+                    }
+
+                    override fun <T> onSuccess(result: T) {
+
+                    }
+
+                    override fun onFailure(message: String, e: Exception) {
+
+                    }
+                },
+                signatureOutputFile)
+    }
+
+    override fun onFailure(message: String, e: Exception) {
+
+    }
+})
+```
+
+#### Verify data
+```kotlin
+eCryptAsymmetric.verify(input, publicKey, signatureFile,
+        object : ECVerifiedListener {
+            override fun onSuccess(verified: Boolean) {
+
+            }
+
+            override fun onFailure(message: String, e: Exception) {
+
+            }
+        }
+)
+```
+
 #### Hash data
 ```kotlin
-eCryptHash.calculate(input, hashAlgorithm, // from ECryptHashAlgorithms
-        object : ECryptResultListener {
+eCryptHash.calculate(input, hashAlgorithm, // from ECHashAlgorithms
+        object : ECResultListener {
 
             // Optional
             override fun onProgress(newBytes: Int, bytesProcessed: Long) {
@@ -205,11 +253,12 @@ val password = eCryptPass.genSecureRandomPassword(length, charArrayOf(/*symbols 
 ```
 
 #### Generate key with Random.org (true random)
+For sample to work enter your API key in FragmentPasswords
 ```kotlin
 eCryptPass.genRandomOrgPassword(
         length,
         "random-org-api-key", //TODO: Replace with your random.org api key
-        new ECryptPasswordListener() {
+        new ECPasswordListener() {
 
             @Override
             public void onFailure(@NonNull String message, @NonNull Exception e) {

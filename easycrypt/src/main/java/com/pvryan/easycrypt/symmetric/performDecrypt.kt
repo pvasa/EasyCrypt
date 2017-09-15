@@ -16,7 +16,7 @@
 package com.pvryan.easycrypt.symmetric
 
 import com.pvryan.easycrypt.Constants
-import com.pvryan.easycrypt.ECryptResultListener
+import com.pvryan.easycrypt.ECResultListener
 import com.pvryan.easycrypt.extensions.handleSuccess
 import java.io.*
 import java.security.InvalidParameterException
@@ -34,13 +34,13 @@ internal object performDecrypt {
                             password: String,
                             cipher: Cipher,
                             getKey: (password: String, salt: ByteArray) -> SecretKeySpec,
-                            erl: ECryptResultListener,
+                            erl: ECResultListener,
                             outputFile: File) {
 
         if (outputFile.exists() && outputFile.absolutePath != Constants.DEF_DECRYPTED_FILE_PATH) {
             when (input) { is InputStream -> input.close()
             }
-            erl.onFailure(Constants.MSG_OUTPUT_FILE_EXISTS, FileAlreadyExistsException(outputFile))
+            erl.onFailure(Constants.ERR_OUTPUT_FILE_EXISTS, FileAlreadyExistsException(outputFile))
             return
         }
 
@@ -55,7 +55,7 @@ internal object performDecrypt {
 
                 if (IV_BYTES_LENGTH != input.read(IV) || Constants.SALT_BYTES_LENGTH != input.read(salt)) {
                     input.close()
-                    erl.onFailure(Constants.MSG_INVALID_INPUT_DATA, BadPaddingException())
+                    erl.onFailure(Constants.ERR_INVALID_INPUT_DATA, BadPaddingException())
                     return
                 }
 
@@ -69,9 +69,9 @@ internal object performDecrypt {
                     cipher.doFinal(secureBytes).handleSuccess(erl, outputFile, false)
 
                 } catch (e: BadPaddingException) {
-                    erl.onFailure(Constants.MSG_INVALID_INPUT_DATA, e)
+                    erl.onFailure(Constants.ERR_INVALID_INPUT_DATA, e)
                 } catch (e: IllegalBlockSizeException) {
-                    erl.onFailure(Constants.MSG_INVALID_INPUT_DATA, e)
+                    erl.onFailure(Constants.ERR_INVALID_INPUT_DATA, e)
                 } finally {
                     input.close()
                 }
@@ -94,12 +94,12 @@ internal object performDecrypt {
                     if (IV_BYTES_LENGTH != input.read(iv) ||
                             Constants.SALT_BYTES_LENGTH != input.read(salt)) {
                         input.close()
-                        erl.onFailure(Constants.MSG_INVALID_INPUT_DATA, BadPaddingException())
+                        erl.onFailure(Constants.ERR_INVALID_INPUT_DATA, BadPaddingException())
                         return
                     }
                 } catch (e: IOException) {
                     input.close()
-                    erl.onFailure(Constants.MSG_CANNOT_READ, e)
+                    erl.onFailure(Constants.ERR_CANNOT_READ, e)
                     return
                 }
 
@@ -124,7 +124,7 @@ internal object performDecrypt {
 
                 } catch (e: IOException) {
                     outputFile.delete()
-                    erl.onFailure(Constants.MSG_CANNOT_WRITE, e)
+                    erl.onFailure(Constants.ERR_CANNOT_WRITE, e)
                     return
                 } finally {
                     fos.flush()
@@ -134,7 +134,7 @@ internal object performDecrypt {
                 erl.onSuccess(outputFile)
             }
 
-            else -> erl.onFailure(Constants.MSG_INPUT_TYPE_NOT_SUPPORTED, InvalidParameterException())
+            else -> erl.onFailure(Constants.ERR_INPUT_TYPE_NOT_SUPPORTED, InvalidParameterException())
 
         }
     }

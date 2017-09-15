@@ -16,7 +16,7 @@
 package com.pvryan.easycrypt.symmetric
 
 import com.pvryan.easycrypt.Constants
-import com.pvryan.easycrypt.ECryptResultListener
+import com.pvryan.easycrypt.ECResultListener
 import com.pvryan.easycrypt.extensions.handleSuccess
 import java.io.File
 import java.io.FileInputStream
@@ -35,13 +35,13 @@ internal object performEncrypt {
                             password: String,
                             cipher: Cipher,
                             getKey: (password: String, salt: ByteArray) -> SecretKeySpec,
-                            erl: ECryptResultListener,
+                            erl: ECResultListener,
                             outputFile: File) {
 
         if (outputFile.exists() && outputFile.absolutePath != Constants.DEF_ENCRYPTED_FILE_PATH) {
             when (input) { is InputStream -> input.close()
             }
-            erl.onFailure(Constants.MSG_OUTPUT_FILE_EXISTS, FileAlreadyExistsException(outputFile))
+            erl.onFailure(Constants.ERR_OUTPUT_FILE_EXISTS, FileAlreadyExistsException(outputFile))
             return
         }
 
@@ -78,7 +78,7 @@ internal object performEncrypt {
                     fos.close()
                     input.close()
                     outputFile.delete()
-                    erl.onFailure(Constants.MSG_CANNOT_WRITE, e)
+                    erl.onFailure(Constants.ERR_CANNOT_WRITE, e)
                     return
                 }
 
@@ -98,7 +98,7 @@ internal object performEncrypt {
 
                 } catch (e: IOException) {
                     outputFile.delete()
-                    erl.onFailure(Constants.MSG_CANNOT_WRITE, e)
+                    erl.onFailure(Constants.ERR_CANNOT_WRITE, e)
                     return
                 } finally {
                     cos.flush()
@@ -108,7 +108,7 @@ internal object performEncrypt {
                 erl.onSuccess(outputFile)
             }
 
-            else -> erl.onFailure(Constants.MSG_INPUT_TYPE_NOT_SUPPORTED, InvalidParameterException())
+            else -> erl.onFailure(Constants.ERR_INPUT_TYPE_NOT_SUPPORTED, InvalidParameterException())
 
         }
     }
