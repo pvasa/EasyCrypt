@@ -17,19 +17,21 @@ Secure and efficient cryptography library for Android. (Auto fix SecureRandom bu
 * Generate secure keys with SecureRandom or random.org
 * Asymmetric encryption with RSA
 * Auto handle large data by using hybrid asymmetric encryption
+* Asymmetric RSA signing and verification
 * Supported RSA key sizes are 2048 bits and 4096 bits
+* Password analysis for strength, crack times, weakness, etc using [nulab's zxcvbn4j library](https://github.com/nulab/zxcvbn4j)
 
 ## Install in Java app
 Add in your project's build.gradle
 ```gradle
 buildscript {
-    ...
+    ..
     dependencies {
-        ...
+        ..
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.1.3-2"
         classpath "org.jetbrains.kotlin:kotlin-android-extensions:1.1.3-2"
     }
-    ...
+    ..
 }
 ```
 Add in your app's build.gradle
@@ -38,11 +40,11 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 
 dependencies {
-    ...
+    ..
     compile "com.pvryan.easycrypt:easycrypt:1.2.0"
     compile "org.jetbrains.kotlin:kotlin-stdlib:1.1.4-3"
     compile "org.jetbrains.anko:anko-commons:0.10.1"
-    ...
+    ..
 }
 ```
 
@@ -50,9 +52,9 @@ dependencies {
 Add in your app's build.gradle
 ```gradle
 dependencies {
-    ...
+    ..
     compile "com.pvryan.easycrypt:easycrypt:1.2.0"
-    ...
+    ..
 }
 ```
 
@@ -234,6 +236,11 @@ eCryptHash.calculate(input, hashAlgorithm, // from ECHashAlgorithms
         },
         outputFile // Optional
 )
+```
+
+#### Analyze password
+```kotlin
+val analysis: ECPasswordAnalysis = ECPasswordAnalyzer.analyze("thisismypassword")
 ```
 
 --------------------------------------------------------------

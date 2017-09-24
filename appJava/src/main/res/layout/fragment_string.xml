@@ -13,6 +13,7 @@
 -->
 
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -26,6 +27,7 @@
             style="?android:attr/progressBarStyleHorizontal"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:indeterminate="true"
             android:visibility="invisible" />
 
         <RadioGroup
@@ -43,14 +45,14 @@
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="2dp"
                 android:checked="true"
-                android:text="Symmetric" />
+                android:text="@string/rb_symmetric" />
 
             <RadioButton
                 android:id="@+id/rbAsymmetricS"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="2dp"
-                android:text="Asymmetric" />
+                android:text="@string/rb_asymmetric" />
 
         </RadioGroup>
 
@@ -65,17 +67,25 @@
             android:inputType="textMultiLine"
             android:maxLines="6" />
 
-        <EditText
-            android:id="@+id/edPasswordS"
+        <android.support.design.widget.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginEnd="32dp"
             android:layout_marginStart="32dp"
-            android:layout_marginTop="16dp"
-            android:hint="@string/ed_password"
-            android:inputType="textPassword" />
+            android:layout_marginTop="4dp"
+            app:passwordToggleEnabled="true">
+
+            <EditText
+                android:id="@+id/edPasswordS"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/ed_password"
+                android:inputType="textPassword" />
+
+        </android.support.design.widget.TextInputLayout>
 
         <LinearLayout
+            android:id="@+id/llEncryptDecrypt"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"

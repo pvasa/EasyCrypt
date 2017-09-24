@@ -50,7 +50,7 @@ freeline_project_description.json
 # Unused code
 *.unused
 .idea/vcs.xml
-/easycrypt/src/main/java/com/pvryan/easycrypt/ECAnalyzePassword.kt
+/easycrypt/src/main/java/com/pvryan/easycrypt/ECPasswordAnalyzer.kt
 .idea/markdown-navigator.xml
 .idea/markdown-navigator/
 secure.properties

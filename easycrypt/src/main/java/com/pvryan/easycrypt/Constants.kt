@@ -17,6 +17,7 @@ package com.pvryan.easycrypt
 
 import android.os.Build
 import android.os.Environment
+import com.nulabinc.zxcvbn.Zxcvbn
 import java.io.File
 import java.security.SecureRandom
 
@@ -25,6 +26,7 @@ internal open class Constants {
     companion object {
 
         val random = SecureRandom()
+        val zxcvbn = Zxcvbn()
 
         val SECRET_KEY_FAC_ALGORITHM =
                 if (Build.VERSION.SDK_INT < 26) "PBKDF2WithHmacSHA1"
