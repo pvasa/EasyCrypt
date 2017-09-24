@@ -2,8 +2,8 @@
 
 buildscript {
     ext {
-        support_version = '25.4.0'
-        kotlin_version = '1.1.4-3'
+        support_version = '26.1.0'
+        kotlin_version = '1.1.50'
         anko_version = '0.10.1'
         bintray_version = '1.7.3'
         maven_version = '1.5'
@@ -13,7 +13,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.0.0-beta5'
+        classpath 'com.android.tools.build:gradle:3.0.0-beta6'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath "org.jetbrains.kotlin:kotlin-android-extensions:$kotlin_version"
 

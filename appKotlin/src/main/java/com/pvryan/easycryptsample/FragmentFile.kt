@@ -44,11 +44,11 @@ import java.security.interfaces.RSAPublicKey
 
 class FragmentFile : Fragment(), AnkoLogger, ECResultListener {
 
-    private val RC_HASH = 2
-    private val RC_ENCRYPT = 3
-    private val RC_DECRYPT = 4
-    private val RC_SIGN = 5
-    private val RC_VERIFY = 6
+    private val _rCHash = 2
+    private val _rCEncrypt = 3
+    private val _rCDecrypt = 4
+    private val _rCSign = 5
+    private val _rCVerify = 6
     private val eCryptSymmetric = ECSymmetric()
     private val eCryptAsymmetric = ECAsymmetric()
     private val eCryptHash = ECHash()
@@ -59,10 +59,6 @@ class FragmentFile : Fragment(), AnkoLogger, ECResultListener {
     override fun onCreateView(inflater: LayoutInflater?, @Nullable container: ViewGroup?,
                               @Nullable savedInstanceState: Bundle?): View? {
         return inflater?.inflate(R.layout.fragment_file, container, false)
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
     }
 
     override fun onViewCreated(view: View?, @Nullable savedInstanceState: Bundle?) {
@@ -82,19 +78,19 @@ class FragmentFile : Fragment(), AnkoLogger, ECResultListener {
         }
 
         buttonSelectHashF.setOnClickListener {
-            selectFile(RC_HASH)
+            selectFile(_rCHash)
         }
         buttonSelectEncryptF.setOnClickListener {
-            selectFile(RC_ENCRYPT)
+            selectFile(_rCEncrypt)
         }
         buttonSelectDecryptF.setOnClickListener {
-            selectFile(RC_DECRYPT)
+            selectFile(_rCDecrypt)
         }
         buttonSignF.setOnClickListener {
-            selectFile(RC_SIGN)
+            selectFile(_rCSign)
         }
         buttonVerifyF.setOnClickListener {
-            selectFile(RC_VERIFY)
+            selectFile(_rCVerify)
         }
     }
 
@@ -115,11 +111,11 @@ class FragmentFile : Fragment(), AnkoLogger, ECResultListener {
 
             when (requestCode) {
 
-                RC_HASH -> {
+                _rCHash -> {
                     eCryptHash.calculate(fis, ECHashAlgorithms.SHA_256, this)
                 }
 
-                RC_ENCRYPT -> {
+                _rCEncrypt -> {
                     when (rgTypeF.checkedRadioButtonId) {
 
                         R.id.rbSymmetricF ->
@@ -145,7 +141,7 @@ class FragmentFile : Fragment(), AnkoLogger, ECResultListener {
                     }
                 }
 
-                RC_DECRYPT -> {
+                _rCDecrypt -> {
                     when (rgTypeF.checkedRadioButtonId) {
 
                         R.id.rbSymmetricF ->
@@ -155,7 +151,7 @@ class FragmentFile : Fragment(), AnkoLogger, ECResultListener {
                     }
                 }
 
-                RC_SIGN -> {
+                _rCSign -> {
                     val sigFile = File(Environment.getExternalStorageDirectory(),
                             "ECryptSample/sample.sig")
                     if (sigFile.exists()) sigFile.delete()
@@ -179,7 +175,7 @@ class FragmentFile : Fragment(), AnkoLogger, ECResultListener {
                     })
                 }
 
-                RC_VERIFY -> {
+                _rCVerify -> {
                     eCryptAsymmetric.verify(fis, publicKey,
                             File(Environment.getExternalStorageDirectory(), "ECryptSample/sample.sig"),
                             object : ECVerifiedListener {

@@ -1,5 +1,6 @@
 <resources>
     <string name="app_name">EasyCryptSampleKotlin</string>
+    <string name="app_title">EasyCrypt\ Sample\ -\ Kotlin</string>
     <string name="action_settings">Settings</string>
 
     <string name="tv_select_file_to">Select file to,</string>
@@ -36,5 +37,13 @@
     <string name="button_verify">Verify</string>
     <string name="msg_valid">Data verified. Valid.</string>
     <string name="msg_invalid">Cannot verify data. Invalid.</string>
+    <string name="tv_password_strength_checker">Password Strength Checker</string>
+    <string name="tv_password_key_generation">Password / key generation</string>
+    <string name="tv_online_bf_time">Online brute-force time:\ </string>
+    <string name="tv_offline_bf_time">Offline brute-force time:\ </string>
+    <string name="tv_guesses">Guesses:\ </string>
+    <string name="tv_guesses_log_10">Guesses Log 10:\ </string>
+    <string name="tv_calc_time">Calc time:\ </string>
+    <string name="tv_warning">Warning:\ </string>
 
 </resources>

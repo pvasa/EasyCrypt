@@ -73,10 +73,10 @@ public class StringFragment extends Fragment implements ECResultListener {
 
         clipboard = (ClipboardManager) getActivity().getSystemService(Context.CLIPBOARD_SERVICE);
 
-        llSignVerifyS = (LinearLayout) view.findViewById(R.id.llSignVerifyS);
-        edInput = (EditText) view.findViewById(R.id.edInputS);
-        edPassword = (EditText) view.findViewById(R.id.edPasswordS);
-        tvResult = (TextView) view.findViewById(R.id.tvResultS);
+        llSignVerifyS = view.findViewById(R.id.llSignVerifyS);
+        edInput = view.findViewById(R.id.edInputS);
+        edPassword = view.findViewById(R.id.edPasswordS);
+        tvResult = view.findViewById(R.id.tvResultS);
         tvResult.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
@@ -88,10 +88,10 @@ public class StringFragment extends Fragment implements ECResultListener {
             }
         });
 
-        pBar = (ProgressBar) view.findViewById(R.id.progressBarS);
+        pBar = view.findViewById(R.id.progressBarS);
         pBar.setIndeterminate(true);
 
-        rgType = (RadioGroup) view.findViewById(R.id.rgTypeS);
+        rgType = view.findViewById(R.id.rgTypeS);
 
         rgType.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
@@ -268,7 +268,7 @@ public class StringFragment extends Fragment implements ECResultListener {
                             ((File) result).getAbsolutePath()));
                 else if (result instanceof String)
                     tvResult.setText((String) result);
-                else tvResult.setText(R.string.result_undefined);
+                else tvResult.setText("Undefined");
             }
         });
     }

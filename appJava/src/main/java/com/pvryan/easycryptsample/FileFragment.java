@@ -81,9 +81,9 @@ public class FileFragment extends Fragment implements ECResultListener {
 
         clipboard = (ClipboardManager) getActivity().getSystemService(Context.CLIPBOARD_SERVICE);
 
-        llSignVerifyF = (LinearLayout) view.findViewById(R.id.llSignVerifyF);
-        edPassword = (EditText) view.findViewById(R.id.edPasswordF);
-        tvResult = (TextView) view.findViewById(R.id.tvResultF);
+        llSignVerifyF = view.findViewById(R.id.llSignVerifyF);
+        edPassword = view.findViewById(R.id.edPasswordF);
+        tvResult = view.findViewById(R.id.tvResultF);
         tvResult.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
@@ -95,9 +95,9 @@ public class FileFragment extends Fragment implements ECResultListener {
             }
         });
 
-        pBar = (ProgressBar) getActivity().findViewById(R.id.progressBarF);
+        pBar = getActivity().findViewById(R.id.progressBarF);
 
-        rgType = (RadioGroup) view.findViewById(R.id.rgTypeF);
+        rgType = view.findViewById(R.id.rgTypeF);
         rgType.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(RadioGroup group, int checkedId) {
@@ -135,14 +135,14 @@ public class FileFragment extends Fragment implements ECResultListener {
                         selectFile(RC_DECRYPT);
                     }
                 });
-        view.findViewById(R.id.buttonSelectSignF)
+        view.findViewById(R.id.buttonSignF)
                 .setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view1) {
                         selectFile(RC_SIGN);
                     }
                 });
-        view.findViewById(R.id.buttonSelectVerifyF)
+        view.findViewById(R.id.buttonVerifyF)
                 .setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view1) {
@@ -427,7 +427,7 @@ public class FileFragment extends Fragment implements ECResultListener {
                             ((File) result).getAbsolutePath()));
                 else if (result instanceof String)
                     tvResult.setText((String) result);
-                else tvResult.setText(R.string.result_undefined);
+                else tvResult.setText("Undefined");
             }
         });
     }

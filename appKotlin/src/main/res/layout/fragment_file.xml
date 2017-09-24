@@ -13,6 +13,7 @@
 -->
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
@@ -53,15 +54,22 @@
 
     </RadioGroup>
 
-    <EditText
-        android:id="@+id/edPasswordF"
+    <android.support.design.widget.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginEnd="32dp"
         android:layout_marginStart="32dp"
-        android:layout_marginTop="16dp"
-        android:hint="@string/ed_password"
-        android:inputType="textPassword" />
+        android:layout_marginTop="4dp"
+        app:passwordToggleEnabled="true">
+
+        <EditText
+            android:id="@+id/edPasswordF"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/ed_password"
+            android:inputType="textPassword" />
+
+    </android.support.design.widget.TextInputLayout>
 
     <TextView
         style="?android:attr/textAppearanceMedium"

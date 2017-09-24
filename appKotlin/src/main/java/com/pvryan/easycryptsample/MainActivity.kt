@@ -31,7 +31,7 @@ import java.io.File
 
 class MainActivity : AppCompatActivity() {
 
-    private val RC_PERMISSIONS = 1
+    private val _rCPermissions = 1
     private val fragments = arrayListOf(
             FragmentString.newInstance(),
             FragmentFile.newInstance(),
@@ -72,7 +72,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        checkPermissions(RC_PERMISSIONS,
+        checkPermissions(_rCPermissions,
                 Manifest.permission.READ_EXTERNAL_STORAGE,
                 Manifest.permission.WRITE_EXTERNAL_STORAGE,
                 Manifest.permission.INTERNET)
@@ -81,7 +81,7 @@ class MainActivity : AppCompatActivity() {
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         when (requestCode) {
-            RC_PERMISSIONS -> handlePermissionResults(requestCode, permissions, grantResults)
+            _rCPermissions -> handlePermissionResults(requestCode, permissions, grantResults)
         }
     }
 
