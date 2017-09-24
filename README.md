@@ -41,7 +41,7 @@ apply plugin: 'kotlin-android-extensions'
 
 dependencies {
     ..
-    compile "com.pvryan.easycrypt:easycrypt:1.2.0"
+    compile "com.pvryan.easycrypt:easycrypt:1.3.0"
     compile "org.jetbrains.kotlin:kotlin-stdlib:1.1.4-3"
     compile "org.jetbrains.anko:anko-commons:0.10.1"
     ..
@@ -53,7 +53,7 @@ Add in your app's build.gradle
 ```gradle
 dependencies {
     ..
-    compile "com.pvryan.easycrypt:easycrypt:1.2.0"
+    compile "com.pvryan.easycrypt:easycrypt:1.3.0"
     ..
 }
 ```
