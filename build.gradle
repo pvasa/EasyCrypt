@@ -2,18 +2,21 @@
 
 buildscript {
     ext {
-        support_version = '26.1.0'
-        kotlin_version = '1.1.50'
+        support_version = '27.0.2'
+        kotlin_version = '1.2.21'
         anko_version = '0.10.1'
+        retrofit_version = '2.3.0'
         bintray_version = '1.7.3'
         maven_version = '1.5'
+        junit_version = '4.12'
+        mockito_version = '1.10.19'
     }
     repositories {
         google()
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.0.0-beta6'
+        classpath 'com.android.tools.build:gradle:3.0.1'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath "org.jetbrains.kotlin:kotlin-android-extensions:$kotlin_version"
 

@@ -1,11 +1,11 @@
 <resources>
     <string name="app_name">EasyCryptSampleKotlin</string>
-    <string name="app_title">EasyCrypt\ Sample\ -\ Kotlin</string>
+    <string name="app_title">EasyCrypt\ Sample</string>
     <string name="action_settings">Settings</string>
 
     <string name="tv_select_file_to">Select file to,</string>
 
-    <string name="ed_string_to_encrypt_decrypt_hash">String to encrypt / decrypt / hash</string>
+    <string name="ed_text_input">Text input</string>
     <string name="ed_password">Password</string>
 
     <string name="button_hash">Hash</string>
@@ -22,9 +22,9 @@
     <string name="title_permissions">Permissions</string>
 
     <string name="message_permissions">Permissions required to run this app correctly. Grant to allow or Exit to close the app.</string>
-    <string name="ed_characters_to_use">Characters to use</string>
-    <string name="button_random_org">Random.org</string>
-    <string name="button_secure_random">SecureRandom</string>
+    <string name="ed_characters_to_use">Characters to use \(optional\)</string>
+    <string name="button_true_random">True Random</string>
+    <string name="button_pseudo_random">Pseudo Random</string>
     <string name="ed_length_of_password">Length of password</string>
     <string name="tv_generate_password_with">Generate password with,</string>
     <string name="title_string">String</string>
@@ -45,5 +45,8 @@
     <string name="tv_guesses_log_10">Guesses Log 10:\ </string>
     <string name="tv_calc_time">Calc time:\ </string>
     <string name="tv_warning">Warning:\ </string>
+    <string name="ivd_icon_for_cards">Icon for cards</string>
+    <string name="btn_string">String</string>
+    <string name="btn_file">File</string>
 
 </resources>

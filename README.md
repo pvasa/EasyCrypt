@@ -28,10 +28,9 @@ buildscript {
     ..
     dependencies {
         ..
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.1.3-2"
-        classpath "org.jetbrains.kotlin:kotlin-android-extensions:1.1.3-2"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.2.21"
+        classpath "org.jetbrains.kotlin:kotlin-android-extensions:1.2.21"
     }
-    ..
 }
 ```
 Add in your app's build.gradle
@@ -41,10 +40,7 @@ apply plugin: 'kotlin-android-extensions'
 
 dependencies {
     ..
-    compile "com.pvryan.easycrypt:easycrypt:1.3.0"
-    compile "org.jetbrains.kotlin:kotlin-stdlib:1.1.4-3"
-    compile "org.jetbrains.anko:anko-commons:0.10.1"
-    ..
+    compile "com.pvryan.easycrypt:easycrypt:1.3.1"
 }
 ```
 
@@ -53,8 +49,7 @@ Add in your app's build.gradle
 ```gradle
 dependencies {
     ..
-    compile "com.pvryan.easycrypt:easycrypt:1.3.0"
-    ..
+    compile "com.pvryan.easycrypt:easycrypt:1.3.1"
 }
 ```
 
@@ -281,7 +276,7 @@ eCryptPass.genRandomOrgPassword(
 
 ## License
 ```
-Copyright 2017 Priyank Vasa
+Copyright 2018 Priyank Vasa
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at

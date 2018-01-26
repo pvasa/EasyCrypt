@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Priyank Vasa
+ * Copyright 2018 Priyank Vasa
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,7 +24,9 @@ import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
+import java.security.InvalidKeyException
 import java.security.InvalidParameterException
+import java.security.Key
 import java.security.interfaces.RSAPrivateKey
 import java.security.interfaces.RSAPublicKey
 import javax.crypto.Cipher
@@ -34,7 +36,7 @@ import javax.crypto.Cipher
  */
 class ECAsymmetric {
 
-    private val cipher = Cipher.getInstance(Constants.ASYMMETRIC_TRANSFORMATION)
+    private val cipher: Cipher = Cipher.getInstance(Constants.ASYMMETRIC_TRANSFORMATION)
 
     /**
      * Encrypts the input data using RSA algorithm with OAEPwithSHA-256andMGF1Padding padding
@@ -62,7 +64,12 @@ class ECAsymmetric {
                     @NotNull outputFile: File = File(Constants.DEF_ENCRYPTED_FILE_PATH)) {
 
         doAsync {
-            cipher.init(Cipher.ENCRYPT_MODE, publicKey)
+            try {
+                cipher.init(Cipher.ENCRYPT_MODE, publicKey as Key)
+            } catch (e: InvalidKeyException) {
+                erl.onFailure(Constants.ERR_INVALID_KEY, e)
+                return@doAsync
+            }
 
             when (input) {
 
@@ -116,7 +123,12 @@ class ECAsymmetric {
                     @NotNull outputFile: File = File(Constants.DEF_DECRYPTED_FILE_PATH)) {
 
         doAsync {
-            cipher.init(Cipher.DECRYPT_MODE, privateKey)
+            try {
+                cipher.init(Cipher.DECRYPT_MODE, privateKey)
+            } catch (e: InvalidKeyException) {
+                erl.onFailure(Constants.ERR_INVALID_KEY, e)
+                return@doAsync
+            }
 
             when (input) {
 
@@ -165,8 +177,7 @@ class ECAsymmetric {
      * @exception IllegalArgumentException if input data is not in valid format
      * @exception SignatureException if this signature algorithm is unable to process the input data provided
      */
-    fun <T> sign(input: T, privateKey: RSAPrivateKey,
-                 erl: ECResultListener, outputFile: File) {
+    fun <T> sign(input: T, privateKey: RSAPrivateKey, erl: ECResultListener, outputFile: File) {
 
         doAsync {
             when (input) {
@@ -243,8 +254,8 @@ class ECAsymmetric {
      * Key sizes that can be used for generating RSA key pairs
      */
     enum class KeySizes(val value: Int) {
-        _2048(2048),
-        _4096(4096) // Default
+        S_2048(2048),
+        S_4096(4096) // Default
     }
 
 }
