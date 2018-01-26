@@ -1,3 +1,17 @@
+/**
+ * Copyright 2018 Priyank Vasa
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.pvryan.easycrypt
 
 import com.pvryan.easycrypt.asymmetric.ECAsymmetric.KeySizes
@@ -39,6 +53,9 @@ class ECKeys {
         if (length < 1 || length > 4096) throw InvalidParameterException(
                 "Invalid length. Valid range is 1 to 4096.")
 
+        if (symbols.isEmpty()) throw InvalidParameterException(
+                "Array of symbols cannot be empty.")
+
         val password = CharArray(length)
         for (i in 0 until length) {
             password[i] = symbols[Constants.random.nextInt(symbols.size - 1)]
@@ -72,9 +89,7 @@ class ECKeys {
                 if (length.rem(2) != 0) {
                     oddLength = true
                     length + 1
-                } else {
-                    length
-                }
+                } else length
 
         doAsync {
 
@@ -123,8 +138,7 @@ class ECKeys {
                         }
                     } else {
                         resultListener.onFailure("Response code ${response.code()}",
-                                Exception(response.errorBody()?.string() ?:
-                                        "Some error occurred at Random.org. Please try again."))
+                                Exception(response.errorBody()?.string() ?: "Some error occurred at Random.org. Please try again."))
                     }
                 }
             })
@@ -140,7 +154,7 @@ class ECKeys {
      */
     @JvmOverloads
     fun genRSAKeyPair(kpl: ECRSAKeyPairListener,
-                      keySize: KeySizes = KeySizes._4096) {
+                      keySize: KeySizes = KeySizes.S_4096) {
         doAsync {
             val generator = KeyPairGenerator.getInstance(Constants.ASYMMETRIC_ALGORITHM)
             generator.initialize(keySize.value, Constants.random)

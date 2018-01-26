@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Priyank Vasa
+ * Copyright 2018 Priyank Vasa
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -63,6 +63,7 @@ internal open class Constants {
         val DEF_ENCRYPTED_FILE_PATH = DEF_EXT_FILE_PATH + ENCRYPTED_FILE_NAME + ECRYPT_FILE_EXT
         val DEF_DECRYPTED_FILE_PATH = DEF_EXT_FILE_PATH + DECRYPTED_FILE_NAME + ECRYPT_FILE_EXT
 
+        val ERR_INVALID_KEY = "The key is not valid. Please provide a valid RSA key."
         val ERR_VERIFY_EXCEPTION = "Cannot use provided signature to verify input data."
         val ERR_SIGN_EXCEPTION = "This signature algorithm is unable to process the input data provided."
         val ERR_INPUT_TYPE_NOT_SUPPORTED = "Input type not supported."
