@@ -20,6 +20,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.Environment
 import android.support.v4.app.Fragment
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -28,10 +29,9 @@ import com.pvryan.easycrypt.ECResultListener
 import com.pvryan.easycrypt.asymmetric.ECAsymmetric
 import com.pvryan.easycrypt.asymmetric.ECRSAKeyPairListener
 import com.pvryan.easycrypt.asymmetric.ECVerifiedListener
-import com.pvryan.easycrypt.hash.ECHash
-import com.pvryan.easycrypt.hash.ECHashAlgorithms
-import com.pvryan.easycrypt.symmetric.ECSymmetric
 import com.pvryan.easycryptsample.R
+import com.pvryan.easycryptsample.extensions.hide
+import com.pvryan.easycryptsample.extensions.show
 import kotlinx.android.synthetic.main.fragment_asymmetric_file.*
 import org.jetbrains.anko.AnkoLogger
 import org.jetbrains.anko.support.v4.longToast
@@ -44,19 +44,17 @@ import java.security.interfaces.RSAPublicKey
 
 class FragmentAsymmetricFile : Fragment(), AnkoLogger, ECResultListener {
 
-    private val _rCHash = 2
-    private val _rCEncrypt = 3
-    private val _rCDecrypt = 4
-    private val _rCSign = 5
-    private val _rCVerify = 6
-    private val eCryptSymmetric = ECSymmetric()
+    private val _rCEncrypt = 2
+    private val _rCDecrypt = 3
+    private val _rCSign = 4
+    private val _rCVerify = 5
     private val eCryptAsymmetric = ECAsymmetric()
-    private val eCryptHash = ECHash()
     private val eCryptKeys = ECKeys()
     private lateinit var privateKey: RSAPrivateKey
     private lateinit var publicKey: RSAPublicKey
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
+                              savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_asymmetric_file, container, false)
     }
 
@@ -90,15 +88,12 @@ class FragmentAsymmetricFile : Fragment(), AnkoLogger, ECResultListener {
 
             val fis = context?.contentResolver?.openInputStream(data?.data)
 
-            progressBarF.visibility = View.VISIBLE
+            progressBarF.show()
 
             when (requestCode) {
 
-                _rCHash -> {
-                    eCryptHash.calculate(fis, ECHashAlgorithms.SHA_256, this)
-                }
-
                 _rCEncrypt -> {
+                    tvStatus.text = getString(R.string.tv_status_encrypting)
                     eCryptKeys.genRSAKeyPair(object : ECRSAKeyPairListener {
                         override fun onGenerated(keyPair: KeyPair) {
                             privateKey = keyPair.private as RSAPrivateKey
@@ -109,7 +104,8 @@ class FragmentAsymmetricFile : Fragment(), AnkoLogger, ECResultListener {
                         override fun onFailure(message: String, e: Exception) {
                             e.printStackTrace()
                             onUiThread {
-                                progressBarF.visibility = View.INVISIBLE
+                                progressBarF.hide()
+                                tvStatus.text = getString(R.string.tv_status_idle)
                                 longToast("Error: $message")
                             }
                         }
@@ -117,10 +113,12 @@ class FragmentAsymmetricFile : Fragment(), AnkoLogger, ECResultListener {
                 }
 
                 _rCDecrypt -> {
+                    tvStatus.text = getString(R.string.tv_status_decrypting)
                     eCryptAsymmetric.decrypt(fis, privateKey, this)
                 }
 
                 _rCSign -> {
+                    tvStatus.text = getString(R.string.tv_status_signing)
                     val sigFile = File(Environment.getExternalStorageDirectory(),
                             "ECryptSample/sample.sig")
                     if (sigFile.exists()) sigFile.delete()
@@ -138,6 +136,8 @@ class FragmentAsymmetricFile : Fragment(), AnkoLogger, ECResultListener {
                         override fun onFailure(message: String, e: Exception) {
                             e.printStackTrace()
                             onUiThread {
+                                progressBarF.hide()
+                                tvStatus.text = getString(R.string.tv_status_idle)
                                 longToast("Failed to generate RSA key pair. Try again.")
                             }
                         }
@@ -145,21 +145,23 @@ class FragmentAsymmetricFile : Fragment(), AnkoLogger, ECResultListener {
                 }
 
                 _rCVerify -> {
+                    tvStatus.text = getString(R.string.tv_status_verifying)
                     eCryptAsymmetric.verify(fis, publicKey,
                             File(Environment.getExternalStorageDirectory(), "ECryptSample/sample.sig"),
                             object : ECVerifiedListener {
                                 override fun onSuccess(verified: Boolean) {
                                     onUiThread {
+                                        progressBarF.hide()
                                         if (verified) tvResultF.text = getString(R.string.msg_valid)
                                         else tvResultF.text = getString(R.string.msg_invalid)
-                                        progressBarF.visibility = View.INVISIBLE
                                     }
                                 }
 
                                 override fun onFailure(message: String, e: Exception) {
                                     e.printStackTrace()
                                     onUiThread {
-                                        progressBarF.visibility = View.INVISIBLE
+                                        progressBarF.hide()
+                                        tvStatus.text = getString(R.string.tv_status_idle)
                                         toast("Error: $message")
                                     }
                                 }
@@ -169,13 +171,25 @@ class FragmentAsymmetricFile : Fragment(), AnkoLogger, ECResultListener {
         }
     }
 
-    override fun onProgress(newBytes: Int, bytesProcessed: Long) {
-        progressBarF.progress = (bytesProcessed / 1024).toInt()
+    private var maxSet = false
+    override fun onProgress(newBytes: Int, bytesProcessed: Long, totalBytes: Long) {
+        Log.i("TEST", "" + bytesProcessed)
+        if (totalBytes > -1) {
+            onUiThread {
+                if (!maxSet) {
+                    progressBarF.isIndeterminate = false
+                    progressBarF.max = (totalBytes / 1024).toInt()
+                    maxSet = true
+                }
+                progressBarF.progress = (bytesProcessed / 1024).toInt()
+            }
+        }
     }
 
     override fun <T> onSuccess(result: T) {
         onUiThread {
-            progressBarF.visibility = View.INVISIBLE
+            progressBarF.hide()
+            tvStatus.text = getString(R.string.tv_status_idle)
             tvResultF.text = resources.getString(
                     R.string.success_result_to_file,
                     (result as File).absolutePath)
@@ -185,7 +199,8 @@ class FragmentAsymmetricFile : Fragment(), AnkoLogger, ECResultListener {
     override fun onFailure(message: String, e: Exception) {
         e.printStackTrace()
         onUiThread {
-            progressBarF.visibility = View.INVISIBLE
+            progressBarF.hide()
+            tvStatus.text = getString(R.string.tv_status_idle)
             toast("Error: $message")
         }
     }

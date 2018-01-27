@@ -30,6 +30,8 @@ import com.pvryan.easycrypt.asymmetric.ECAsymmetric
 import com.pvryan.easycrypt.asymmetric.ECRSAKeyPairListener
 import com.pvryan.easycrypt.asymmetric.ECVerifiedListener
 import com.pvryan.easycryptsample.R
+import com.pvryan.easycryptsample.extensions.hide
+import com.pvryan.easycryptsample.extensions.show
 import kotlinx.android.synthetic.main.fragment_asymmetric_string.*
 import org.jetbrains.anko.support.v4.longToast
 import org.jetbrains.anko.support.v4.onUiThread
@@ -62,7 +64,7 @@ class FragmentAsymmetricString : Fragment(), ECResultListener {
 
         buttonEncryptS.setOnClickListener {
 
-            progressBarS.visibility = View.VISIBLE
+            progressBarS.show()
             eCryptKeys.genRSAKeyPair(object : ECRSAKeyPairListener {
                 override fun onGenerated(keyPair: KeyPair) {
                     privateKey = keyPair.private as RSAPrivateKey
@@ -73,7 +75,7 @@ class FragmentAsymmetricString : Fragment(), ECResultListener {
                 override fun onFailure(message: String, e: Exception) {
                     e.printStackTrace()
                     onUiThread {
-                        progressBarS.visibility = View.INVISIBLE
+                        progressBarS.hide()
                         longToast("Error: $message")
                     }
                 }
@@ -81,11 +83,13 @@ class FragmentAsymmetricString : Fragment(), ECResultListener {
         }
 
         buttonDecryptS.setOnClickListener {
+            progressBarS.show()
             eCryptAsymmetric.decrypt(edInputS.text, privateKey, this)
         }
 
         buttonSignS.setOnClickListener {
 
+            progressBarS.show()
             val sigFile = File(Environment.getExternalStorageDirectory(),
                     "ECryptSample/sample.sig")
             if (sigFile.exists()) sigFile.delete()
@@ -103,6 +107,7 @@ class FragmentAsymmetricString : Fragment(), ECResultListener {
                 override fun onFailure(message: String, e: Exception) {
                     e.printStackTrace()
                     onUiThread {
+                        progressBarS.hide()
                         longToast("Failed to generate RSA key pair. Try again.")
                     }
                 }
@@ -116,6 +121,7 @@ class FragmentAsymmetricString : Fragment(), ECResultListener {
                     object : ECVerifiedListener {
                         override fun onSuccess(verified: Boolean) {
                             onUiThread {
+                                progressBarS.hide()
                                 if (verified) tvResultS.text = getString(R.string.msg_valid)
                                 else tvResultS.text = getString(R.string.msg_invalid)
                             }
@@ -124,18 +130,17 @@ class FragmentAsymmetricString : Fragment(), ECResultListener {
                         override fun onFailure(message: String, e: Exception) {
                             e.printStackTrace()
                             onUiThread {
-                                progressBarS.visibility = View.INVISIBLE
+                                progressBarS.hide()
                                 longToast("Error: $message")
                             }
                         }
-
                     })
         }
     }
 
     override fun <T> onSuccess(result: T) {
         onUiThread {
-            progressBarS.visibility = View.INVISIBLE
+            progressBarS.hide()
             tvResultS.text = when (result) {
                 is String -> result
                 is File -> resources.getString(
@@ -149,7 +154,7 @@ class FragmentAsymmetricString : Fragment(), ECResultListener {
     override fun onFailure(message: String, e: Exception) {
         e.printStackTrace()
         onUiThread {
-            progressBarS.visibility = View.INVISIBLE
+            progressBarS.hide()
             longToast("Error: $message")
         }
     }

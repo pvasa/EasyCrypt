@@ -23,7 +23,7 @@ interface ECVerifiedListener {
      * @param newBytes count processed after last block
      * @param bytesProcessed count from total input
      */
-    fun onProgress(newBytes: Int, bytesProcessed: Long) {}
+    fun onProgress(newBytes: Int, bytesProcessed: Long, totalBytes: Long) {}
 
     /**
      * @param verified on successful execution of the calling method

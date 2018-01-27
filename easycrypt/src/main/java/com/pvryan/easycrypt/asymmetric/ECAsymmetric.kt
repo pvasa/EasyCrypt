@@ -31,6 +31,7 @@ import java.security.interfaces.RSAPrivateKey
 import java.security.interfaces.RSAPublicKey
 import javax.crypto.Cipher
 
+@Suppress("KDocUnresolvedReference", "MemberVisibilityCanBePrivate", "unused")
 /**
  * Secure asymmetric encryption with RSA.
  */
@@ -134,10 +135,21 @@ class ECAsymmetric {
 
                 is ByteArrayInputStream -> decrypt(input.readBytes(), privateKey, erl, outputFile)
 
-                is String -> decrypt(input.fromBase64(), privateKey, erl, outputFile)
+                is String -> {
+                    try {
+                        decrypt(input.fromBase64(), privateKey, erl, outputFile)
+                    } catch (e: IllegalArgumentException) {
+                        erl.onFailure(Constants.ERR_BAD_BASE64, e)
+                    }
+                }
 
-                is CharSequence ->
-                    decrypt(input.toString().fromBase64(), privateKey, erl, outputFile)
+                is CharSequence -> {
+                    try {
+                        decrypt(input.toString().fromBase64(), privateKey, erl, outputFile)
+                    } catch (e: IllegalArgumentException) {
+                        erl.onFailure(Constants.ERR_BAD_BASE64, e)
+                    }
+                }
 
                 is File -> {
                     if (!input.exists() || input.isDirectory) {
@@ -174,7 +186,6 @@ class ECAsymmetric {
      * @exception InvalidParameterException if input data type is not supported
      * @exception IOException if cannot read or write to a file
      * @exception FileAlreadyExistsException if output file is provided and already exists
-     * @exception IllegalArgumentException if input data is not in valid format
      * @exception SignatureException if this signature algorithm is unable to process the input data provided
      */
     fun <T> sign(input: T, privateKey: RSAPrivateKey, erl: ECResultListener, outputFile: File) {

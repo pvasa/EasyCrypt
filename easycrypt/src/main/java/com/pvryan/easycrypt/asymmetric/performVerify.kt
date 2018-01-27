@@ -19,6 +19,7 @@ import com.pvryan.easycrypt.extensions.asString
 import com.pvryan.easycrypt.extensions.fromBase64
 import org.jetbrains.anko.AnkoLogger
 import java.io.File
+import java.io.FileInputStream
 import java.io.IOException
 import java.io.InputStream
 import java.security.InvalidParameterException
@@ -46,18 +47,21 @@ internal object performVerify : AnkoLogger {
                 var bytesCopied: Long = 0
 
                 try {
+                    val size = if (input is FileInputStream) input.channel.size() else -1
                     var read = input.read(buffer)
 
                     while (read > -1) {
                         signature.update(buffer, 0, read)
                         bytesCopied += read
-                        evl.onProgress(read, bytesCopied)
+                        evl.onProgress(read, bytesCopied, size)
                         read = input.read(buffer)
                     }
 
                     try {
                         evl.onSuccess(signature.verify(
                                 sigFile.readBytes().asString().fromBase64()))
+                    } catch (e: IllegalArgumentException) {
+                        evl.onFailure(Constants.ERR_BAD_BASE64, e)
                     } catch (e: SignatureException) {
                         evl.onFailure(Constants.ERR_VERIFY_EXCEPTION, e)
                     }

@@ -26,6 +26,9 @@ import android.view.ViewGroup
 import com.pvryan.easycrypt.ECResultListener
 import com.pvryan.easycrypt.symmetric.ECSymmetric
 import com.pvryan.easycryptsample.R
+import com.pvryan.easycryptsample.extensions.hide
+import com.pvryan.easycryptsample.extensions.show
+import com.pvryan.easycryptsample.extensions.snackShort
 import kotlinx.android.synthetic.main.fragment_symmetric_string.*
 import org.jetbrains.anko.support.v4.longToast
 import org.jetbrains.anko.support.v4.onUiThread
@@ -50,22 +53,23 @@ class FragmentSymmetricString : Fragment(), ECResultListener {
         }
 
         buttonEncryptS.setOnClickListener {
-            progressBarS.visibility = View.VISIBLE
-            eCryptSymmetric.encrypt(edInputS.text, edPasswordS.text.toString(), this)
+            if (edPasswordS.text.toString() != "") {
+                progressBarS.show()
+                eCryptSymmetric.encrypt(edInputS.text, edPasswordS.text.toString(), this)
+            } else view.snackShort("Password cannot be empty!")
         }
 
         buttonDecryptS.setOnClickListener {
-            eCryptSymmetric.decrypt(edInputS.text, edPasswordS.text.toString(), this)
+            if (edPasswordS.text.toString() != "") {
+                progressBarS.show()
+                eCryptSymmetric.decrypt(edInputS.text, edPasswordS.text.toString(), this)
+            } else view.snackShort("Password cannot be empty!")
         }
-    }
-
-    companion object {
-        fun newInstance(): Fragment = FragmentSymmetricString()
     }
 
     override fun <T> onSuccess(result: T) {
         onUiThread {
-            progressBarS.visibility = View.INVISIBLE
+            progressBarS.hide()
             tvResultS.text = result as String
         }
     }
@@ -73,8 +77,12 @@ class FragmentSymmetricString : Fragment(), ECResultListener {
     override fun onFailure(message: String, e: Exception) {
         e.printStackTrace()
         onUiThread {
-            progressBarS.visibility = View.INVISIBLE
+            progressBarS.hide()
             longToast("Error: $message")
         }
+    }
+
+    companion object {
+        fun newInstance(): Fragment = FragmentSymmetricString()
     }
 }

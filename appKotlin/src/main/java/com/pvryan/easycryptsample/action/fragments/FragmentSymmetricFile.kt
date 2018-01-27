@@ -25,6 +25,9 @@ import android.view.ViewGroup
 import com.pvryan.easycrypt.ECResultListener
 import com.pvryan.easycrypt.symmetric.ECSymmetric
 import com.pvryan.easycryptsample.R
+import com.pvryan.easycryptsample.extensions.hide
+import com.pvryan.easycryptsample.extensions.show
+import com.pvryan.easycryptsample.extensions.snackShort
 import kotlinx.android.synthetic.main.fragment_symmetric_file.*
 import org.jetbrains.anko.AnkoLogger
 import org.jetbrains.anko.support.v4.onUiThread
@@ -37,7 +40,8 @@ class FragmentSymmetricFile : Fragment(), AnkoLogger, ECResultListener {
     private val _rCDecrypt = 3
     private val eCryptSymmetric = ECSymmetric()
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(inflater: LayoutInflater,
+                              container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_symmetric_file, container, false)
     }
 
@@ -45,10 +49,14 @@ class FragmentSymmetricFile : Fragment(), AnkoLogger, ECResultListener {
         super.onViewCreated(view, savedInstanceState)
 
         buttonSelectEncryptF.setOnClickListener {
-            selectFile(_rCEncrypt)
+            if (edPasswordF.text.toString() != "")
+                selectFile(_rCEncrypt)
+            else view.snackShort("Password cannot be empty!")
         }
         buttonSelectDecryptF.setOnClickListener {
-            selectFile(_rCDecrypt)
+            if (edPasswordF.text.toString() != "")
+                selectFile(_rCDecrypt)
+            else view.snackShort("Password cannot be empty!")
         }
     }
 
@@ -65,30 +73,39 @@ class FragmentSymmetricFile : Fragment(), AnkoLogger, ECResultListener {
 
             val fis = context?.contentResolver?.openInputStream(data?.data)
 
-            progressBarF.visibility = View.VISIBLE
+            progressBarF.show()
 
             when (requestCode) {
                 _rCEncrypt -> {
+                    tvStatus.text = resources.getString(R.string.tv_status_encrypting)
                     eCryptSymmetric.encrypt(fis, edPasswordF.text.toString(), this)
                 }
                 _rCDecrypt -> {
+                    tvStatus.text = resources.getString(R.string.tv_status_decrypting)
                     eCryptSymmetric.decrypt(fis, edPasswordF.text.toString(), this)
                 }
             }
         }
     }
 
-    companion object {
-        fun newInstance(): Fragment = FragmentSymmetricFile()
-    }
-
-    override fun onProgress(newBytes: Int, bytesProcessed: Long) {
-        progressBarF.progress = (bytesProcessed / 1024).toInt()
+    private var maxSet = false
+    override fun onProgress(newBytes: Int, bytesProcessed: Long, totalBytes: Long) {
+        if (totalBytes > -1) {
+            onUiThread {
+                if (!maxSet) {
+                    progressBarF.isIndeterminate = false
+                    progressBarF.max = (totalBytes / 1024).toInt()
+                    maxSet = true
+                }
+                progressBarF.progress = (bytesProcessed / 1024).toInt()
+            }
+        }
     }
 
     override fun <T> onSuccess(result: T) {
         onUiThread {
-            progressBarF.visibility = View.INVISIBLE
+            progressBarF.hide()
+            tvStatus.text = getString(R.string.tv_status_idle)
             tvResultF.text = resources.getString(
                     R.string.success_result_to_file,
                     (result as File).absolutePath)
@@ -98,9 +115,13 @@ class FragmentSymmetricFile : Fragment(), AnkoLogger, ECResultListener {
     override fun onFailure(message: String, e: Exception) {
         e.printStackTrace()
         onUiThread {
-            progressBarF.visibility = View.INVISIBLE
+            progressBarF.hide()
+            tvStatus.text = getString(R.string.tv_status_idle)
             toast("Error: $message")
         }
     }
 
+    companion object {
+        fun newInstance(): Fragment = FragmentSymmetricFile()
+    }
 }

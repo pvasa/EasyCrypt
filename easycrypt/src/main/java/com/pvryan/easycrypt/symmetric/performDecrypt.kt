@@ -109,6 +109,7 @@ internal object performDecrypt {
                 cipher.init(Cipher.DECRYPT_MODE, key, ivParams)
 
                 try {
+                    val size = input.channel.size()
                     cis = CipherInputStream(input, cipher)
 
                     val buffer = ByteArray(8192)
@@ -118,7 +119,7 @@ internal object performDecrypt {
                     while (read > -1) {
                         fos.write(buffer, 0, read)
                         bytesCopied += read
-                        erl.onProgress(read, bytesCopied)
+                        erl.onProgress(read, bytesCopied, size)
                         read = cis.read(buffer)
                     }
 

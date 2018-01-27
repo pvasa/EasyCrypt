@@ -15,17 +15,34 @@
 package com.pvryan.easycryptsample.main
 
 import android.support.v7.widget.RecyclerView
+import android.transition.TransitionManager
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.pvryan.easycryptsample.R
 import com.pvryan.easycryptsample.data.Card
+import com.pvryan.easycryptsample.extensions.gone
+import com.pvryan.easycryptsample.extensions.show
 import kotlinx.android.synthetic.main.card_view_main.view.*
 
 class MainAdapter(private val mDataset: ArrayList<Card>) : RecyclerView.Adapter<MainAdapter.ViewHolder>() {
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         holder.bindItems(mDataset[position])
+
+        holder.itemView.buttonExpandCollapse.setOnClickListener {
+            with(holder.itemView.tvDesc) {
+                if (visibility == View.VISIBLE) {
+                    it.animate().rotation(0f).setDuration(200).start()
+                    TransitionManager.beginDelayedTransition(holder.itemView.cardView as ViewGroup)
+                    gone()
+                } else {
+                    it.animate().rotation(180f).setDuration(200).start()
+                    TransitionManager.beginDelayedTransition(holder.itemView.cardView as ViewGroup)
+                    show()
+                }
+            }
+        }
     }
 
     override fun getItemCount() = mDataset.size
@@ -55,5 +72,4 @@ class MainAdapter(private val mDataset: ArrayList<Card>) : RecyclerView.Adapter<
             }
         }
     }
-
 }

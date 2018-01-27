@@ -22,6 +22,7 @@ import com.pvryan.easycrypt.extensions.asHexString
 import org.jetbrains.anko.doAsync
 import org.jetbrains.annotations.NotNull
 import java.io.File
+import java.io.FileInputStream
 import java.io.IOException
 import java.io.InputStream
 import java.security.InvalidParameterException
@@ -93,13 +94,13 @@ class ECHash {
                     }
 
                     try {
-
+                        val size = if (input is FileInputStream) input.channel.size() else -1
                         var bytesCopied: Long = 0
                         var read = input.read(buffer)
                         while (read > -1) {
                             digest.update(buffer, 0, read)
                             bytesCopied += read
-                            erl.onProgress(read, bytesCopied)
+                            erl.onProgress(read, bytesCopied, size)
                             read = input.read(buffer)
                         }
 

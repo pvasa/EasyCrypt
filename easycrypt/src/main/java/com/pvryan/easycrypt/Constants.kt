@@ -32,25 +32,25 @@ internal open class Constants {
                 if (Build.VERSION.SDK_INT < 26) "PBKDF2WithHmacSHA1"
                 else "PBEwithHmacSHA512AndAES_256"
 
-        val SECRET_KEY_SPEC_ALGORITHM = "AES"
+        const val SECRET_KEY_SPEC_ALGORITHM = "AES"
 
-        val KEY_BITS_LENGTH = 256
-        val SALT_BYTES_LENGTH = KEY_BITS_LENGTH / 8
+        const val KEY_BITS_LENGTH = 256
+        const val SALT_BYTES_LENGTH = KEY_BITS_LENGTH / 8
 
-        val ITERATIONS = 10000
+        const val ITERATIONS = 10000
 
-        val ASYMMETRIC_ALGORITHM = "RSA"
-        val ASYMMETRIC_TRANSFORMATION = "RSA/NONE/OAEPwithSHA-256andMGF1Padding"
-        val SIGNATURE_ALGORITHM = "SHA512withRSA"
+        const val ASYMMETRIC_ALGORITHM = "RSA"
+        const val ASYMMETRIC_TRANSFORMATION = "RSA/NONE/OAEPwithSHA-256andMGF1Padding"
+        const val SIGNATURE_ALGORITHM = "SHA512withRSA"
 
-        private val HASH_FILE_EXT = ".txt"
-        val ECRYPT_FILE_EXT = ".ecrypt"
+        private const val HASH_FILE_EXT = ".txt"
+        const val ECRYPT_FILE_EXT = ".ecrypt"
 
-        private val HASH_FILE_NAME = "HashOfFile"
-        val ENCRYPTED_FILE_NAME = "EncryptedFile"
-        private val DECRYPTED_FILE_NAME = "DecryptedFile"
+        private const val HASH_FILE_NAME = "HashOfFile"
+        const val ENCRYPTED_FILE_NAME = "EncryptedFile"
+        private const val DECRYPTED_FILE_NAME = "DecryptedFile"
 
-        private val TEMP_DIR_NAME = ".ecrypt"
+        private const val TEMP_DIR_NAME = ".ecrypt"
 
         val DEF_EXT_TEMP_DIR_PATH =
                 Environment.getExternalStorageDirectory().absolutePath +
@@ -63,22 +63,23 @@ internal open class Constants {
         val DEF_ENCRYPTED_FILE_PATH = DEF_EXT_FILE_PATH + ENCRYPTED_FILE_NAME + ECRYPT_FILE_EXT
         val DEF_DECRYPTED_FILE_PATH = DEF_EXT_FILE_PATH + DECRYPTED_FILE_NAME + ECRYPT_FILE_EXT
 
-        val ERR_INVALID_KEY = "The key is not valid. Please provide a valid RSA key."
-        val ERR_VERIFY_EXCEPTION = "Cannot use provided signature to verify input data."
-        val ERR_SIGN_EXCEPTION = "This signature algorithm is unable to process the input data provided."
-        val ERR_INPUT_TYPE_NOT_SUPPORTED = "Input type not supported."
-        val ERR_INVALID_INPUT_DATA = "Invalid input data."
-        val ERR_NO_SUCH_FILE = "File does not exist."
-        val ERR_CANNOT_WRITE = "Cannot write to file."
-        val ERR_CANNOT_READ = "Cannot read from file."
-        val ERR_OUTPUT_FILE_EXISTS = "Output file already exists."
+        const val ERR_INVALID_KEY = "The key is not valid. Please provide a valid RSA key."
+        const val ERR_VERIFY_EXCEPTION = "Cannot use provided signature to verify input data."
+        const val ERR_SIGN_EXCEPTION = "This signature algorithm is unable to process the input data provided."
+        const val ERR_INPUT_TYPE_NOT_SUPPORTED = "Input type not supported."
+        const val ERR_INVALID_INPUT_DATA = "Invalid input data."
+        const val ERR_NO_SUCH_FILE = "File does not exist."
+        const val ERR_CANNOT_WRITE = "Cannot write to file."
+        const val ERR_CANNOT_READ = "Cannot read from file."
+        const val ERR_OUTPUT_FILE_EXISTS = "Output file already exists."
+        const val ERR_BAD_BASE64 = "Invalid base64 string."
 
-        val STANDARD_SYMBOLS =
+        const val STANDARD_SYMBOLS =
                 "ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
                         "abcdefghijklmnopqrstuvwxyz" +
                         "0123456789"
 
-        val PASSWORD_LENGTH: Int = 24
+        const val PASSWORD_LENGTH: Int = 24
 
     }
 }

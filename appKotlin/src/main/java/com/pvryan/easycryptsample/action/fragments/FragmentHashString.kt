@@ -23,6 +23,7 @@ import android.support.v4.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ArrayAdapter
 import com.pvryan.easycrypt.ECResultListener
 import com.pvryan.easycrypt.hash.ECHash
 import com.pvryan.easycrypt.hash.ECHashAlgorithms
@@ -50,9 +51,19 @@ class FragmentHashString : Fragment(), ECResultListener {
             true
         }
 
+        val hashAdapter: ArrayAdapter<ECHashAlgorithms> = ArrayAdapter(view.context,
+                android.R.layout.simple_spinner_item,
+                arrayListOf(ECHashAlgorithms.SHA_512,
+                        ECHashAlgorithms.SHA_384,
+                        ECHashAlgorithms.SHA_256,
+                        ECHashAlgorithms.SHA_224,
+                        ECHashAlgorithms.SHA_1,
+                        ECHashAlgorithms.MD5))
+        hashAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinnerHashS.adapter = hashAdapter
+
         buttonHashS.setOnClickListener {
-            progressBarS.visibility = View.VISIBLE
-            eCryptHash.calculate(edInputS.text, ECHashAlgorithms.SHA_512, this)
+            eCryptHash.calculate(edInputS.text, spinnerHashS.selectedItem as ECHashAlgorithms, this)
         }
     }
 
@@ -62,7 +73,6 @@ class FragmentHashString : Fragment(), ECResultListener {
 
     override fun <T> onSuccess(result: T) {
         onUiThread {
-            progressBarS.visibility = View.INVISIBLE
             tvResultS.text = result as String
         }
     }
@@ -70,7 +80,6 @@ class FragmentHashString : Fragment(), ECResultListener {
     override fun onFailure(message: String, e: Exception) {
         e.printStackTrace()
         onUiThread {
-            progressBarS.visibility = View.INVISIBLE
             longToast("Error: $message")
         }
     }
