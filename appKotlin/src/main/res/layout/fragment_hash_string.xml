@@ -19,36 +19,46 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginEnd="32dp"
+        android:layout_marginStart="32dp"
         android:orientation="vertical">
-
-        <ProgressBar
-            android:id="@+id/progressBarS"
-            style="?android:attr/progressBarStyleHorizontal"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:indeterminate="true"
-            android:visibility="invisible" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="32dp"
-            android:layout_marginStart="32dp"
-            android:layout_marginTop="32dp"
-            android:orientation="horizontal">
+            android:layout_marginTop="32dp">
+
+            <TextView
+                style="?android:attr/textAppearanceMedium"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/tv_hash_algorithm" />
+
+            <Spinner
+                android:id="@+id/spinnerHashS"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:orientation="horizontal"
+            android:weightSum="10">
 
             <android.support.design.widget.TextInputLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content">
-
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="9">
                 <EditText
                     android:id="@+id/edInputS"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="@string/ed_text_input"
                     android:inputType="textMultiLine"
-                    android:maxLines="6"
-                    android:minEms="12" />
+                    android:maxLines="6" />
             </android.support.design.widget.TextInputLayout>
 
             <Button
@@ -56,6 +66,7 @@
                 style="?android:attr/buttonBarButtonStyle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
                 android:text="@string/button_hash" />
 
         </LinearLayout>
@@ -65,8 +76,6 @@
             style="?android:attr/textAppearanceMedium"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="32dp"
-            android:layout_marginStart="32dp"
             android:layout_marginTop="16dp"
             android:longClickable="true"
             android:textIsSelectable="false" />

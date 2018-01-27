@@ -19,6 +19,7 @@ import com.pvryan.easycrypt.ECResultListener
 import com.pvryan.easycrypt.extensions.handleSuccess
 import org.jetbrains.anko.AnkoLogger
 import java.io.File
+import java.io.FileInputStream
 import java.io.IOException
 import java.io.InputStream
 import java.security.InvalidParameterException
@@ -53,12 +54,13 @@ internal object performSign : AnkoLogger {
                 var bytesCopied: Long = 0
 
                 try {
+                    val size = if (input is FileInputStream) input.channel.size() else -1
                     var read = input.read(buffer)
 
                     while (read > -1) {
                         signature.update(buffer, 0, read)
                         bytesCopied += read
-                        erl.onProgress(read, bytesCopied)
+                        erl.onProgress(read, bytesCopied, size)
                         read = input.read(buffer)
                     }
 
@@ -71,11 +73,9 @@ internal object performSign : AnkoLogger {
                     outputFile.delete()
                     erl.onFailure(Constants.ERR_SIGN_EXCEPTION, e)
                 }
-
             }
 
             else -> erl.onFailure(Constants.ERR_INPUT_TYPE_NOT_SUPPORTED, InvalidParameterException())
-
         }
     }
 }

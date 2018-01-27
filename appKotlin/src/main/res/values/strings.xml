@@ -48,5 +48,25 @@
     <string name="ivd_icon_for_cards">Icon for cards</string>
     <string name="btn_string">String</string>
     <string name="btn_file">File</string>
+    <string name="tv_hash_algorithm">Hash algorithm:</string>
+    <string name="tv_status">Status:\ </string>
+    <string name="tv_status_idle">Idle</string>
+    <string name="tv_status_encrypting">Encrypting ..</string>
+    <string name="tv_status_decrypting">Decrypting ..</string>
+    <string name="tv_status_hashing">Hashing ..</string>
+    <string name="tv_status_signing">Signing ..</string>
+    <string name="tv_status_verifying">Verifying ..</string>
+    <string name="iv_expand_collapse_button">Expand / Collapse button</string>
+
+    <string-array name="hash_array">
+        <item>Mercury</item>
+        <item>Venus</item>
+        <item>Earth</item>
+        <item>Mars</item>
+        <item>Jupiter</item>
+        <item>Saturn</item>
+        <item>Uranus</item>
+        <item>Neptune</item>
+    </string-array>
 
 </resources>

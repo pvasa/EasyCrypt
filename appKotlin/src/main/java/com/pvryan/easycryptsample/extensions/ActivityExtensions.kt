@@ -31,12 +31,12 @@ fun AppCompatActivity.checkPermissions(requestCode: Int, vararg permissions: Str
         ContextCompat.checkSelfPermission(this, it) == PackageManager.PERMISSION_DENIED
     }
 
-    if (!unGranted.isEmpty()) {
+    return if (!unGranted.isEmpty()) {
         ActivityCompat.requestPermissions(
                 this, unGranted.toTypedArray<String>(), requestCode)
-        return false
+        false
     } else {
-        return true
+        true
     }
 }
 

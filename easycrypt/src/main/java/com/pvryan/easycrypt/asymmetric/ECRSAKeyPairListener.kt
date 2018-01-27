@@ -16,6 +16,7 @@ package com.pvryan.easycrypt.asymmetric
 
 import java.security.KeyPair
 
+@Suppress("KDocUnresolvedReference")
 /**
  * Interface to listen for result from [ECKeys.genRSAKeyPair]
  */

@@ -63,9 +63,13 @@ internal object performEncrypt {
 
                                 @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")
                                 override fun <T> onSuccess(cipherPass: T) {
-                                    ((cipherPass as String).fromBase64()
-                                            .plus((result as String).fromBase64()))
-                                            .handleSuccess(erl, outputFile, true)
+                                    try {
+                                        ((cipherPass as String).fromBase64()
+                                                .plus((result as String).fromBase64()))
+                                                .handleSuccess(erl, outputFile, true)
+                                    } catch (e: IllegalArgumentException) {
+                                        erl.onFailure(Constants.ERR_BAD_BASE64, e)
+                                    }
                                 }
 
                                 override fun onFailure(message: String, e: Exception) {
@@ -100,8 +104,8 @@ internal object performEncrypt {
 
                 ECSymmetric().encrypt(input, password, object : ECResultListener {
 
-                    override fun onProgress(newBytes: Int, bytesProcessed: Long) {
-                        erl.onProgress(newBytes, bytesProcessed)
+                    override fun onProgress(newBytes: Int, bytesProcessed: Long, totalBytes: Long) {
+                        erl.onProgress(newBytes, bytesProcessed, input.channel.size())
                     }
 
                     override fun <T> onSuccess(result: T) {
@@ -127,6 +131,9 @@ internal object performEncrypt {
                                             fos.write(buffer, 0, read)
                                             read = it.read(buffer)
                                         }
+                                    } catch (e: IllegalArgumentException) {
+                                        erl.onFailure(Constants.ERR_BAD_BASE64, e)
+                                        return
                                     } catch (e: IOException) {
                                         erl.onFailure(Constants.ERR_CANNOT_WRITE, e)
                                         return

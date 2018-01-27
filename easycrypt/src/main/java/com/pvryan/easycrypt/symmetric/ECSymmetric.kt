@@ -171,10 +171,22 @@ class ECSymmetric(transformation: ECSymmetricTransformations
 
             when (input) {
 
-                is String -> decrypt(input.fromBase64().inputStream(), password, erl, outputFile)
+                is String -> {
+                    try {
+                        decrypt(input.fromBase64().inputStream(), password, erl, outputFile)
+                    } catch (e: IllegalArgumentException) {
+                        erl.onFailure(Constants.ERR_BAD_BASE64, e)
+                    }
+                }
 
-                is CharSequence -> decrypt(input.toString().fromBase64().inputStream(),
-                        password, erl, outputFile)
+                is CharSequence -> {
+                    try {
+                        decrypt(input.toString().fromBase64().inputStream(),
+                                password, erl, outputFile)
+                    } catch (e: IllegalArgumentException) {
+                        erl.onFailure(Constants.ERR_BAD_BASE64, e)
+                    }
+                }
 
                 is ByteArray -> decrypt(input.inputStream(), password, erl, outputFile)
 

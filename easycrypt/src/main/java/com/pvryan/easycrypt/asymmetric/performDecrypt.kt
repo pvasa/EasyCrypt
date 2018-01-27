@@ -105,6 +105,10 @@ internal object performDecrypt {
                         ECSymmetric().decrypt(input, password as String,
                                 object : ECResultListener {
 
+                                    override fun onProgress(newBytes: Int, bytesProcessed: Long, totalBytes: Long) {
+                                        erl.onProgress(newBytes, bytesProcessed, totalBytes)
+                                    }
+
                                     override fun <T> onSuccess(result: T) {
                                         erl.onSuccess(result)
                                     }

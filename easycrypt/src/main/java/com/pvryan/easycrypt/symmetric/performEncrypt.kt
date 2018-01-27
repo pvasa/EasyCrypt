@@ -85,6 +85,7 @@ internal object performEncrypt {
                 val cos = CipherOutputStream(fos, cipher)
 
                 try {
+                    val size = input.channel.size()
                     val buffer = ByteArray(8192)
                     var bytesCopied: Long = 0
                     var read = input.read(buffer)
@@ -92,7 +93,7 @@ internal object performEncrypt {
                     while (read > -1) {
                         cos.write(buffer, 0, read)
                         bytesCopied += read
-                        erl.onProgress(read, bytesCopied)
+                        erl.onProgress(read, bytesCopied, size)
                         read = input.read(buffer)
                     }
 

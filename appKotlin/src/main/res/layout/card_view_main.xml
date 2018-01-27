@@ -42,16 +42,19 @@
             android:textSize="24sp" />
 
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:padding="8dp">
+            android:padding="8dp"
+            android:weightSum="10">
 
             <Button
                 android:id="@+id/buttonAction1"
                 style="?android:attr/buttonBarButtonStyle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_gravity="start"
+                android:layout_weight="1"
                 android:text="@string/btn_string" />
 
             <Button
@@ -59,7 +62,24 @@
                 style="?android:attr/buttonBarButtonStyle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_gravity="start"
+                android:layout_weight="1"
                 android:text="@string/btn_file" />
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="7" />
+
+            <ImageView
+                android:id="@+id/buttonExpandCollapse"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:background="@drawable/ic_keyboard_arrow_down_black_24px"
+                android:contentDescription="@string/iv_expand_collapse_button"
+                android:foreground="?android:attr/selectableItemBackground"
+                android:padding="4dp" />
 
         </LinearLayout>
 
@@ -71,7 +91,8 @@
             android:paddingEnd="16dp"
             android:paddingStart="16dp"
             android:textColor="@android:color/black"
-            android:textSize="14sp" />
+            android:textSize="14sp"
+            android:visibility="gone" />
 
     </LinearLayout>
 

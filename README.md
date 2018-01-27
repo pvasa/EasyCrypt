@@ -68,7 +68,7 @@ eCryptSymmetric.encrypt (input, password,
     object : ECResultListener {
 
         // Optional
-        override fun onProgress(newBytes: Int, bytesProcessed: Long) {
+        override fun onProgress(newBytes: Int, bytesProcessed: Long, totalBytes: Long) {
 
         }
 
@@ -90,7 +90,7 @@ eCryptSymmetric.decrypt(input, password,
         object : ECResultListener {
 
             // Optional
-            override fun onProgress(newBytes: Int, bytesProcessed: Long) {
+            override fun onProgress(newBytes: Int, bytesProcessed: Long, totalBytes: Long) {
 
             }
 
@@ -117,7 +117,7 @@ eCryptAsymmetric.generateKeyPair(object : ECRSAKeyPairListener {
                  object : ECResultListener {
 
                      // Optional
-                     override fun onProgress(newBytes: Int, bytesProcessed: Long) {
+                     override fun onProgress(newBytes: Int, bytesProcessed: Long, totalBytes: Long) {
 
                      }
 
@@ -146,7 +146,7 @@ eCryptAsymmetric.decrypt(input, privateKey,
         object : ECResultListener {
 
             // Optional
-            override fun onProgress(newBytes: Int, bytesProcessed: Long) {
+            override fun onProgress(newBytes: Int, bytesProcessed: Long, totalBytes: Long) {
 
             }
 
@@ -175,7 +175,7 @@ eCryptKeys.genRSAKeyPair(object : ECRSAKeyPairListener {
                 object : ECResultListener {
 
                     // Optional
-                    override fun onProgress(newBytes: Int, bytesProcessed: Long) {
+                    override fun onProgress(newBytes: Int, bytesProcessed: Long, totalBytes: Long) {
 
                     }
 
@@ -217,7 +217,7 @@ eCryptHash.calculate(input, hashAlgorithm, // from ECHashAlgorithms
         object : ECResultListener {
 
             // Optional
-            override fun onProgress(newBytes: Int, bytesProcessed: Long) {
+            override fun onProgress(newBytes: Int, bytesProcessed: Long, totalBytes: Long) {
 
             }
 

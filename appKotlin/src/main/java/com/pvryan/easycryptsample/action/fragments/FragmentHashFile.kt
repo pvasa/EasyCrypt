@@ -22,10 +22,13 @@ import android.support.v4.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ArrayAdapter
 import com.pvryan.easycrypt.ECResultListener
 import com.pvryan.easycrypt.hash.ECHash
 import com.pvryan.easycrypt.hash.ECHashAlgorithms
 import com.pvryan.easycryptsample.R
+import com.pvryan.easycryptsample.extensions.hide
+import com.pvryan.easycryptsample.extensions.show
 import kotlinx.android.synthetic.main.fragment_hash_file.*
 import org.jetbrains.anko.AnkoLogger
 import org.jetbrains.anko.support.v4.onUiThread
@@ -42,6 +45,17 @@ class FragmentHashFile : Fragment(), AnkoLogger, ECResultListener {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        val hashAdapter: ArrayAdapter<ECHashAlgorithms> = ArrayAdapter(view.context,
+                android.R.layout.simple_spinner_item,
+                arrayListOf(ECHashAlgorithms.SHA_512,
+                        ECHashAlgorithms.SHA_384,
+                        ECHashAlgorithms.SHA_256,
+                        ECHashAlgorithms.SHA_224,
+                        ECHashAlgorithms.SHA_1,
+                        ECHashAlgorithms.MD5))
+        hashAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinnerHashF.adapter = hashAdapter
 
         buttonSelectHashF.setOnClickListener {
             selectFile(_rCHash)
@@ -61,23 +75,35 @@ class FragmentHashFile : Fragment(), AnkoLogger, ECResultListener {
 
             val fis = context?.contentResolver?.openInputStream(data?.data)
 
-            progressBarF.visibility = View.VISIBLE
+            progressBarF.show()
 
             when (requestCode) {
                 _rCHash -> {
-                    eCryptHash.calculate(fis, ECHashAlgorithms.SHA_512, this)
+                    tvStatus.text = getString(R.string.tv_status_hashing)
+                    eCryptHash.calculate(fis, spinnerHashF.selectedItem as ECHashAlgorithms, this)
                 }
             }
         }
     }
 
-    override fun onProgress(newBytes: Int, bytesProcessed: Long) {
-        progressBarF.progress = (bytesProcessed / 1024).toInt()
+    private var maxSet = false
+    override fun onProgress(newBytes: Int, bytesProcessed: Long, totalBytes: Long) {
+        if (totalBytes > -1) {
+            onUiThread {
+                if (!maxSet) {
+                    progressBarF.isIndeterminate = false
+                    progressBarF.max = (totalBytes / 1024).toInt()
+                    maxSet = true
+                }
+                progressBarF.progress = (bytesProcessed / 1024).toInt()
+            }
+        }
     }
 
     override fun <T> onSuccess(result: T) {
         onUiThread {
-            progressBarF.visibility = View.INVISIBLE
+            progressBarF.hide()
+            tvStatus.text = getString(R.string.tv_status_idle)
             tvResultF.text = result as String
         }
     }
@@ -85,7 +111,8 @@ class FragmentHashFile : Fragment(), AnkoLogger, ECResultListener {
     override fun onFailure(message: String, e: Exception) {
         e.printStackTrace()
         onUiThread {
-            progressBarF.visibility = View.INVISIBLE
+            progressBarF.hide()
+            tvStatus.text = getString(R.string.tv_status_idle)
             toast("Error: $message")
         }
     }

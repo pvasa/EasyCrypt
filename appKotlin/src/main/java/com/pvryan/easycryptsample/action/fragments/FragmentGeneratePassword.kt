@@ -27,9 +27,9 @@ import android.view.ViewGroup
 import com.pvryan.easycrypt.ECKeys
 import com.pvryan.easycrypt.symmetric.ECPasswordListener
 import com.pvryan.easycryptsample.R
+import com.pvryan.easycryptsample.extensions.snackShort
 import kotlinx.android.synthetic.main.fragment_generate_password.*
-import org.jetbrains.anko.support.v4.longToast
-import org.jetbrains.anko.support.v4.toast
+import org.jetbrains.anko.support.v4.onUiThread
 import java.security.InvalidParameterException
 
 class FragmentGeneratePassword : Fragment() {
@@ -47,7 +47,7 @@ class FragmentGeneratePassword : Fragment() {
         tvResultP.setOnLongClickListener {
             val data = ClipData.newPlainText("result", tvResultP.text)
             clipboard.primaryClip = data
-            longToast("Result copied to clipboard")
+            view.snackShort("Result copied to clipboard")
             true
         }
 
@@ -64,10 +64,10 @@ class FragmentGeneratePassword : Fragment() {
                 }
             } catch (e: InvalidParameterException) {
                 e.printStackTrace()
-                toast(e.localizedMessage)
+                view.snackShort(e.localizedMessage)
             } catch (e: NumberFormatException) {
                 e.printStackTrace()
-                toast("Too big number.")
+                view.snackShort("Too big number.")
             }
         }
 
@@ -81,7 +81,7 @@ class FragmentGeneratePassword : Fragment() {
                             override fun onFailure(message: String, e: Exception) {
                                 Log.w(FragmentGeneratePassword::class.java.simpleName, message)
                                 e.printStackTrace()
-                                toast(e.localizedMessage)
+                                onUiThread { view.snackShort(e.localizedMessage) }
                             }
 
                             override fun onGenerated(password: String) {
@@ -90,7 +90,7 @@ class FragmentGeneratePassword : Fragment() {
                         })
             } catch (e: NumberFormatException) {
                 e.printStackTrace()
-                toast("Too big number.")
+                view.snackShort("Too big number.")
             }
         }
     }
