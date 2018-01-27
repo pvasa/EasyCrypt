@@ -21,35 +21,12 @@ Secure and efficient cryptography library for Android. (Auto fix SecureRandom bu
 * Supported RSA key sizes are 2048 bits and 4096 bits
 * Password analysis for strength, crack times, weakness, etc using [nulab's zxcvbn4j library](https://github.com/nulab/zxcvbn4j)
 
-## Install in Java app
-Add in your project's build.gradle
-```gradle
-buildscript {
-    ..
-    dependencies {
-        ..
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.2.21"
-        classpath "org.jetbrains.kotlin:kotlin-android-extensions:1.2.21"
-    }
-}
-```
-Add in your app's build.gradle
-```gradle
-apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
-
-dependencies {
-    ..
-    compile "com.pvryan.easycrypt:easycrypt:1.3.1"
-}
-```
-
-## Install in Kotlin app
+## Install
 Add in your app's build.gradle
 ```gradle
 dependencies {
     ..
-    compile "com.pvryan.easycrypt:easycrypt:1.3.1"
+    implementation "com.pvryan.easycrypt:easycrypt:1.3.1"
 }
 ```
 
