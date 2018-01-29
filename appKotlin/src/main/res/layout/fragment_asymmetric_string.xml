@@ -13,6 +13,7 @@
 -->
 
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -36,7 +37,6 @@
             android:layout_marginEnd="32dp"
             android:layout_marginStart="32dp"
             android:layout_marginTop="32dp">
-
             <EditText
                 android:id="@+id/edInputS"
                 android:layout_width="match_parent"
@@ -46,7 +46,7 @@
                 android:maxLines="6" />
         </android.support.design.widget.TextInputLayout>
 
-        <!--<android.support.design.widget.TextInputLayout
+        <android.support.design.widget.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginEnd="32dp"
@@ -59,7 +59,7 @@
                 android:layout_height="wrap_content"
                 android:hint="@string/ed_password"
                 android:inputType="textPassword" />
-        </android.support.design.widget.TextInputLayout>-->
+        </android.support.design.widget.TextInputLayout>
 
         <LinearLayout
             android:id="@+id/llEncryptDecrypt"
@@ -100,16 +100,149 @@
 
         </LinearLayout>
 
-        <TextView
-            android:id="@+id/tvResultS"
-            style="?android:attr/textAppearanceMedium"
+        <RelativeLayout
+            android:id="@+id/rlPrivateKeyTitleS"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginEnd="32dp"
             android:layout_marginStart="32dp"
             android:layout_marginTop="16dp"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:longClickable="true">
+
+            <TextView
+                android:id="@+id/labelPrivateKeyS"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_gravity="center_vertical"
+                android:labelFor="@+id/tvPrivateKeyS"
+                android:text="@string/tv_secure_private_key"
+                android:textAppearance="?android:textAppearanceMedium"
+                android:textColor="@color/primary_text"
+                android:textIsSelectable="false" />
+
+            <ImageView
+                android:id="@+id/bExpandCollapsePrivateS"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignEnd="@+id/labelPrivateKeyS"
+                android:layout_alignParentEnd="true"
+                android:layout_gravity="center_vertical"
+                android:background="@drawable/ic_keyboard_arrow_down_black_24px"
+                android:contentDescription="@string/iv_expand_collapse_button"
+                android:padding="4dp" />
+
+            <TextView
+                android:id="@+id/tvPrivateKeyS"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/labelPrivateKeyS"
+                android:layout_marginStart="4dp"
+                android:layout_marginTop="8dp"
+                android:textIsSelectable="false"
+                android:visibility="gone" />
+
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/rlPublicKeyTitleS"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="32dp"
+            android:layout_marginStart="32dp"
+            android:layout_marginTop="16dp"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
             android:longClickable="true"
-            android:textIsSelectable="false" />
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/labelPublicKeyS"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_gravity="start|center_vertical"
+                android:labelFor="@+id/tvPublicKeyS"
+                android:text="@string/tv_public_key"
+                android:textAppearance="?android:textAppearanceMedium"
+                android:textColor="@color/primary_text"
+                android:textIsSelectable="false" />
+
+            <ImageView
+                android:id="@+id/bExpandCollapsePublicS"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignEnd="@+id/labelPublicKeyS"
+                android:layout_alignParentEnd="true"
+                android:layout_gravity="center_vertical"
+                android:background="@drawable/ic_keyboard_arrow_down_black_24px"
+                android:contentDescription="@string/iv_expand_collapse_button"
+                android:padding="4dp" />
+
+            <TextView
+                android:id="@+id/tvPublicKeyS"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/labelPublicKeyS"
+                android:layout_marginStart="4dp"
+                android:layout_marginTop="8dp"
+                android:textIsSelectable="false"
+                android:visibility="gone" />
+
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/rlOutputTitleS"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="32dp"
+            android:layout_marginEnd="32dp"
+            android:layout_marginStart="32dp"
+            android:layout_marginTop="16dp"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:longClickable="true"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/labelOutputS"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_gravity="center_vertical"
+                android:labelFor="@+id/tvResultS"
+                android:text="@string/tv_output"
+                android:textAppearance="?android:textAppearanceMedium"
+                android:textColor="@color/primary_text"
+                android:textIsSelectable="false" />
+
+            <ImageView
+                android:id="@+id/bExpandCollapseOutputS"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignEnd="@+id/labelOutputS"
+                android:layout_alignParentEnd="true"
+                android:layout_gravity="center_vertical"
+                android:background="@drawable/ic_keyboard_arrow_down_black_24px"
+                android:contentDescription="@string/iv_expand_collapse_button"
+                android:padding="4dp" />
+
+            <TextView
+                android:id="@+id/tvResultS"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/labelOutputS"
+                android:layout_marginStart="4dp"
+                android:layout_marginTop="8dp"
+                android:textIsSelectable="false"
+                android:visibility="gone" />
+
+        </RelativeLayout>
 
     </LinearLayout>
 

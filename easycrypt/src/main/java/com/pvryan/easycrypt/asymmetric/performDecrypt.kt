@@ -25,7 +25,9 @@ import java.io.FileInputStream
 import java.io.InputStream
 import java.security.InvalidParameterException
 import java.security.interfaces.RSAPrivateKey
+import javax.crypto.BadPaddingException
 import javax.crypto.Cipher
+import javax.crypto.IllegalBlockSizeException
 
 internal object performDecrypt {
 
@@ -79,11 +81,16 @@ internal object performDecrypt {
                             inputStream.close()
                             erl.onFailure(message, e)
                         }
-
                     }, outputFile)
 
                 } else {
-                    cipher.doFinal(input).handleSuccess(erl, outputFile, false)
+                    try {
+                        cipher.doFinal(input).handleSuccess(erl, outputFile, false)
+                    } catch (e: BadPaddingException) {
+                        erl.onFailure(Constants.ERR_INVALID_INPUT_DATA, e)
+                    } catch (e: IllegalBlockSizeException) {
+                        erl.onFailure(Constants.ERR_INVALID_INPUT_DATA, e)
+                    }
                 }
             }
 
@@ -128,7 +135,6 @@ internal object performDecrypt {
             }
 
             else -> erl.onFailure(Constants.ERR_INPUT_TYPE_NOT_SUPPORTED, InvalidParameterException())
-
         }
     }
 }

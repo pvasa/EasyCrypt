@@ -36,7 +36,6 @@
             android:layout_marginEnd="32dp"
             android:layout_marginStart="32dp"
             android:layout_marginTop="32dp">
-
             <EditText
                 android:id="@+id/edInputS"
                 android:layout_width="match_parent"
@@ -87,13 +86,27 @@
         </LinearLayout>
 
         <TextView
-            android:id="@+id/tvResultS"
-            style="?android:attr/textAppearanceMedium"
+            android:id="@+id/labelOutputS"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginEnd="32dp"
             android:layout_marginStart="32dp"
             android:layout_marginTop="16dp"
+            android:labelFor="@+id/tvResultS"
+            android:text="@string/tv_output"
+            android:textAppearance="?android:textAppearanceMedium"
+            android:textColor="@color/primary_text"
+            android:textIsSelectable="false" />
+
+        <TextView
+            android:id="@+id/tvResultS"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="32dp"
+            android:layout_marginEnd="32dp"
+            android:layout_marginStart="36dp"
+            android:layout_marginTop="8dp"
+            android:background="?attr/selectableItemBackground"
             android:longClickable="true"
             android:textIsSelectable="false" />
 

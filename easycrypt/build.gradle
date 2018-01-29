@@ -17,7 +17,7 @@ ext {
     gitUrl = 'https://github.com/ryan652/EasyCrypt.git'
     gitRepo = 'ryan652/EasyCrypt'
 
-    libraryVersion = '1.3.2'
+    libraryVersion = '1.3.3'
 
     developerId = 'ryan652'
     developerName = 'Priyank Vasa'
@@ -47,7 +47,7 @@ android {
         minSdkVersion 14
         targetSdkVersion 27
         versionCode 1
-        versionName "1.3.2"
+        versionName "1.3.3"
         signingConfig signingConfigs.config
     }
     buildTypes {

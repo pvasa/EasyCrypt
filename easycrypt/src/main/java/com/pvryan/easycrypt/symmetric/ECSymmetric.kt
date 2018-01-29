@@ -207,7 +207,6 @@ class ECSymmetric(transformation: ECSymmetricTransformations
 
                 else -> performDecrypt.invoke(input, tPass, cipher,
                         { pass, salt -> getKey(pass, salt) }, erl, outputFile)
-
             }
         }
     }

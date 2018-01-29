@@ -24,13 +24,14 @@ import android.support.v7.widget.RecyclerView
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.widget.Toast
 import com.pvryan.easycryptsample.R
+import com.pvryan.easycryptsample.about.AboutActivity
 import com.pvryan.easycryptsample.action.ActionActivity
 import com.pvryan.easycryptsample.data.Card
 import com.pvryan.easycryptsample.extensions.checkPermissions
 import com.pvryan.easycryptsample.extensions.handlePermissionResults
 import kotlinx.android.synthetic.main.activity_main.*
+import org.jetbrains.anko.toast
 import java.io.File
 
 class MainActivity : AppCompatActivity() {
@@ -120,8 +121,14 @@ class MainActivity : AppCompatActivity() {
         // as you specify a parent activity in AndroidManifest.xml.
         return when (item.itemId) {
             R.id.action_settings -> {
-                Toast.makeText(
-                        this@MainActivity, "Coming soon", Toast.LENGTH_SHORT).show()
+                toast("Coming soon")
+                true
+            }
+            R.id.action_about -> {
+                val intent = Intent(this, AboutActivity::class.java)
+                intent.putExtra(Card.TITLE, getString(R.string.title_about))
+                startActivity(intent)
+                R.style.about_elementTextAppearance
                 true
             }
             else -> super.onOptionsItemSelected(item)

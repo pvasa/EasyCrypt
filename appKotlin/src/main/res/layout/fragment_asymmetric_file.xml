@@ -12,110 +12,230 @@
      limitations under the License.
 -->
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/container"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:layout_height="match_parent">
 
-    <ProgressBar
-        android:id="@+id/progressBarF"
-        style="?android:attr/progressBarStyleHorizontal"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="2dp"
-        android:indeterminate="true"
-        android:visibility="invisible" />
+        android:orientation="vertical">
 
-    <!--<android.support.design.widget.TextInputLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="32dp"
-        android:layout_marginStart="32dp"
-        android:layout_marginTop="32dp"
-        app:passwordToggleEnabled="true">
-        <EditText
-            android:id="@+id/edPasswordF"
+        <ProgressBar
+            android:id="@+id/progressBarF"
+            style="?android:attr/progressBarStyleHorizontal"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="@string/ed_password"
-            android:inputType="textPassword" />
-    </android.support.design.widget.TextInputLayout>-->
+            android:layout_marginTop="2dp"
+            android:indeterminate="true"
+            android:visibility="invisible" />
 
-    <TextView
-        style="?android:attr/textAppearanceMedium"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_vertical"
-        android:layout_marginEnd="32dp"
-        android:layout_marginStart="32dp"
-        android:layout_marginTop="16dp"
-        android:text="@string/tv_select_file_to" />
+        <android.support.design.widget.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="32dp"
+            android:layout_marginStart="32dp"
+            android:layout_marginTop="32dp"
+            app:passwordToggleEnabled="true">
 
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="32dp"
-        android:layout_marginStart="32dp"
-        android:layout_marginTop="16dp"
-        android:orientation="horizontal">
+            <EditText
+                android:id="@+id/edPasswordF"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/ed_password"
+                android:inputType="textPassword" />
+        </android.support.design.widget.TextInputLayout>
 
-        <Button
-            android:id="@+id/buttonSelectEncryptF"
-            style="?android:attr/buttonBarButtonStyle"
+        <TextView
+            style="?android:attr/textAppearanceMedium"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/button_select_encrypt" />
+            android:layout_gravity="center_vertical"
+            android:layout_marginEnd="32dp"
+            android:layout_marginStart="32dp"
+            android:layout_marginTop="16dp"
+            android:text="@string/tv_select_file_to"
+            android:textAppearance="?android:textAppearanceMedium"
+            android:textColor="@color/primary_text" />
 
-        <Button
-            android:id="@+id/buttonSelectDecryptF"
-            style="?android:attr/buttonBarButtonStyle"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/button_select_decrypt" />
+            android:layout_marginEnd="32dp"
+            android:layout_marginStart="32dp"
+            android:orientation="horizontal">
 
-        <Button
-            android:id="@+id/buttonSignF"
-            style="?android:attr/buttonBarButtonStyle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/button_sign" />
+            <Button
+                android:id="@+id/buttonSelectEncryptF"
+                style="?android:attr/buttonBarButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/button_select_encrypt" />
 
-        <Button
-            android:id="@+id/buttonVerifyF"
-            style="?android:attr/buttonBarButtonStyle"
-            android:layout_width="wrap_content"
+            <Button
+                android:id="@+id/buttonSelectDecryptF"
+                style="?android:attr/buttonBarButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/button_select_decrypt" />
+
+            <Button
+                android:id="@+id/buttonSignF"
+                style="?android:attr/buttonBarButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/button_sign" />
+
+            <Button
+                android:id="@+id/buttonVerifyF"
+                style="?android:attr/buttonBarButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/button_verify" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/button_verify" />
+            android:layout_marginEnd="32dp"
+            android:layout_marginStart="32dp"
+            android:layout_marginTop="16dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/tv_status" />
+
+            <TextView
+                android:id="@+id/tvStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/tv_status_idle" />
+
+        </LinearLayout>
+
+        <RelativeLayout
+            android:id="@+id/rlPrivateKeyTitleF"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="32dp"
+            android:layout_marginStart="32dp"
+            android:layout_marginTop="16dp"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:longClickable="true">
+
+            <TextView
+                android:id="@+id/labelPrivateKeyF"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_gravity="center_vertical"
+                android:labelFor="@+id/tvPrivateKeyS"
+                android:text="@string/tv_secure_private_key"
+                android:textAppearance="?android:textAppearanceMedium"
+                android:textColor="@color/primary_text"
+                android:textIsSelectable="false" />
+
+            <ImageView
+                android:id="@+id/bExpandCollapsePrivateF"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignEnd="@+id/labelPrivateKeyF"
+                android:layout_alignParentEnd="true"
+                android:layout_gravity="center_vertical"
+                android:background="@drawable/ic_keyboard_arrow_down_black_24px"
+                android:contentDescription="@string/iv_expand_collapse_button"
+                android:padding="4dp" />
+
+            <TextView
+                android:id="@+id/tvPrivateKeyF"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/labelPrivateKeyF"
+                android:layout_marginStart="4dp"
+                android:layout_marginTop="8dp"
+                android:textIsSelectable="false"
+                android:visibility="gone" />
+
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/rlPublicKeyTitleF"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="32dp"
+            android:layout_marginStart="32dp"
+            android:layout_marginTop="16dp"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:longClickable="true"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/labelPublicKeyF"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_gravity="start|center_vertical"
+                android:labelFor="@+id/tvPublicKeyS"
+                android:text="@string/tv_public_key"
+                android:textAppearance="?android:textAppearanceMedium"
+                android:textColor="@color/primary_text"
+                android:textIsSelectable="false" />
+
+            <ImageView
+                android:id="@+id/bExpandCollapsePublicF"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignEnd="@+id/labelPublicKeyF"
+                android:layout_alignParentEnd="true"
+                android:layout_gravity="center_vertical"
+                android:background="@drawable/ic_keyboard_arrow_down_black_24px"
+                android:contentDescription="@string/iv_expand_collapse_button"
+                android:padding="4dp" />
+
+            <TextView
+                android:id="@+id/tvPublicKeyF"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/labelPublicKeyF"
+                android:layout_marginStart="4dp"
+                android:layout_marginTop="8dp"
+                android:textIsSelectable="false"
+                android:visibility="gone" />
+
+        </RelativeLayout>
+
+        <TextView
+            android:id="@+id/labelOutputF"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="32dp"
+            android:layout_marginStart="32dp"
+            android:layout_marginTop="16dp"
+            android:labelFor="@+id/tvResultF"
+            android:text="@string/tv_output"
+            android:textAppearance="?android:textAppearanceMedium"
+            android:textColor="@color/primary_text"
+            android:textIsSelectable="false" />
+
+        <TextView
+            android:id="@+id/tvResultF"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="32dp"
+            android:layout_marginEnd="32dp"
+            android:layout_marginStart="36dp"
+            android:layout_marginTop="8dp"
+            android:textIsSelectable="false" />
 
     </LinearLayout>
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="32dp"
-        android:layout_marginStart="32dp"
-        android:layout_marginTop="16dp"
-        android:orientation="horizontal">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/tv_status" />
-
-        <TextView
-            android:id="@+id/tvStatus"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/tv_status_idle" />
-
-    </LinearLayout>
-
-    <TextView
-        android:id="@+id/tvResultF"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="32dp"
-        android:layout_marginStart="32dp"
-        android:layout_marginTop="16dp" />
-
-</LinearLayout>
+</ScrollView>

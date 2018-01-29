@@ -37,7 +37,9 @@
             style="?android:attr/textAppearanceMedium"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/tv_hash_algorithm" />
+            android:text="@string/tv_hash_algorithm"
+            android:textAppearance="?android:textAppearanceMedium"
+            android:textColor="@color/primary_text" />
 
         <Spinner
             android:id="@+id/spinnerHashF"
@@ -59,7 +61,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
-            android:text="@string/tv_select_file_to" />
+            android:text="@string/tv_select_file_to"
+            android:textAppearance="?android:textAppearanceMedium"
+            android:textColor="@color/primary_text" />
 
         <Button
             android:id="@+id/buttonSelectHashF"
@@ -92,11 +96,28 @@
     </LinearLayout>
 
     <TextView
-        android:id="@+id/tvResultF"
-        android:layout_width="wrap_content"
+        android:id="@+id/labelOutputF"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginEnd="32dp"
         android:layout_marginStart="32dp"
-        android:layout_marginTop="16dp" />
+        android:layout_marginTop="16dp"
+        android:labelFor="@+id/tvResultF"
+        android:text="@string/tv_output"
+        android:textAppearance="?android:textAppearanceMedium"
+        android:textColor="@color/primary_text"
+        android:textIsSelectable="false" />
+
+    <TextView
+        android:id="@+id/tvResultF"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="32dp"
+        android:layout_marginEnd="32dp"
+        android:layout_marginStart="36dp"
+        android:layout_marginTop="8dp"
+        android:background="?attr/selectableItemBackground"
+        android:longClickable="true"
+        android:textIsSelectable="false" />
 
 </LinearLayout>

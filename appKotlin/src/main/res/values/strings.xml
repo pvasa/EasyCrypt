@@ -57,6 +57,11 @@
     <string name="tv_status_signing">Signing ..</string>
     <string name="tv_status_verifying">Verifying ..</string>
     <string name="iv_expand_collapse_button">Expand / Collapse button</string>
+    <string name="action_about">About</string>
+    <string name="title_about">About</string>
+    <string name="tv_secure_private_key">Secure private key</string>
+    <string name="tv_public_key">Public key</string>
+    <string name="tv_output">Output</string>
 
     <string-array name="hash_array">
         <item>Mercury</item>

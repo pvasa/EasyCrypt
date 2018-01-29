@@ -26,7 +26,7 @@ Add in your app's build.gradle
 ```gradle
 dependencies {
     ..
-    implementation "com.pvryan.easycrypt:easycrypt:1.3.2"
+    implementation "com.pvryan.easycrypt:easycrypt:1.3.3"
 }
 ```
 

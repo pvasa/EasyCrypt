@@ -15,13 +15,9 @@
 
 @file:Suppress("unused")
 
-package com.pvryan.easycrypt.extensions
+package com.pvryan.easycryptsample.extensions
 
 import android.util.Base64
-import com.pvryan.easycrypt.Constants
-import com.pvryan.easycrypt.ECResultListener
-import java.io.File
-import java.io.IOException
 import java.security.interfaces.RSAKey
 import java.util.regex.Pattern
 
@@ -42,36 +38,9 @@ fun ByteArray.asHexString(): String {
     return result.toString()
 }
 
-fun ByteArray.handleSuccess(erl: ECResultListener, outputFile: File, asBase64String: Boolean) {
-
-    if (outputFile.absolutePath != Constants.DEF_ENCRYPTED_FILE_PATH &&
-            outputFile.absolutePath != Constants.DEF_DECRYPTED_FILE_PATH) {
-
-        try {
-            outputFile.outputStream().use {
-                if (asBase64String)
-                    it.write(this.toBase64())
-                else it.write(this)
-                it.flush()
-            }
-            erl.onSuccess(outputFile)
-        } catch (e: IOException) {
-            erl.onFailure(Constants.ERR_CANNOT_WRITE, e)
-        }
-
-    } else {
-        if (asBase64String)
-            erl.onSuccess(this.toBase64String())
-        else {
-            erl.onSuccess(this.asString())
-        }
-    }
-}
-
 @Throws(IllegalArgumentException::class)
 fun String.asByteArray(): ByteArray = this.toByteArray(Charsets.UTF_8)
 
-@Throws(IllegalArgumentException::class)
 fun String.fromBase64(): ByteArray = Base64.decode(this.asByteArray(), Base64.URL_SAFE)
 
 private val pHex: Pattern = Pattern.compile("[0-9a-fA-F]+")
