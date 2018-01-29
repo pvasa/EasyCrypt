@@ -16,6 +16,7 @@ package com.pvryan.easycrypt
 
 import com.pvryan.easycrypt.asymmetric.ECAsymmetric.KeySizes
 import com.pvryan.easycrypt.asymmetric.ECRSAKeyPairListener
+import com.pvryan.easycrypt.extensions.fromBase64
 import com.pvryan.easycrypt.randomorg.RandomOrgApis
 import com.pvryan.easycrypt.randomorg.RandomOrgRequest
 import com.pvryan.easycrypt.randomorg.RandomOrgResponse
@@ -29,8 +30,14 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.net.HttpURLConnection
 import java.security.InvalidParameterException
+import java.security.KeyFactory
 import java.security.KeyPairGenerator
 import java.security.SecureRandom
+import java.security.interfaces.RSAPrivateKey
+import java.security.interfaces.RSAPublicKey
+import java.security.spec.InvalidKeySpecException
+import java.security.spec.PKCS8EncodedKeySpec
+import java.security.spec.X509EncodedKeySpec
 
 class ECKeys {
 
@@ -162,4 +169,34 @@ class ECKeys {
             kpl.onGenerated(keyPair)
         }
     }
+
+    /**
+     * Retrieve [RSAPublicKey] from base64 encoded string.
+     *
+     * @param keyBase64String base64 encoded public key string
+     *
+     * @return [RSAPublicKey]
+     *
+     * @throws IllegalArgumentException when [keyBase64String] is not a valid base64 string
+     * @throws InvalidKeySpecException when input is not a valid key
+     */
+    @Throws(IllegalArgumentException::class, InvalidKeySpecException::class)
+    fun genRSAPublicKeyFromBase64(keyBase64String: String) =
+            KeyFactory.getInstance(Constants.ASYMMETRIC_ALGORITHM)
+                    .generatePublic(X509EncodedKeySpec(keyBase64String.fromBase64())) as RSAPublicKey
+
+    /**
+     * Retrieve [RSAPrivateKey] from base64 encoded string.
+     *
+     * @param keyBase64String base64 encoded private key string
+     *
+     * @return [RSAPrivateKey]
+     *
+     * @throws IllegalArgumentException when [keyBase64String] is not a valid base64 string
+     * @throws InvalidKeySpecException when input is not a valid key
+     */
+    @Throws(IllegalArgumentException::class, InvalidKeySpecException::class)
+    fun genRSAPrivateKeyFromBase64(keyBase64String: String) =
+            KeyFactory.getInstance(Constants.ASYMMETRIC_ALGORITHM)
+                    .generatePrivate(PKCS8EncodedKeySpec(keyBase64String.fromBase64())) as RSAPrivateKey
 }
