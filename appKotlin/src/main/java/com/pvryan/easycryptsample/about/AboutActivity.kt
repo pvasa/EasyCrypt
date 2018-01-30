@@ -43,6 +43,7 @@ class AboutActivity : AppCompatActivity() {
         libVersionElement.title = "Library version 1.3.3"
 
         val view: View = AboutPage(this).isRTL(false)
+                .setImage(R.drawable.easycrypt)
                 .addItem(appVersionElement)
                 .addItem(libVersionElement)
                 .isRTL(false)
