@@ -21,6 +21,9 @@ Secure and efficient cryptography library for Android. (Auto fix SecureRandom bu
 * Supported RSA key sizes are 2048 bits and 4096 bits
 * Password analysis for strength, crack times, weakness, etc using [nulab's zxcvbn4j library](https://github.com/nulab/zxcvbn4j)
 
+## Sample app
+Download the sample app from [play store](https://play.google.com/store/apps/details?id=com.pvryan.easycryptsample).
+
 ## Install
 Add in your app's build.gradle
 ```gradle
