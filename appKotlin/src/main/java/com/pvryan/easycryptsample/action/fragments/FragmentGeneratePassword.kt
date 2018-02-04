@@ -20,7 +20,6 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.os.Bundle
 import android.support.v4.app.Fragment
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -29,6 +28,7 @@ import com.pvryan.easycrypt.symmetric.ECPasswordListener
 import com.pvryan.easycryptsample.R
 import com.pvryan.easycryptsample.extensions.snackShort
 import kotlinx.android.synthetic.main.fragment_generate_password.*
+import org.jetbrains.anko.support.v4.defaultSharedPreferences
 import org.jetbrains.anko.support.v4.onUiThread
 import java.security.InvalidParameterException
 
@@ -44,10 +44,10 @@ class FragmentGeneratePassword : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         val clipboard = activity?.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        tvResultP.setOnLongClickListener {
+        llOutputTitleP.setOnLongClickListener {
             val data = ClipData.newPlainText("result", tvResultP.text)
             clipboard.primaryClip = data
-            view.snackShort("Result copied to clipboard")
+            view.snackShort("Output copied to clipboard")
             true
         }
 
@@ -63,10 +63,8 @@ class FragmentGeneratePassword : Fragment() {
                             Integer.valueOf(edLengthP.text.toString()))
                 }
             } catch (e: InvalidParameterException) {
-                e.printStackTrace()
                 view.snackShort(e.localizedMessage)
             } catch (e: NumberFormatException) {
-                e.printStackTrace()
                 view.snackShort("Too big number.")
             }
         }
@@ -75,13 +73,11 @@ class FragmentGeneratePassword : Fragment() {
             try {
                 eCPasswords.genRandomOrgPassword(
                         Integer.valueOf(edLengthP.text.toString())!!,
-                        "",
+                        defaultSharedPreferences.getString(getString(R.string.pref_api_key), ""),
                         object : ECPasswordListener {
 
                             override fun onFailure(message: String, e: Exception) {
-                                Log.w(FragmentGeneratePassword::class.java.simpleName, message)
-                                e.printStackTrace()
-                                onUiThread { view.snackShort(e.localizedMessage) }
+                                onUiThread { view.snackShort("Invalid API key: ${e.localizedMessage}") }
                             }
 
                             override fun onGenerated(password: String) {
@@ -89,7 +85,6 @@ class FragmentGeneratePassword : Fragment() {
                             }
                         })
             } catch (e: NumberFormatException) {
-                e.printStackTrace()
                 view.snackShort("Too big number.")
             }
         }

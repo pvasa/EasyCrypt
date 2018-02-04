@@ -49,7 +49,7 @@ class ECAsymmetric {
      * @param T which can be either of [String], [CharSequence],
      * [ByteArray], [InputStream], [FileInputStream], or [File]
      * @param input data to be encrypted
-     * @param publicKey to encrypt the input
+     * @param publicKey to encrypt the input, in X.509 format
      * @param erl listener interface of type [ECResultListener] where result and progress will be posted
      * @param outputFile optional output file. If provided, result will be written to this file
      *
@@ -94,7 +94,6 @@ class ECAsymmetric {
                 }
 
                 else -> performEncrypt.invoke(input, publicKey, cipher, erl, outputFile)
-
             }
         }
     }
@@ -108,6 +107,7 @@ class ECAsymmetric {
      *
      * @param input data to be decrypted. It can be of type
      * [String], [CharSequence], [ByteArray], [InputStream], [FileInputStream],or [File]
+     * @param privateKey to decrypt the data, in PKCS#8 format
      * @param erl listener interface of type [ECResultListener] where result and progress will be posted
      * @param outputFile optional output file. If provided, result will be written to this file
      *
@@ -164,7 +164,6 @@ class ECAsymmetric {
                 }
 
                 else -> performDecrypt.invoke(input, privateKey, cipher, erl, outputFile)
-
             }
         }
     }
@@ -178,7 +177,7 @@ class ECAsymmetric {
      *
      * @param input data to be signed. It can be of type
      * [String], [CharSequence], [ByteArray], [InputStream], [FileInputStream], or [File]
-     * @param privateKey to be used for signing [input] data
+     * @param privateKey to be used for signing [input] data, in PKCS#8 format
      * @param erl listener interface of type [ECResultListener] where result and progress will be posted
      * @param outputFile output signature will be saved to this file
      *
@@ -223,7 +222,7 @@ class ECAsymmetric {
      *
      * @param input input data to be signed. It can be of type
      * [String], [CharSequence], [ByteArray], [InputStream], [FileInputStream], or [File]
-     * @param publicKey to verify input data with
+     * @param publicKey to verify input data, in X.509 format
      * @param signature expected to match and verify input data
      * @param evl listener interface of type [ECVerifiedListener] where result and progress will be posted
      *
@@ -268,5 +267,4 @@ class ECAsymmetric {
         S_2048(2048),
         S_4096(4096) // Default
     }
-
 }

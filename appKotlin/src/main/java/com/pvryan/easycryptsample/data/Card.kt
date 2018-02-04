@@ -25,8 +25,6 @@ data class Card(val title: String,
 
     companion object {
         const val ACTION = "action"
-        const val TITLE = "title"
-        const val SUB_TITLE = "subTitle"
         const val actionTypeSString = 2
         const val actionTypeSFile = 3
         const val actionTypeAString = 4

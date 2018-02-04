@@ -37,6 +37,7 @@ import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.PBEKeySpec
 import javax.crypto.spec.SecretKeySpec
 
+@Suppress("KDocUnresolvedReference")
 /**
  * Secure symmetric encryption with AES256.
  */

@@ -30,7 +30,6 @@ internal data class RandomOrgResponse(
             val code: Int,
             val message: String
     )
-
     data class Result(
             val random: Random,
             val bitsUsed: Long,

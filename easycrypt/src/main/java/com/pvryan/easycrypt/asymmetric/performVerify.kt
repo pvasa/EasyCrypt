@@ -27,6 +27,7 @@ import java.security.Signature
 import java.security.SignatureException
 import java.security.interfaces.RSAPublicKey
 
+@Suppress("ClassName")
 internal object performVerify : AnkoLogger {
 
     private val signature = Signature.getInstance(Constants.SIGNATURE_ALGORITHM)

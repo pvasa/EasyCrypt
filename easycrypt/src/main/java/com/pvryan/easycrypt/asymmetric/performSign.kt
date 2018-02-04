@@ -27,6 +27,7 @@ import java.security.Signature
 import java.security.SignatureException
 import java.security.interfaces.RSAPrivateKey
 
+@Suppress("ClassName")
 internal object performSign : AnkoLogger {
 
     private val signature = Signature.getInstance(Constants.SIGNATURE_ALGORITHM)
@@ -38,8 +39,7 @@ internal object performSign : AnkoLogger {
                             outputFile: File) {
 
         if (outputFile.exists()) {
-            when (input) { is InputStream -> input.close()
-            }
+            if (input is InputStream) input.close()
             erl.onFailure(Constants.ERR_OUTPUT_FILE_EXISTS, FileAlreadyExistsException(outputFile))
             return
         }

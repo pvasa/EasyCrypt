@@ -17,8 +17,7 @@ package com.pvryan.easycrypt
 import com.pvryan.easycrypt.asymmetric.ECAsymmetric.KeySizes
 import com.pvryan.easycrypt.asymmetric.ECRSAKeyPairListener
 import com.pvryan.easycrypt.extensions.fromBase64
-import com.pvryan.easycrypt.randomorg.RandomOrgApis
-import com.pvryan.easycrypt.randomorg.RandomOrgRequest
+import com.pvryan.easycrypt.randomorg.RandomOrg
 import com.pvryan.easycrypt.randomorg.RandomOrgResponse
 import com.pvryan.easycrypt.symmetric.ECPasswordListener
 import org.jetbrains.anko.doAsync
@@ -26,8 +25,6 @@ import org.jetbrains.annotations.NotNull
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
 import java.net.HttpURLConnection
 import java.security.InvalidParameterException
 import java.security.KeyFactory
@@ -39,12 +36,13 @@ import java.security.spec.InvalidKeySpecException
 import java.security.spec.PKCS8EncodedKeySpec
 import java.security.spec.X509EncodedKeySpec
 
+@Suppress("unused")
 class ECKeys {
 
     /**
      * Generate pseudo-random password using Java's [SecureRandom] number generator.
      *
-     * @param length of password to be onGenerated
+     * @param length of password to be generated (range 1 to 4096)
      * @param symbols (optional) to be used in the password
      *
      * @return [String] password of specified [length]
@@ -76,9 +74,10 @@ class ECKeys {
      * posts error to [ECPasswordListener.onFailure] if failed.
      * Result is a [String] password of specified [length].
      *
-     * @param length of password to be onGenerated (range 1 to 4096)
+     * @param length of password to be generated (range 1 to 4096)
      * @param randomOrgApiKey provided by api.random.org/api-keys/beta
-     * @param resultListener listener interface of type [ECPasswordListener] where onGenerated password will be posted
+     * @param resultListener listener interface of type [ECPasswordListener]
+     * where generated password will be posted
      */
     fun genRandomOrgPassword(@NotNull length: Int, @NotNull randomOrgApiKey: String,
                              @NotNull resultListener: ECPasswordListener) {
@@ -98,65 +97,57 @@ class ECKeys {
                     length + 1
                 } else length
 
-        doAsync {
+        RandomOrg.request(randomOrgApiKey, passLength, object : Callback<RandomOrgResponse> {
 
-            val retrofit = Retrofit.Builder().baseUrl(RandomOrgApis.BASE_URL)
-                    .addConverterFactory(GsonConverterFactory.create()).build()
+            override fun onResponse(call: Call<RandomOrgResponse>,
+                                    response: Response<RandomOrgResponse>) {
 
-            val randomOrgApis: RandomOrgApis = retrofit.create(RandomOrgApis::class.java)
+                if (HttpURLConnection.HTTP_OK == response.code()) {
 
-            val params = RandomOrgRequest.Params(apiKey = randomOrgApiKey, n = passLength / 2)
-            val postData = RandomOrgRequest(params = params)
+                    val body = response.body()
 
-            randomOrgApis.request(postData).enqueue(object : Callback<RandomOrgResponse> {
+                    if (body != null) {
 
-                override fun onFailure(call: Call<RandomOrgResponse>, t: Throwable) {
-                    resultListener.onFailure(t.localizedMessage, Exception(t))
-                }
-
-                override fun onResponse(call: Call<RandomOrgResponse>, response: Response<RandomOrgResponse>) {
-
-                    if (HttpURLConnection.HTTP_OK == response.code()) {
-
-                        val body = response.body()
-
-                        if (body != null) {
-
-                            if (body.error != null) {
-                                resultListener.onFailure("Error response from random.org",
-                                        InvalidParameterException(body.error.message))
-                                return
-                            }
-
-                            val randomKeyArray = body.result.random.data
-                            val randomKeyHex = StringBuilder()
-                            for (i in 0..(randomKeyArray.size() - 1)) {
-                                randomKeyHex.append(randomKeyArray[i].toString().replace("\"", "", true))
-                            }
-
-                            if (oddLength)
-                                resultListener.onGenerated(randomKeyHex.toString().dropLast(1))
-                            else resultListener.onGenerated(randomKeyHex.toString())
-
-                        } else {
-                            resultListener.onFailure("Random.org error.",
-                                    Exception(response.errorBody()?.string()
-                                            ?: "Null response from Random.org. Please try again."))
+                        if (body.error != null) {
+                            resultListener.onFailure("Error response from random.org",
+                                    InvalidParameterException(body.error.message))
+                            return
                         }
+
+                        val randomKeyArray = body.result.random.data
+                        val randomKeyHex = StringBuilder()
+                        for (i in 0..(randomKeyArray.size() - 1)) {
+                            randomKeyHex.append(randomKeyArray[i].toString()
+                                    .replace("\"", "", true))
+                        }
+
+                        if (oddLength)
+                            resultListener.onGenerated(randomKeyHex.toString().dropLast(1))
+                        else resultListener.onGenerated(randomKeyHex.toString())
+
                     } else {
-                        resultListener.onFailure("Response code ${response.code()}",
-                                Exception(response.errorBody()?.string() ?: "Some error occurred at Random.org. Please try again."))
+                        resultListener.onFailure("Random.org error.",
+                                Exception(response.errorBody()?.string()
+                                        ?: "Null response from Random.org. Please try again."))
                     }
+                } else {
+                    resultListener.onFailure("Response code ${response.code()}",
+                            Exception(response.errorBody()?.string()
+                                    ?: "Some error occurred at Random.org. Please try again."))
                 }
-            })
-        }
+            }
+
+            override fun onFailure(call: Call<RandomOrgResponse>, t: Throwable) {
+                resultListener.onFailure(t.localizedMessage, Exception(t))
+            }
+        })
     }
 
     /**
      * Generate a key pair with keys of specified length (default 4096) for RSA algorithm.
      *
      * @param kpl listener interface of type [ECRSAKeyPairListener]
-     * where onGenerated keypair will be posted
+     * where generated keypair will be posted
      * @param keySize of type [KeySizes] which can be 2048 or 4096 (default)
      */
     @JvmOverloads
@@ -173,7 +164,7 @@ class ECKeys {
     /**
      * Retrieve [RSAPublicKey] from base64 encoded string.
      *
-     * @param keyBase64String base64 encoded public key string
+     * @param keyBase64String base64 encoded public key string (X.509 format)
      *
      * @return [RSAPublicKey]
      *
@@ -188,7 +179,7 @@ class ECKeys {
     /**
      * Retrieve [RSAPrivateKey] from base64 encoded string.
      *
-     * @param keyBase64String base64 encoded private key string
+     * @param keyBase64String base64 encoded private key string (PKCS#8 format)
      *
      * @return [RSAPrivateKey]
      *

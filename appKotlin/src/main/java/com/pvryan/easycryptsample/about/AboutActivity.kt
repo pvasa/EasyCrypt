@@ -18,12 +18,11 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.view.MenuItem
 import android.view.View
+import com.pvryan.easycryptsample.Constants
 import com.pvryan.easycryptsample.R
-import com.pvryan.easycryptsample.data.Card
 import kotlinx.android.synthetic.main.activity_about.*
 import mehdi.sakout.aboutpage.AboutPage
 import mehdi.sakout.aboutpage.Element
-
 
 class AboutActivity : AppCompatActivity() {
 
@@ -33,7 +32,7 @@ class AboutActivity : AppCompatActivity() {
 
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.title = intent.extras[Card.TITLE] as String
+        supportActionBar?.title = intent.extras[Constants.TITLE] as String
 
         val packageInfo = packageManager.getPackageInfo(packageName, 0)
         val appVersionElement = Element()
