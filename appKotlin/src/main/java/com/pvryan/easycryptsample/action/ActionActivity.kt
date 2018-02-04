@@ -18,6 +18,7 @@ package com.pvryan.easycryptsample.action
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.view.MenuItem
+import com.pvryan.easycryptsample.Constants
 import com.pvryan.easycryptsample.R
 import com.pvryan.easycryptsample.action.fragments.*
 import com.pvryan.easycryptsample.data.Card
@@ -31,8 +32,8 @@ class ActionActivity : AppCompatActivity() {
         setSupportActionBar(toolbar)
 
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.title = intent.extras[Card.TITLE] as String
-        supportActionBar?.subtitle = intent.extras[Card.SUB_TITLE] as String
+        supportActionBar?.title = intent.extras[Constants.TITLE] as String
+        supportActionBar?.subtitle = intent.extras[Constants.SUB_TITLE] as String
 
         val fragmentTransaction = supportFragmentManager.beginTransaction()
         when (intent.extras[Card.ACTION]) {

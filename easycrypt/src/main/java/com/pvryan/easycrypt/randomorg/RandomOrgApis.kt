@@ -33,6 +33,6 @@ internal interface RandomOrgApis {
     fun request(@Body body: RandomOrgRequest): Call<RandomOrgResponse>
 
     companion object {
-        val BASE_URL = "https://api.random.org/"
+        const val BASE_URL = "https://api.random.org/"
     }
 }

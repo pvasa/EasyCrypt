@@ -28,6 +28,7 @@ import javax.crypto.CipherOutputStream
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
+@Suppress("ClassName")
 internal object performEncrypt {
 
     @JvmSynthetic

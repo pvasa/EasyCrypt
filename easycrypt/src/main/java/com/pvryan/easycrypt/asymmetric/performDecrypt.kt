@@ -29,6 +29,7 @@ import javax.crypto.BadPaddingException
 import javax.crypto.Cipher
 import javax.crypto.IllegalBlockSizeException
 
+@Suppress("ClassName", "LocalVariableName")
 internal object performDecrypt {
 
     @JvmSynthetic

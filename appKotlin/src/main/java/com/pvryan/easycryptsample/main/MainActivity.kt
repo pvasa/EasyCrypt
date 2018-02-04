@@ -24,14 +24,15 @@ import android.support.v7.widget.RecyclerView
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import com.pvryan.easycryptsample.Constants
 import com.pvryan.easycryptsample.R
 import com.pvryan.easycryptsample.about.AboutActivity
 import com.pvryan.easycryptsample.action.ActionActivity
 import com.pvryan.easycryptsample.data.Card
 import com.pvryan.easycryptsample.extensions.checkPermissions
 import com.pvryan.easycryptsample.extensions.handlePermissionResults
+import com.pvryan.easycryptsample.settings.SettingsActivity
 import kotlinx.android.synthetic.main.activity_main.*
-import org.jetbrains.anko.toast
 import java.io.File
 
 class MainActivity : AppCompatActivity() {
@@ -44,8 +45,8 @@ class MainActivity : AppCompatActivity() {
     private fun getAction(actionType: Int, title: String, subTitle: String): View.OnClickListener {
         val intent = Intent(this, ActionActivity::class.java)
         intent.putExtra(Card.ACTION, actionType)
-        intent.putExtra(Card.TITLE, title)
-        intent.putExtra(Card.SUB_TITLE, subTitle)
+        intent.putExtra(Constants.TITLE, title)
+        intent.putExtra(Constants.SUB_TITLE, subTitle)
         return View.OnClickListener { startActivity(intent) }
     }
 
@@ -121,14 +122,15 @@ class MainActivity : AppCompatActivity() {
         // as you specify a parent activity in AndroidManifest.xml.
         return when (item.itemId) {
             R.id.action_settings -> {
-                toast("Coming soon")
+                val intent = Intent(this, SettingsActivity::class.java)
+                intent.putExtra(Constants.TITLE, getString(R.string.title_settings))
+                startActivity(intent)
                 true
             }
             R.id.action_about -> {
                 val intent = Intent(this, AboutActivity::class.java)
-                intent.putExtra(Card.TITLE, getString(R.string.title_about))
+                intent.putExtra(Constants.TITLE, getString(R.string.title_about))
                 startActivity(intent)
-                R.style.about_elementTextAppearance
                 true
             }
             else -> super.onOptionsItemSelected(item)

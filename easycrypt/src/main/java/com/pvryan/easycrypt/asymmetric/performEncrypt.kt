@@ -29,6 +29,7 @@ import java.io.InputStream
 import java.security.interfaces.RSAPublicKey
 import javax.crypto.Cipher
 
+@Suppress("ClassName")
 internal object performEncrypt {
 
     @JvmSynthetic

@@ -14,6 +14,7 @@
  */
 package com.pvryan.easycrypt.symmetric
 
+@Suppress("KDocUnresolvedReference")
 /**
  * Interface to listen for result from
  * [ECKeys.genRandomOrgPassword] and [ECKeys.genSecureRandomPassword]

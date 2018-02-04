@@ -27,6 +27,7 @@ import javax.crypto.IllegalBlockSizeException
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
+@Suppress("ClassName", "LocalVariableName")
 internal object performDecrypt {
 
     @JvmSynthetic
