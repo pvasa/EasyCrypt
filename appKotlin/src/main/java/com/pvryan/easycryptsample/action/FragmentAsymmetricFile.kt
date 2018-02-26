@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2018 Priyank Vasa
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package com.pvryan.easycryptsample.action.fragments
+package com.pvryan.easycryptsample.action
 
 import android.annotation.SuppressLint
 import android.app.Activity
@@ -24,7 +24,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.Environment
 import android.support.v4.app.Fragment
-import android.transition.TransitionManager
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -36,6 +35,7 @@ import com.pvryan.easycrypt.asymmetric.ECVerifiedListener
 import com.pvryan.easycrypt.symmetric.ECSymmetric
 import com.pvryan.easycryptsample.R
 import com.pvryan.easycryptsample.extensions.*
+import com.transitionseverywhere.TransitionManager
 import kotlinx.android.synthetic.main.fragment_asymmetric_file.*
 import org.jetbrains.anko.AnkoLogger
 import org.jetbrains.anko.support.v4.onUiThread

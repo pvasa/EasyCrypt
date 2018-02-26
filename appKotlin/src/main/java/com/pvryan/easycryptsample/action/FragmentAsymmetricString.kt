@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2018 Priyank Vasa
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,16 +13,16 @@
  * limitations under the License.
  */
 
-package com.pvryan.easycryptsample.action.fragments
+package com.pvryan.easycryptsample.action
 
 import android.annotation.SuppressLint
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.os.Environment
 import android.support.v4.app.Fragment
-import android.transition.TransitionManager
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -32,10 +32,12 @@ import com.pvryan.easycrypt.asymmetric.ECAsymmetric
 import com.pvryan.easycrypt.asymmetric.ECRSAKeyPairListener
 import com.pvryan.easycrypt.asymmetric.ECVerifiedListener
 import com.pvryan.easycrypt.symmetric.ECSymmetric
+import com.pvryan.easycryptsample.Constants
 import com.pvryan.easycryptsample.R
 import com.pvryan.easycryptsample.extensions.*
+import com.transitionseverywhere.Rotate
+import com.transitionseverywhere.TransitionManager
 import kotlinx.android.synthetic.main.fragment_asymmetric_string.*
-import org.jetbrains.anko.support.v4.longToast
 import org.jetbrains.anko.support.v4.onUiThread
 import java.io.File
 import java.security.KeyPair
@@ -56,6 +58,13 @@ class FragmentAsymmetricString : Fragment(), ECResultListener {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        edInputS.setOnClickEndDrawableListener {
+            /*val intent = Intent(activity, CameraActivity::class.java)
+            intent.putExtra(Constants.TITLE, getString(R.string.title_camera))
+            startActivityForResult(intent, Constants.rCCameraResult)*/
+            llContentAString.snackLong(getString(R.string.scanComingSoon, "encrypt"))
+        }
 
         val clipboard = activity?.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         rlPublicKeyTitleS.setOnLongClickListener {
@@ -243,43 +252,51 @@ class FragmentAsymmetricString : Fragment(), ECResultListener {
         }
 
         rlPrivateKeyTitleS.setOnClickListener {
+            TransitionManager.beginDelayedTransition(it.parent as ViewGroup, Rotate())
             if (tvPrivateKeyS.visibility == View.GONE) {
-                bExpandCollapsePrivateS.animate().rotation(180f).setDuration(200).start()
-                tvPrivateKeyS.show()
+                bExpandCollapsePrivateS.rotation = 180f
+                tvPrivateKeyS.show(true)
             } else {
-                bExpandCollapsePrivateS.animate().rotation(0f).setDuration(200).start()
-                tvPrivateKeyS.gone()
+                bExpandCollapsePrivateS.rotation = 0f
+                tvPrivateKeyS.gone(true)
             }
-            TransitionManager.beginDelayedTransition(rlPrivateKeyTitleS.parent as ViewGroup)
         }
 
         rlPublicKeyTitleS.setOnClickListener {
+            TransitionManager.beginDelayedTransition(it.parent as ViewGroup)
             if (tvPublicKeyS.visibility == View.GONE) {
-                bExpandCollapsePublicS.animate().rotation(180f).setDuration(200).start()
-                tvPublicKeyS.show()
+                bExpandCollapsePublicS.rotation = 180f
+                tvPublicKeyS.show(true)
             } else {
-                bExpandCollapsePublicS.animate().rotation(0f).setDuration(200).start()
-                tvPublicKeyS.gone()
+                bExpandCollapsePublicS.rotation = 0f
+                tvPublicKeyS.gone(true)
             }
-            TransitionManager.beginDelayedTransition(rlPublicKeyTitleS.parent as ViewGroup)
         }
 
         rlOutputTitleS.setOnClickListener {
+            TransitionManager.beginDelayedTransition(it.parent as ViewGroup)
             if (tvResultS.visibility == View.GONE) {
-                bExpandCollapseOutputS.animate().rotation(180f).setDuration(200).start()
-                tvResultS.show()
+                bExpandCollapseOutputS.rotation = 180f
+                tvResultS.show(true)
             } else {
-                bExpandCollapseOutputS.animate().rotation(0f).setDuration(200).start()
-                tvResultS.gone()
+                bExpandCollapseOutputS.rotation = 0f
+                tvResultS.gone(true)
             }
-            TransitionManager.beginDelayedTransition(rlOutputTitleS.parent as ViewGroup)
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        when (requestCode) {
+            Constants.rCCameraResult -> {
+                data?.let { edInputS.setText(it.getStringExtra(Constants.INPUT_STRING) ?: "") }
+            }
         }
     }
 
     override fun <T> onSuccess(result: T) {
         onUiThread {
             progressBarS.hide()
-            longToast("Check output")
+            llContentAString.snackLong("Check output")
             tvResultS.text = when (result) {
                 is String -> result
                 is File -> resources.getString(
@@ -293,7 +310,7 @@ class FragmentAsymmetricString : Fragment(), ECResultListener {
     override fun onFailure(message: String, e: Exception) {
         onUiThread {
             progressBarS.hide()
-            longToast("Error: $message")
+            llContentAString.snackLong("Error: $message")
         }
     }
 

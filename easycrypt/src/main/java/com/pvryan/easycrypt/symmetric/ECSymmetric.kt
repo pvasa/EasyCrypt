@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2018 Priyank Vasa
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -96,11 +96,6 @@ class ECSymmetric(transformation: ECSymmetricTransformations
 
             val tPass = password.trim()
 
-            /*if (tPass.isNullOrBlank()) {
-                erl.onFailure("Password is null or blank.", InvalidKeyException())
-                return@doAsync
-            }*/
-
             when (input) {
 
                 is String -> encrypt(input.asByteArray(), password, erl, outputFile)
@@ -164,11 +159,6 @@ class ECSymmetric(transformation: ECSymmetricTransformations
         doAsync {
 
             val tPass = password.trim()
-
-            /*if (tPass.isNullOrBlank()) {
-                erl.onFailure("Password is null or blank.", InvalidKeyException())
-                return@doAsync
-            }*/
 
             when (input) {
 

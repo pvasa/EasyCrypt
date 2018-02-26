@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2018 Priyank Vasa
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,8 +20,7 @@ import android.support.v7.app.AppCompatActivity
 import android.view.MenuItem
 import com.pvryan.easycryptsample.Constants
 import com.pvryan.easycryptsample.R
-import com.pvryan.easycryptsample.action.fragments.*
-import com.pvryan.easycryptsample.data.Card
+import com.pvryan.easycryptsample.data.models.Card
 import kotlinx.android.synthetic.main.activity_main.*
 
 class ActionActivity : AppCompatActivity() {

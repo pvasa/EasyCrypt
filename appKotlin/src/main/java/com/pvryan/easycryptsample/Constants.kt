@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2018 Priyank Vasa
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,23 @@
 package com.pvryan.easycryptsample
 
 internal object Constants {
+
     const val TITLE = "title"
     const val SUB_TITLE = "subTitle"
+    const val INPUT_STRING = "inputString"
+    const val DEFAULT_PASSWORD_LENGTH = 12
+
+    const val rCStoragePermissions = 1
+    const val rCCameraPermissions = 2
+    const val rCCameraResult = 3
+    //const val rCHandleGMS = 9001
+
+    /*val ORIENTATIONS = SparseIntArray()
+
+    init {
+        ORIENTATIONS.append(Surface.ROTATION_0, 90)
+        ORIENTATIONS.append(Surface.ROTATION_90, 0)
+        ORIENTATIONS.append(Surface.ROTATION_180, 270)
+        ORIENTATIONS.append(Surface.ROTATION_270, 180)
+    }*/
 }

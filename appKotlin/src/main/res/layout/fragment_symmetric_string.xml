@@ -18,6 +18,7 @@
     android:layout_height="match_parent">
 
     <LinearLayout
+        android:id="@+id/llContentSString"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
@@ -36,10 +37,13 @@
             android:layout_marginEnd="32dp"
             android:layout_marginStart="32dp"
             android:layout_marginTop="32dp">
-            <EditText
+
+            <android.support.design.widget.TextInputEditText
                 android:id="@+id/edInputS"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:drawableEnd="@drawable/ic_camera_alt_black_24dp"
+                android:drawableRight="@drawable/ic_camera_alt_black_24dp"
                 android:hint="@string/ed_text_input"
                 android:inputType="textMultiLine"
                 android:maxLines="6" />
@@ -52,7 +56,8 @@
             android:layout_marginStart="32dp"
             android:layout_marginTop="16dp"
             app:passwordToggleEnabled="true">
-            <EditText
+
+            <android.support.design.widget.TextInputEditText
                 android:id="@+id/edPasswordS"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -104,6 +109,8 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="32dp"
             android:layout_marginEnd="32dp"
+            android:layout_marginLeft="36dp"
+            android:layout_marginRight="32dp"
             android:layout_marginStart="36dp"
             android:layout_marginTop="8dp"
             android:background="?attr/selectableItemBackground"

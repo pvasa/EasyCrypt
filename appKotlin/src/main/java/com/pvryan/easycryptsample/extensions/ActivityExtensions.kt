@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2018 Priyank Vasa
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,42 +21,49 @@ import android.support.v4.content.ContextCompat
 import android.support.v4.util.ArraySet
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
+import com.pvryan.easycryptsample.Constants
 import com.pvryan.easycryptsample.R
 
-fun AppCompatActivity.checkPermissions(requestCode: Int, vararg permissions: String): Boolean {
+fun AppCompatActivity.checkPermissions(requestCode: Int, permissions: Array<out String>): Boolean {
 
     val unGranted = ArraySet<String>()
 
     permissions.filterTo(unGranted) {
-        ContextCompat.checkSelfPermission(this, it) == PackageManager.PERMISSION_DENIED
+        ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
     }
 
-    return if (!unGranted.isEmpty()) {
-        ActivityCompat.requestPermissions(
-                this, unGranted.toTypedArray<String>(), requestCode)
-        false
-    } else {
+    return if (unGranted.isEmpty()) {
         true
-    }
-}
-
-fun AppCompatActivity.handlePermissionResults(
-        requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-
-    if (grantResults.contains(PackageManager.PERMISSION_DENIED)) {
-        AlertDialog.Builder(this).setCancelable(false)
+    } else {
+        val message = when (requestCode) {
+            Constants.rCStoragePermissions -> getString(R.string.message_storage_permissions)
+            Constants.rCCameraPermissions -> getString(R.string.message_camera_permissions)
+            else -> getString(R.string.message_general_permissions)
+        }
+        AlertDialog.Builder(this)
+                .setCancelable(true)
                 .setTitle(getString(R.string.title_permissions))
-                .setMessage(getString(R.string.message_permissions))
-                .setPositiveButton(getString(R.string.button_grant), {
-                    dialog, _ ->
-                    checkPermissions(requestCode, *permissions)
+                .setMessage(message)
+                .setPositiveButton(getString(R.string.button_allow), { dialog, _ ->
+                    ActivityCompat.requestPermissions(
+                            this, unGranted.toTypedArray(), requestCode)
                     dialog.dismiss()
                 })
-                .setNegativeButton(getString(R.string.button_exit), {
-                    dialog, _ ->
+                .setNegativeButton(getString(R.string.button_deny), { dialog, _ ->
                     dialog.cancel()
-                    finish()
-                }).show()
+                })
+                .setOnCancelListener {
+                    this.onRequestPermissionsResult(requestCode, permissions,
+                            kotlin.intArrayOf(PackageManager.PERMISSION_DENIED))
+                }.show()
+        false
     }
-
 }
+
+/*fun AppCompatActivity.checkPlayServices() {
+    val code = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(this)
+    if (code != ConnectionResult.SUCCESS) {
+        GoogleApiAvailability.getInstance()
+                .getErrorDialog(this, code, Constants.rCHandleGMS).show()
+    }
+}*/

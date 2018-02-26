@@ -53,6 +53,7 @@
                 style="?android:attr/buttonBarButtonStyle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_alignParentLeft="true"
                 android:layout_alignParentStart="true"
                 android:text="@string/btn_string" />
 
@@ -62,6 +63,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_toEndOf="@+id/buttonAction1"
+                android:layout_toRightOf="@+id/buttonAction1"
                 android:text="@string/btn_file" />
 
             <ImageView
@@ -70,6 +72,8 @@
                 android:layout_height="wrap_content"
                 android:layout_alignEnd="@+id/buttonAction2"
                 android:layout_alignParentEnd="true"
+                android:layout_alignParentRight="true"
+                android:layout_alignRight="@+id/buttonAction2"
                 android:layout_centerVertical="true"
                 android:background="@drawable/ic_keyboard_arrow_down_black_24px"
                 android:contentDescription="@string/iv_expand_collapse_button"

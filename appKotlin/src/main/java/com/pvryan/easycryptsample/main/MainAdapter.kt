@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2018 Priyank Vasa
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,14 +15,15 @@
 package com.pvryan.easycryptsample.main
 
 import android.support.v7.widget.RecyclerView
-import android.transition.TransitionManager
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.pvryan.easycryptsample.R
-import com.pvryan.easycryptsample.data.Card
+import com.pvryan.easycryptsample.data.models.Card
 import com.pvryan.easycryptsample.extensions.gone
 import com.pvryan.easycryptsample.extensions.show
+import com.transitionseverywhere.Rotate
+import com.transitionseverywhere.TransitionManager
 import kotlinx.android.synthetic.main.card_view_main.view.*
 
 class MainAdapter(private val mDataset: ArrayList<Card>) : RecyclerView.Adapter<MainAdapter.ViewHolder>() {
@@ -31,15 +32,14 @@ class MainAdapter(private val mDataset: ArrayList<Card>) : RecyclerView.Adapter<
         holder.bindItems(mDataset[position])
 
         holder.itemView.buttonExpandCollapse.setOnClickListener {
+            TransitionManager.beginDelayedTransition(it.parent as ViewGroup, Rotate())
             with(holder.itemView.tvDesc) {
                 if (visibility == View.VISIBLE) {
-                    it.animate().rotation(0f).setDuration(200).start()
-                    TransitionManager.beginDelayedTransition(holder.itemView.cardView as ViewGroup)
-                    gone()
+                    it.rotation = 0f
+                    gone(true)
                 } else {
-                    it.animate().rotation(180f).setDuration(200).start()
-                    TransitionManager.beginDelayedTransition(holder.itemView.cardView as ViewGroup)
-                    show()
+                    it.rotation = 180f
+                    show(true)
                 }
             }
         }
