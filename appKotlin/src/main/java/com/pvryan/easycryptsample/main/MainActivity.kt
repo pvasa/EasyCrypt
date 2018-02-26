@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2018 Priyank Vasa
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,10 @@ package com.pvryan.easycryptsample.main
 
 import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.Environment
+import android.support.design.widget.Snackbar
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
@@ -28,19 +30,81 @@ import com.pvryan.easycryptsample.Constants
 import com.pvryan.easycryptsample.R
 import com.pvryan.easycryptsample.about.AboutActivity
 import com.pvryan.easycryptsample.action.ActionActivity
-import com.pvryan.easycryptsample.data.Card
+import com.pvryan.easycryptsample.data.models.Card
 import com.pvryan.easycryptsample.extensions.checkPermissions
-import com.pvryan.easycryptsample.extensions.handlePermissionResults
+import com.pvryan.easycryptsample.extensions.snackIndefinite
 import com.pvryan.easycryptsample.settings.SettingsActivity
 import kotlinx.android.synthetic.main.activity_main.*
 import java.io.File
 
 class MainActivity : AppCompatActivity() {
 
-    private val _rCPermissions = 1
+    private val requiredPermissions = arrayOf(
+            Manifest.permission.WRITE_EXTERNAL_STORAGE)
+
+    private var snackbar: Snackbar? = null
 
     private val outputDir = Environment.getExternalStorageDirectory().absolutePath +
             File.separator + "ECryptSample"
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+        setSupportActionBar(toolbar)
+
+        val mRecyclerView: RecyclerView = findViewById(R.id.container)
+        mRecyclerView.setHasFixedSize(false)
+        mRecyclerView.layoutManager = LinearLayoutManager(this)
+        mRecyclerView.adapter = MainAdapter(initCards())
+
+        checkPermissions(Constants.rCStoragePermissions, requiredPermissions)
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        menuInflater.inflate(R.menu.menu_main, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        return when (item.itemId) {
+            R.id.action_settings -> {
+                val intent = Intent(this, SettingsActivity::class.java)
+                intent.putExtra(Constants.TITLE, getString(R.string.title_settings))
+                startActivity(intent)
+                true
+            }
+            R.id.action_about -> {
+                val intent = Intent(this, AboutActivity::class.java)
+                intent.putExtra(Constants.TITLE, getString(R.string.title_about))
+                startActivity(intent)
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>,
+                                            grantResults: IntArray) {
+        when (requestCode) {
+            Constants.rCStoragePermissions -> {
+                if (grantResults.contains(PackageManager.PERMISSION_DENIED))
+                    snackbar = mainContent.snackIndefinite(
+                            getString(R.string.text_permissions_required),
+                            "Grant", View.OnClickListener {
+                        checkPermissions(requestCode, permissions)
+                    })
+                else {
+                    snackbar?.dismiss()
+                    File(outputDir).mkdirs()
+                }
+            }
+            else -> super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        }
+    }
 
     private fun getAction(actionType: Int, title: String, subTitle: String): View.OnClickListener {
         val intent = Intent(this, ActionActivity::class.java)
@@ -94,62 +158,4 @@ class MainActivity : AppCompatActivity() {
                             "Password Functions", "Generate"),
                     action2 = getAction(Card.actionTypePAnalyze,
                             "Password Functions", "Analyze")))
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-        setSupportActionBar(toolbar)
-
-        val mRecyclerView: RecyclerView = findViewById(R.id.container)
-        mRecyclerView.setHasFixedSize(false)
-
-        val mLayoutManager = LinearLayoutManager(this)
-        mRecyclerView.layoutManager = mLayoutManager
-
-        mRecyclerView.adapter = MainAdapter(initCards())
-        File(outputDir).mkdirs()
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        menuInflater.inflate(R.menu.menu_main, menu)
-        return true
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        return when (item.itemId) {
-            R.id.action_settings -> {
-                val intent = Intent(this, SettingsActivity::class.java)
-                intent.putExtra(Constants.TITLE, getString(R.string.title_settings))
-                startActivity(intent)
-                true
-            }
-            R.id.action_about -> {
-                val intent = Intent(this, AboutActivity::class.java)
-                intent.putExtra(Constants.TITLE, getString(R.string.title_about))
-                startActivity(intent)
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
-        }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        checkPermissions(_rCPermissions,
-                Manifest.permission.READ_EXTERNAL_STORAGE,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                Manifest.permission.INTERNET)
-    }
-
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>,
-                                            grantResults: IntArray) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        when (requestCode) {
-            _rCPermissions -> handlePermissionResults(requestCode, permissions, grantResults)
-        }
-    }
 }

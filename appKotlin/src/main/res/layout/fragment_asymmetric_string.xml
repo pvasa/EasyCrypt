@@ -18,6 +18,7 @@
     android:layout_height="match_parent">
 
     <LinearLayout
+        android:id="@+id/llContentAString"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
@@ -37,10 +38,14 @@
             android:layout_marginEnd="32dp"
             android:layout_marginStart="32dp"
             android:layout_marginTop="32dp">
-            <EditText
+
+            <android.support.design.widget.TextInputEditText
                 android:id="@+id/edInputS"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:drawableEnd="@drawable/ic_camera_alt_black_24dp"
+                android:drawablePadding="12dp"
+                android:drawableRight="@drawable/ic_camera_alt_black_24dp"
                 android:hint="@string/ed_text_input"
                 android:inputType="textMultiLine"
                 android:maxLines="6" />
@@ -53,7 +58,8 @@
             android:layout_marginStart="32dp"
             android:layout_marginTop="4dp"
             app:passwordToggleEnabled="true">
-            <EditText
+
+            <android.support.design.widget.TextInputEditText
                 android:id="@+id/edPasswordS"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -116,6 +122,7 @@
                 android:id="@+id/labelPrivateKeyS"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_alignParentLeft="true"
                 android:layout_alignParentStart="true"
                 android:layout_gravity="center_vertical"
                 android:labelFor="@+id/tvPrivateKeyS"
@@ -130,6 +137,8 @@
                 android:layout_height="wrap_content"
                 android:layout_alignEnd="@+id/labelPrivateKeyS"
                 android:layout_alignParentEnd="true"
+                android:layout_alignParentRight="true"
+                android:layout_alignRight="@+id/labelPrivateKeyS"
                 android:layout_gravity="center_vertical"
                 android:background="@drawable/ic_keyboard_arrow_down_black_24px"
                 android:contentDescription="@string/iv_expand_collapse_button"
@@ -140,6 +149,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/labelPrivateKeyS"
+                android:layout_marginLeft="4dp"
                 android:layout_marginStart="4dp"
                 android:layout_marginTop="8dp"
                 android:textIsSelectable="false"
@@ -164,6 +174,7 @@
                 android:id="@+id/labelPublicKeyS"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_alignParentLeft="true"
                 android:layout_alignParentStart="true"
                 android:layout_gravity="start|center_vertical"
                 android:labelFor="@+id/tvPublicKeyS"
@@ -178,6 +189,8 @@
                 android:layout_height="wrap_content"
                 android:layout_alignEnd="@+id/labelPublicKeyS"
                 android:layout_alignParentEnd="true"
+                android:layout_alignParentRight="true"
+                android:layout_alignRight="@+id/labelPublicKeyS"
                 android:layout_gravity="center_vertical"
                 android:background="@drawable/ic_keyboard_arrow_down_black_24px"
                 android:contentDescription="@string/iv_expand_collapse_button"
@@ -188,6 +201,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/labelPublicKeyS"
+                android:layout_marginLeft="4dp"
                 android:layout_marginStart="4dp"
                 android:layout_marginTop="8dp"
                 android:textIsSelectable="false"
@@ -213,6 +227,7 @@
                 android:id="@+id/labelOutputS"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_alignParentLeft="true"
                 android:layout_alignParentStart="true"
                 android:layout_gravity="center_vertical"
                 android:labelFor="@+id/tvResultS"
@@ -227,6 +242,8 @@
                 android:layout_height="wrap_content"
                 android:layout_alignEnd="@+id/labelOutputS"
                 android:layout_alignParentEnd="true"
+                android:layout_alignParentRight="true"
+                android:layout_alignRight="@+id/labelOutputS"
                 android:layout_gravity="center_vertical"
                 android:background="@drawable/ic_keyboard_arrow_down_black_24px"
                 android:contentDescription="@string/iv_expand_collapse_button"
@@ -237,6 +254,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/labelOutputS"
+                android:layout_marginLeft="4dp"
                 android:layout_marginStart="4dp"
                 android:layout_marginTop="8dp"
                 android:textIsSelectable="false"

@@ -14,14 +14,17 @@
     <string name="button_select_hash">Hash</string>
     <string name="button_select_encrypt">Encrypt</string>
     <string name="button_select_decrypt">Decrypt</string>
-    <string name="button_grant">Grant</string>
-    <string name="button_exit">Exit</string>
+    <string name="button_allow">Allow</string>
+    <string name="button_deny">Deny</string>
 
     <string name="success_result_to_file">Successfully saved result to file\n%s</string>
 
     <string name="title_permissions">Permissions</string>
 
-    <string name="message_permissions">Permissions required to run this app correctly. Grant to allow or Exit to close the app.</string>
+    <string name="message_storage_permissions">Storage permission required to store output files.</string>
+    <string name="message_camera_permissions">Camera permission required to scan input strings.</string>
+    <string name="message_general_permissions">Permissions required for this app to run correctly.</string>
+
     <string name="ed_characters_to_use">Characters to use \(optional\)</string>
     <string name="button_true_random">True Random</string>
     <string name="button_pseudo_random">Pseudo Random</string>
@@ -60,6 +63,7 @@
     <string name="action_about">About</string>
     <string name="title_about">About</string>
     <string name="title_settings">Settings</string>
+    <string name="title_camera">Camera</string>
     <string name="tv_secure_private_key">Secure private key</string>
     <string name="tv_public_key">Public key</string>
     <string name="tv_output">Output</string>
@@ -67,6 +71,14 @@
     <string name="title_api_key">Random.org API Key</string>
     <string name="summary_not_set">Not set</string>
     <string name="summary_set">Set</string>
+    <string name="picture">Picture</string>
+    <string name="description_info">Info</string>
+    <string name="request_permission">This sample needs camera permission.</string>
+    <string name="camera_error">This device does not support Camera2 API.</string>
+    <string name="action_title_grant">Grant</string>
+    <string name="camera_usage">Point towards text and tap on text box to use it as string input.</string>
+    <string name="scanComingSoon">Scan text to %s, coming soon.</string>
+    <string name="text_permissions_required">Permissions required for some functions.</string>
 
     <string-array name="hash_array">
         <item>Mercury</item>

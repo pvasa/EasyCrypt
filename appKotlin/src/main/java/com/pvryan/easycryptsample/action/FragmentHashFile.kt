@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2018 Priyank Vasa
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package com.pvryan.easycryptsample.action.fragments
+package com.pvryan.easycryptsample.action
 
 import android.app.Activity
 import android.content.Intent
@@ -29,10 +29,10 @@ import com.pvryan.easycrypt.hash.ECHashAlgorithms
 import com.pvryan.easycryptsample.R
 import com.pvryan.easycryptsample.extensions.hide
 import com.pvryan.easycryptsample.extensions.show
+import com.pvryan.easycryptsample.extensions.snackLong
 import kotlinx.android.synthetic.main.fragment_hash_file.*
 import org.jetbrains.anko.AnkoLogger
 import org.jetbrains.anko.support.v4.onUiThread
-import org.jetbrains.anko.support.v4.toast
 
 class FragmentHashFile : Fragment(), AnkoLogger, ECResultListener {
 
@@ -113,7 +113,7 @@ class FragmentHashFile : Fragment(), AnkoLogger, ECResultListener {
         onUiThread {
             progressBarF.hide()
             tvStatus.text = getString(R.string.tv_status_idle)
-            toast("Error: $message")
+            llContentHFile.snackLong("Error: $message")
         }
     }
 

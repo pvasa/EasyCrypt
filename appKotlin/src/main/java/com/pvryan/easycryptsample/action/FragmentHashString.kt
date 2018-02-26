@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2018 Priyank Vasa
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,11 +13,12 @@
  * limitations under the License.
  */
 
-package com.pvryan.easycryptsample.action.fragments
+package com.pvryan.easycryptsample.action
 
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.view.LayoutInflater
@@ -27,9 +28,11 @@ import android.widget.ArrayAdapter
 import com.pvryan.easycrypt.ECResultListener
 import com.pvryan.easycrypt.hash.ECHash
 import com.pvryan.easycrypt.hash.ECHashAlgorithms
+import com.pvryan.easycryptsample.Constants
 import com.pvryan.easycryptsample.R
+import com.pvryan.easycryptsample.extensions.setOnClickEndDrawableListener
+import com.pvryan.easycryptsample.extensions.snackLong
 import kotlinx.android.synthetic.main.fragment_hash_string.*
-import org.jetbrains.anko.support.v4.longToast
 import org.jetbrains.anko.support.v4.onUiThread
 
 class FragmentHashString : Fragment(), ECResultListener {
@@ -43,12 +46,11 @@ class FragmentHashString : Fragment(), ECResultListener {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val clipboard = activity?.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        tvResultS.setOnLongClickListener {
-            val data = ClipData.newPlainText("result", tvResultS.text)
-            clipboard.primaryClip = data
-            longToast("Result copied to clipboard")
-            true
+        edInputS.setOnClickEndDrawableListener {
+            /*val intent = Intent(activity, CameraActivity::class.java)
+            intent.putExtra(Constants.TITLE, getString(R.string.title_camera))
+            startActivityForResult(intent, Constants.rCCameraResult)*/
+            llContentHString.snackLong(getString(R.string.scanComingSoon, "hash"))
         }
 
         val hashAdapter: ArrayAdapter<ECHashAlgorithms> = ArrayAdapter(view.context,
@@ -65,10 +67,22 @@ class FragmentHashString : Fragment(), ECResultListener {
         buttonHashS.setOnClickListener {
             eCryptHash.calculate(edInputS.text, spinnerHashS.selectedItem as ECHashAlgorithms, this)
         }
+
+        val clipboard = activity?.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        tvResultS.setOnLongClickListener {
+            val data = ClipData.newPlainText("result", tvResultS.text)
+            clipboard.primaryClip = data
+            view.snackLong("Result copied to clipboard")
+            true
+        }
     }
 
-    companion object {
-        fun newInstance(): Fragment = FragmentHashString()
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        when (requestCode) {
+            Constants.rCCameraResult -> {
+                data?.let { edInputS.setText(it.getStringExtra(Constants.INPUT_STRING) ?: "") }
+            }
+        }
     }
 
     override fun <T> onSuccess(result: T) {
@@ -80,7 +94,11 @@ class FragmentHashString : Fragment(), ECResultListener {
     override fun onFailure(message: String, e: Exception) {
         e.printStackTrace()
         onUiThread {
-            longToast("Error: $message")
+            llContentHString.snackLong("Error: $message")
         }
+    }
+
+    companion object {
+        fun newInstance(): Fragment = FragmentHashString()
     }
 }

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2018 Priyank Vasa
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package com.pvryan.easycryptsample.action.fragments
+package com.pvryan.easycryptsample.action
 
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -25,8 +25,10 @@ import android.view.View
 import android.view.ViewGroup
 import com.pvryan.easycrypt.ECKeys
 import com.pvryan.easycrypt.symmetric.ECPasswordListener
+import com.pvryan.easycryptsample.Constants
 import com.pvryan.easycryptsample.R
 import com.pvryan.easycryptsample.extensions.snackShort
+import com.pvryan.easycryptsample.extensions.toNumber
 import kotlinx.android.synthetic.main.fragment_generate_password.*
 import org.jetbrains.anko.support.v4.defaultSharedPreferences
 import org.jetbrains.anko.support.v4.onUiThread
@@ -56,11 +58,11 @@ class FragmentGeneratePassword : Fragment() {
                 val symbols: String = edCharsP.text.toString()
                 if (symbols.isNotEmpty()) {
                     tvResultP.text = eCPasswords.genSecureRandomPassword(
-                            Integer.valueOf(edLengthP.text.toString()),
+                            edLengthP.text.toString().toNumber(Constants.DEFAULT_PASSWORD_LENGTH),
                             symbols.toCharArray())
                 } else {
                     tvResultP.text = eCPasswords.genSecureRandomPassword(
-                            Integer.valueOf(edLengthP.text.toString()))
+                            edLengthP.text.toString().toNumber(Constants.DEFAULT_PASSWORD_LENGTH))
                 }
             } catch (e: InvalidParameterException) {
                 view.snackShort(e.localizedMessage)
@@ -72,7 +74,7 @@ class FragmentGeneratePassword : Fragment() {
         buttonRandomOrgP.setOnClickListener {
             try {
                 eCPasswords.genRandomOrgPassword(
-                        Integer.valueOf(edLengthP.text.toString())!!,
+                        edLengthP.text.toString().toNumber(Constants.DEFAULT_PASSWORD_LENGTH),
                         defaultSharedPreferences.getString(getString(R.string.pref_api_key), ""),
                         object : ECPasswordListener {
 

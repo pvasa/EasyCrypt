@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2018 Priyank Vasa
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,6 +52,7 @@ class AboutActivity : AppCompatActivity() {
                 .addWebsite("https://ryan652.github.io/", "Know dev")
                 .addTwitter("ryanm652", "Follow on Twitter")
                 .addGitHub("ryan652/easycrypt", "Source code on GitHub")
+                .addWebsite("https://daniel-pfeifer-design.com/", "Logo designed by Daniel Pfeifer")
                 .create()
 
         container.addView(view)

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2018 Priyank Vasa
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,7 +12,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 @file:Suppress("unused")
 
 package com.pvryan.easycryptsample.extensions
@@ -37,6 +36,13 @@ fun ByteArray.asHexString(): String {
     }
     return result.toString()
 }
+
+fun String.toNumber(default: Int): Int =
+        try {
+            Integer.valueOf(this)
+        } catch (e: NumberFormatException) {
+            default
+        }
 
 @Throws(IllegalArgumentException::class)
 fun String.asByteArray(): ByteArray = this.toByteArray(Charsets.UTF_8)
@@ -68,3 +74,5 @@ fun RSAKey.allowedInputSize(): Int {
             - (2 * (hashOutputLength / 8)) - 2).toInt() // OAEPwithSHA-256 padding
     //return (Math.floor(keyLength / 8) - 11).toInt() // PKCS#1 padding
 }
+
+fun Long.Companion.sigNum(n: Long): Int = (n shr 63 or (-n).ushr(63)).toInt()

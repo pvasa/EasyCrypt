@@ -10,14 +10,14 @@ ext {
     libraryName = 'EasyCrypt'
     artifact = 'easycrypt'
 
-    libraryDescription = 'Easy to use Android cryptography library.'
+    libraryDescription = 'Easy to use, secure, and efficient Android cryptography library.'
 
     siteUrl = 'https://github.com/ryan652/EasyCrypt'
     gitIssues = 'https://github.com/ryan652/EasyCrypt/issues'
     gitUrl = 'https://github.com/ryan652/EasyCrypt.git'
     gitRepo = 'ryan652/EasyCrypt'
 
-    libraryVersion = '1.3.3'
+    libraryVersion = Versions.easyCrypt
 
     developerId = 'ryan652'
     developerName = 'Priyank Vasa'
@@ -35,34 +35,37 @@ def storePass = "${storePassword}"
 
 android {
     signingConfigs {
-        config {
+        release {
             keyAlias 'android-release'
             keyPassword keyPass
             storeFile file("${storeFilePath}/keystore.jks")
             storePassword storePass
         }
     }
-    compileSdkVersion 27
+    compileSdkVersion Versions.compileSdk
     defaultConfig {
-        minSdkVersion 14
-        targetSdkVersion 27
-        versionCode 1
-        versionName "1.3.3"
-        signingConfig signingConfigs.config
+        minSdkVersion Versions.minSdk
+        targetSdkVersion Versions.targetSdk
+        versionCode Versions.easyCryptCode
+        versionName Versions.easyCrypt
+        signingConfig signingConfigs.release
+        consumerProguardFiles 'proguard-rules.pro'
     }
     buildTypes {
         debug {
             debuggable true
             minifyEnabled false
+            useProguard false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
         release {
-            minifyEnabled false
+            minifyEnabled true
+            debuggable false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.config
+            signingConfig signingConfigs.release
         }
     }
-    buildToolsVersion '27.0.1'
+    buildToolsVersion Versions.buildTools
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
@@ -74,12 +77,12 @@ repositories {
 }
 
 dependencies {
-    compile "com.android.support:appcompat-v7:$support_version"
-    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    compile "org.jetbrains.anko:anko-commons:$anko_version"
-    compile "com.squareup.retrofit2:retrofit:$retrofit_version"
-    compile "com.squareup.retrofit2:converter-gson:$retrofit_version"
-    compile 'com.nulab-inc:zxcvbn:1.2.3'
+    compile Dependencies.appcompatV7
+    compile Dependencies.kotlinStdlib
+    compile Dependencies.ankoCommons
+    compile Dependencies.retrofit
+    compile Dependencies.converterGson
+    compile Dependencies.zxcvbn
 }
 
 tasks.withType(Javadoc) {

@@ -40,7 +40,7 @@
             android:layout_marginTop="32dp"
             app:passwordToggleEnabled="true">
 
-            <EditText
+            <android.support.design.widget.TextInputEditText
                 android:id="@+id/edPasswordF"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -134,6 +134,7 @@
                 android:id="@+id/labelPrivateKeyF"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_alignParentLeft="true"
                 android:layout_alignParentStart="true"
                 android:layout_gravity="center_vertical"
                 android:labelFor="@+id/tvPrivateKeyS"
@@ -148,6 +149,8 @@
                 android:layout_height="wrap_content"
                 android:layout_alignEnd="@+id/labelPrivateKeyF"
                 android:layout_alignParentEnd="true"
+                android:layout_alignParentRight="true"
+                android:layout_alignRight="@+id/labelPrivateKeyF"
                 android:layout_gravity="center_vertical"
                 android:background="@drawable/ic_keyboard_arrow_down_black_24px"
                 android:contentDescription="@string/iv_expand_collapse_button"
@@ -158,6 +161,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/labelPrivateKeyF"
+                android:layout_marginLeft="4dp"
                 android:layout_marginStart="4dp"
                 android:layout_marginTop="8dp"
                 android:textIsSelectable="false"
@@ -182,6 +186,7 @@
                 android:id="@+id/labelPublicKeyF"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_alignParentLeft="true"
                 android:layout_alignParentStart="true"
                 android:layout_gravity="start|center_vertical"
                 android:labelFor="@+id/tvPublicKeyS"
@@ -196,6 +201,8 @@
                 android:layout_height="wrap_content"
                 android:layout_alignEnd="@+id/labelPublicKeyF"
                 android:layout_alignParentEnd="true"
+                android:layout_alignParentRight="true"
+                android:layout_alignRight="@+id/labelPublicKeyF"
                 android:layout_gravity="center_vertical"
                 android:background="@drawable/ic_keyboard_arrow_down_black_24px"
                 android:contentDescription="@string/iv_expand_collapse_button"
@@ -206,6 +213,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/labelPublicKeyF"
+                android:layout_marginLeft="4dp"
                 android:layout_marginStart="4dp"
                 android:layout_marginTop="8dp"
                 android:textIsSelectable="false"
@@ -232,6 +240,8 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="32dp"
             android:layout_marginEnd="32dp"
+            android:layout_marginLeft="36dp"
+            android:layout_marginRight="32dp"
             android:layout_marginStart="36dp"
             android:layout_marginTop="8dp"
             android:textIsSelectable="false" />

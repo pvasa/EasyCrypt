@@ -1,27 +1,17 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
 buildscript {
-    ext {
-        support_version = '27.0.2'
-        kotlin_version = '1.2.21'
-        anko_version = '0.10.1'
-        retrofit_version = '2.3.0'
-        bintray_version = '1.7.3'
-        maven_version = '1.5'
-        junit_version = '4.12'
-        mockito_version = '1.10.19'
-    }
     repositories {
         google()
         jcenter()
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:3.0.1'
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath "org.jetbrains.kotlin:kotlin-android-extensions:$kotlin_version"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${Versions.kotlin}"
+        classpath "org.jetbrains.kotlin:kotlin-android-extensions:${Versions.kotlin}"
 
-        classpath "com.jfrog.bintray.gradle:gradle-bintray-plugin:$bintray_version"
-        classpath "com.github.dcendents:android-maven-gradle-plugin:$maven_version"
+        classpath "com.jfrog.bintray.gradle:gradle-bintray-plugin:${Versions.bintray}"
+        classpath "com.github.dcendents:android-maven-gradle-plugin:${Versions.maven}"
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
@@ -33,6 +23,7 @@ allprojects {
         jcenter()
         google()
         mavenCentral()
+        maven { url 'https://jitpack.io' }
     }
 }
 
