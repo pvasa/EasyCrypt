@@ -6,6 +6,8 @@
 # EasyCrypt
 Secure and efficient cryptography library for Android. (Auto fix SecureRandom bugs in API 18 and below.)
 
+***Note:** EasyCrypt uses only secure implementations and all the known Crypto bugs are already dealt with properly. [More information here.](https://github.com/ryan652/EasyCrypt/issues/6)*
+
 ## Features
 * AES-256 encryption algorithm
 * CBC/CTR mode of operations
