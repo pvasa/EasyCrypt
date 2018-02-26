@@ -26,8 +26,8 @@ internal object Versions {
 
     const val easyCrypt = "1.3.4"
     const val easyCryptCode = 134
-    const val easyCryptSample = "2.3.2"
-    const val easyCryptSampleCode = 232
+    const val easyCryptSample = "2.3.3"
+    const val easyCryptSampleCode = 233
 
     const val support = "27.0.2"
     const val anko = "0.10.1"
