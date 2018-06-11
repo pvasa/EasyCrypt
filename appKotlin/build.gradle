@@ -1,12 +1,14 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
+apply plugin: 'com.github.triplet.play'
 apply from: 'https://raw.githubusercontent.com/ryan652/androidscripts/master/load-properties.gradle'
 
 def keyPass = "${keyPassword}"
 def storePass = "${storePassword}"
 
 android {
+
     signingConfigs {
         release {
             keyAlias "android-release"
@@ -15,16 +17,20 @@ android {
             storePassword storePass
         }
     }
-    compileSdkVersion Versions.compileSdk
+
+    compileSdkVersion rootProject.ext.compileSdk
+    buildToolsVersion rootProject.ext.buildTools
+
     defaultConfig {
         applicationId "com.pvryan.easycryptsample"
-        minSdkVersion Versions.minSdk
-        targetSdkVersion Versions.targetSdk
-        versionCode Versions.easyCryptSampleCode
-        versionName Versions.easyCryptSample
+        minSdkVersion rootProject.ext.minSdk
+        targetSdkVersion rootProject.ext.targetSdk
+        versionCode rootProject.ext.easyCryptSampleCode
+        versionName rootProject.ext.easyCryptSample
         vectorDrawables.useSupportLibrary = true
         signingConfig signingConfigs.release
     }
+
     buildTypes {
         debug {
             shrinkResources true
@@ -41,29 +47,79 @@ android {
             signingConfig signingConfigs.release
         }
     }
-    buildToolsVersion Versions.buildTools
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+
+    splits {
+
+        // Configures multiple APKs based on screen density.
+        density {
+
+            // Configures multiple APKs based on screen density.
+            enable true
+
+            // Specifies a list of screen densities Gradle should not create multiple APKs for.
+            // exclude "ldpi", "xxhdpi", "xxxhdpi"
+
+            // Specifies a list of compatible screen size settings for the manifest.
+            compatibleScreens 'small', 'normal', 'large', 'xlarge'
+        }
+
+        // Configures multiple APKs based on ABI.
+        abi {
+
+            // Enables building multiple APKs per ABI.
+            enable true
+
+            // By default all ABIs are included, so use reset() and include to specify that we only
+            // want APKs for specific ABIs.
+
+            // Resets the list of ABIs that Gradle should create APKs for to none.
+            reset()
+
+            // Specifies a list of ABIs that Gradle should create APKs for.
+            include "x86", "x86_64", "armeabi-v7a", "arm64-v8a"
+
+            // Specifies that we do not want to also generate a universal APK that includes all ABIs.
+            universalApk false
+        }
+    }
 }
 
-repositories {
-    jcenter()
+play {
+    serviceAccountEmail = ''
+    pk12File = file('../scripts/deployment/key.p12')
+
+    track = 'production' // Or any of 'rollout', 'beta', 'alpha' or 'internal'
+    // userFraction = 0.2 // Only necessary for 'rollout'. The default is 0.1 (10%).
+    // untrackOld = true // Will untrack 'alpha' if needed to upload higher version to 'beta'
+
+    /**
+     * Title: 50 characters
+     * Short description: 80 characters
+     * Full description: 4000 characters
+     * Recent changes: 500 characters
+     */
+    errorOnSizeLimit = false // Unless checking listing sizes on each commit
+
+    uploadImages = false // Enable only if updating images
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation Dependencies.kotlinStdlib
-    implementation Dependencies.anko
-    implementation Dependencies.supportV4
-    implementation Dependencies.cardviewV7
-    implementation Dependencies.recyclerviewV7
-    implementation Dependencies.appcompatV7
-    implementation Dependencies.supportDesign
-    implementation Dependencies.transitionsEverywhere
-//    implementation Dependencies.cameraview
-    implementation Dependencies.aboutPage
-//    implementation Dependencies.easycrypt
     implementation project(':easycrypt')
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.kotlin}"
+    implementation "org.jetbrains.anko:anko:${rootProject.ext.anko}"
+    implementation "com.android.support:support-v4:${rootProject.ext.support}"
+    implementation "com.android.support:cardview-v7:${rootProject.ext.support}"
+    implementation "com.android.support:recyclerview-v7:${rootProject.ext.support}"
+    implementation "com.android.support:appcompat-v7:${rootProject.ext.support}"
+    implementation "com.android.support:design:${rootProject.ext.support}"
+    implementation "com.andkulikov:transitionseverywhere:${rootProject.ext.transitionsEverywhere}"
+//    implementation "com.github.google:cameraview:3eaeac0"
+    implementation "com.github.medyo:android-about-page:${rootProject.ext.aboutPage}"
+//    implementation "com.pvryan.easycrypt:easycrypt:${rootProject.ext.easyCrypt}"
 }

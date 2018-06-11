@@ -17,7 +17,7 @@ ext {
     gitUrl = 'https://github.com/ryan652/EasyCrypt.git'
     gitRepo = 'ryan652/EasyCrypt'
 
-    libraryVersion = Versions.easyCrypt
+    libraryVersion = rootProject.ext.easyCrypt
 
     developerId = 'ryan652'
     developerName = 'Priyank Vasa'
@@ -34,6 +34,7 @@ def keyPass = "${keyPassword}"
 def storePass = "${storePassword}"
 
 android {
+
     signingConfigs {
         release {
             keyAlias 'android-release'
@@ -42,15 +43,19 @@ android {
             storePassword storePass
         }
     }
-    compileSdkVersion Versions.compileSdk
+
+    compileSdkVersion rootProject.ext.compileSdk
+    buildToolsVersion rootProject.ext.buildTools
+
     defaultConfig {
-        minSdkVersion Versions.minSdk
-        targetSdkVersion Versions.targetSdk
-        versionCode Versions.easyCryptCode
-        versionName Versions.easyCrypt
+        minSdkVersion rootProject.ext.minSdk
+        targetSdkVersion rootProject.ext.targetSdk
+        versionCode rootProject.ext.easyCryptCode
+        versionName rootProject.ext.easyCrypt
         signingConfig signingConfigs.release
         consumerProguardFiles 'proguard-rules.pro'
     }
+
     buildTypes {
         debug {
             debuggable true
@@ -65,24 +70,20 @@ android {
             signingConfig signingConfigs.release
         }
     }
-    buildToolsVersion Versions.buildTools
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
 }
 
-repositories {
-    jcenter()
-}
-
 dependencies {
-    compile Dependencies.appcompatV7
-    compile Dependencies.kotlinStdlib
-    compile Dependencies.ankoCommons
-    compile Dependencies.retrofit
-    compile Dependencies.converterGson
-    compile Dependencies.zxcvbn
+    implementation "com.android.support:appcompat-v7:${rootProject.ext.support}"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.kotlin}"
+    implementation "org.jetbrains.anko:anko-commons:${rootProject.ext.anko}"
+    implementation "com.squareup.retrofit2:retrofit:${rootProject.ext.retrofit}"
+    implementation "com.squareup.retrofit2:converter-gson:${rootProject.ext.retrofit}"
+    implementation "com.nulab-inc:zxcvbn:${rootProject.ext.zxcvbn}"
 }
 
 tasks.withType(Javadoc) {
