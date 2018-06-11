@@ -47,8 +47,8 @@ class MainAdapter(private val mDataset: ArrayList<Card>) : RecyclerView.Adapter<
 
     override fun getItemCount() = mDataset.size
 
-    override fun onCreateViewHolder(parent: ViewGroup?, viewType: Int): ViewHolder {
-        val v = LayoutInflater.from(parent?.context).inflate(R.layout.card_view_main, parent, false)
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val v = LayoutInflater.from(parent.context).inflate(R.layout.card_view_main, parent, false)
         return ViewHolder(v)
     }
 
