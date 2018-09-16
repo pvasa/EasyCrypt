@@ -15,7 +15,6 @@
 
 package com.pvryan.easycrypt
 
-import android.os.Build
 import android.os.Environment
 import com.nulabinc.zxcvbn.Zxcvbn
 import java.io.File
@@ -28,9 +27,9 @@ internal open class Constants {
         val random = SecureRandom()
         val zxcvbn = Zxcvbn()
 
-        val SECRET_KEY_FAC_ALGORITHM =
-                if (Build.VERSION.SDK_INT < 26) "PBKDF2WithHmacSHA1"
-                else "PBEwithHmacSHA512AndAES_256"
+        const val SECRET_KEY_FAC_ALGORITHM = "PBKDF2WithHmacSHA1"
+//                if (Build.VERSION.SDK_INT < 26) "PBKDF2WithHmacSHA1"
+//                else "PBEwithHmacSHA512AndAES_256"
 
         const val SECRET_KEY_SPEC_ALGORITHM = "AES"
 
