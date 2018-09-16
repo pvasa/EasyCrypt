@@ -45,7 +45,6 @@ android {
     }
 
     compileSdkVersion rootProject.ext.compileSdk
-    buildToolsVersion rootProject.ext.buildTools
 
     defaultConfig {
         minSdkVersion rootProject.ext.minSdk
@@ -84,6 +83,13 @@ dependencies {
     implementation "com.squareup.retrofit2:retrofit:${rootProject.ext.retrofit}"
     implementation "com.squareup.retrofit2:converter-gson:${rootProject.ext.retrofit}"
     implementation "com.nulab-inc:zxcvbn:${rootProject.ext.zxcvbn}"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:${rootProject.ext.coroutinesCore}"
+}
+
+kotlin {
+    experimental {
+        coroutines "enable"
+    }
 }
 
 tasks.withType(Javadoc) {

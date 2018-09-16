@@ -31,7 +31,6 @@ import java.security.Security;
 
 /**
  * Fixes for the output of the default PRNG having low entropy.
- *
  * The fixes need to be applied via {@link #apply()} before any use of Java
  * Cryptography Architecture primitives. A good place to invoke them is in the
  * application's {@code onCreate}.
