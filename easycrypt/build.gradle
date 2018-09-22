@@ -12,14 +12,14 @@ ext {
 
     libraryDescription = 'Easy to use, secure, and efficient Android cryptography library.'
 
-    siteUrl = 'https://github.com/ryan652/EasyCrypt'
-    gitIssues = 'https://github.com/ryan652/EasyCrypt/issues'
-    gitUrl = 'https://github.com/ryan652/EasyCrypt.git'
-    gitRepo = 'ryan652/EasyCrypt'
+    siteUrl = 'https://github.com/pvasa/EasyCrypt'
+    gitIssues = 'https://github.com/pvasa/EasyCrypt/issues'
+    gitUrl = 'https://github.com/pvasa/EasyCrypt.git'
+    gitRepo = 'pvasa/EasyCrypt'
 
     libraryVersion = rootProject.ext.easyCrypt
 
-    developerId = 'ryan652'
+    developerId = 'pvasa'
     developerName = 'Priyank Vasa'
     developerEmail = 'pv.ryan14@gmail.com'
 
@@ -28,7 +28,7 @@ ext {
     allLicenses = ["Apache-2.0"]
 }
 
-apply from: 'https://raw.githubusercontent.com/ryan652/androidscripts/master/load-properties.gradle'
+apply from: 'https://raw.githubusercontent.com/pvasa/androidscripts/master/load-properties.gradle'
 
 def keyPass = "${keyPassword}"
 def storePass = "${storePassword}"
@@ -100,4 +100,4 @@ tasks.withType(Javadoc) {
 }
 
 apply from: 'https://raw.githubusercontent.com/nuuneoi/JCenter/master/installv1.gradle'
-apply from: 'https://raw.githubusercontent.com/ryan652/androidscripts/master/bintray.gradle'
+apply from: 'https://raw.githubusercontent.com/pvasa/androidscripts/master/bintray.gradle'

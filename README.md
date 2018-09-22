@@ -1,12 +1,12 @@
-[![CircleCI](https://img.shields.io/circleci/project/github/ryan652/EasyCrypt.svg)](https://circleci.com/gh/ryan652/EasyCrypt)
-[![Bintray](https://img.shields.io/github/release/ryan652/easycrypt.svg)](https://github.com/ryan652/EasyCrypt/releases)
-[![License](https://img.shields.io/github/license/ryan652/easycrypt.svg)](LICENSE)
-[![GitHub issues](https://img.shields.io/github/issues/ryan652/easycrypt.svg)](https://github.com/ryan652/EasyCrypt/issues)
+[![CircleCI](https://img.shields.io/circleci/project/github/pvasa/EasyCrypt.svg)](https://circleci.com/gh/pvasa/EasyCrypt)
+[![Bintray](https://img.shields.io/github/release/pvasa/easycrypt.svg)](https://github.com/pvasa/EasyCrypt/releases)
+[![License](https://img.shields.io/github/license/pvasa/easycrypt.svg)](LICENSE)
+[![GitHub issues](https://img.shields.io/github/issues/pvasa/easycrypt.svg)](https://github.com/pvasa/EasyCrypt/issues)
 
 # EasyCrypt
 Secure and efficient cryptography library for Android. (Auto fix SecureRandom bugs in API 18 and below.)
 
-***Note:** EasyCrypt uses only secure implementations and all the known Crypto bugs are already dealt with properly. [More information here.](https://github.com/ryan652/EasyCrypt/issues/6)*
+***Note:** EasyCrypt uses only secure implementations and all the known Crypto bugs are already dealt with properly. [More information here.](https://github.com/pvasa/EasyCrypt/issues/6)*
 
 ## Features
 * AES-256 encryption algorithm
