@@ -17,10 +17,12 @@ package com.pvryan.easycrypt
 import com.pvryan.easycrypt.asymmetric.ECAsymmetric.KeySizes
 import com.pvryan.easycrypt.asymmetric.ECRSAKeyPairListener
 import com.pvryan.easycrypt.extensions.fromBase64
+import com.pvryan.easycrypt.extensions.random
 import com.pvryan.easycrypt.randomorg.RandomOrg
 import com.pvryan.easycrypt.randomorg.RandomOrgResponse
 import com.pvryan.easycrypt.symmetric.ECPasswordListener
-import org.jetbrains.anko.doAsync
+import kotlinx.coroutines.experimental.GlobalScope
+import kotlinx.coroutines.experimental.async
 import org.jetbrains.annotations.NotNull
 import retrofit2.Call
 import retrofit2.Callback
@@ -53,7 +55,7 @@ class ECKeys {
     @JvmOverloads
     fun genSecureRandomPassword(@NotNull length: Int,
                                 @NotNull symbols: CharArray =
-                                Constants.STANDARD_SYMBOLS.toCharArray()): String {
+                                        Constants.STANDARD_SYMBOLS.toCharArray()): String {
 
         if (length < 1 || length > 4096) throw InvalidParameterException(
                 "Invalid length. Valid range is 1 to 4096.")
@@ -63,7 +65,7 @@ class ECKeys {
 
         val password = CharArray(length)
         for (i in 0 until length) {
-            password[i] = symbols[Constants.random.nextInt(symbols.size - 1)]
+            password[i] = symbols[random.nextInt(symbols.size - 1)]
         }
         return password.joinToString("")
     }
@@ -152,13 +154,11 @@ class ECKeys {
      */
     @JvmOverloads
     fun genRSAKeyPair(kpl: ECRSAKeyPairListener,
-                      keySize: KeySizes = KeySizes.S_4096) {
-        doAsync {
-            val generator = KeyPairGenerator.getInstance(Constants.ASYMMETRIC_ALGORITHM)
-            generator.initialize(keySize.value, Constants.random)
-            val keyPair = generator.generateKeyPair()
-            kpl.onGenerated(keyPair)
-        }
+                      keySize: KeySizes = KeySizes.S_4096) = GlobalScope.async {
+        val generator = KeyPairGenerator.getInstance(Constants.ASYMMETRIC_ALGORITHM)
+        generator.initialize(keySize.value, random)
+        val keyPair = generator.generateKeyPair()
+        kpl.onGenerated(keyPair)
     }
 
     /**

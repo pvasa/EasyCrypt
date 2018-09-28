@@ -23,22 +23,37 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.os.Environment
-import android.support.v4.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.Fragment
 import com.pvryan.easycrypt.ECKeys
-import com.pvryan.easycrypt.ECResultListener
 import com.pvryan.easycrypt.asymmetric.ECAsymmetric
 import com.pvryan.easycrypt.asymmetric.ECRSAKeyPairListener
-import com.pvryan.easycrypt.asymmetric.ECVerifiedListener
 import com.pvryan.easycrypt.symmetric.ECSymmetric
 import com.pvryan.easycryptsample.R
-import com.pvryan.easycryptsample.extensions.*
+import com.pvryan.easycryptsample.extensions.gone
+import com.pvryan.easycryptsample.extensions.hide
+import com.pvryan.easycryptsample.extensions.show
+import com.pvryan.easycryptsample.extensions.snackLong
+import com.pvryan.easycryptsample.extensions.toBase64String
 import com.transitionseverywhere.TransitionManager
-import kotlinx.android.synthetic.main.fragment_asymmetric_file.*
-import org.jetbrains.anko.AnkoLogger
-import org.jetbrains.anko.support.v4.onUiThread
+import kotlinx.android.synthetic.main.fragment_asymmetric_file.bExpandCollapsePrivateF
+import kotlinx.android.synthetic.main.fragment_asymmetric_file.bExpandCollapsePublicF
+import kotlinx.android.synthetic.main.fragment_asymmetric_file.buttonSelectDecryptF
+import kotlinx.android.synthetic.main.fragment_asymmetric_file.buttonSelectEncryptF
+import kotlinx.android.synthetic.main.fragment_asymmetric_file.buttonSignF
+import kotlinx.android.synthetic.main.fragment_asymmetric_file.buttonVerifyF
+import kotlinx.android.synthetic.main.fragment_asymmetric_file.container
+import kotlinx.android.synthetic.main.fragment_asymmetric_file.edPasswordF
+import kotlinx.android.synthetic.main.fragment_asymmetric_file.progressBarF
+import kotlinx.android.synthetic.main.fragment_asymmetric_file.rlPrivateKeyTitleF
+import kotlinx.android.synthetic.main.fragment_asymmetric_file.rlPublicKeyTitleF
+import kotlinx.android.synthetic.main.fragment_asymmetric_file.tvPrivateKeyF
+import kotlinx.android.synthetic.main.fragment_asymmetric_file.tvPublicKeyF
+import kotlinx.android.synthetic.main.fragment_asymmetric_file.tvResultF
+import kotlinx.android.synthetic.main.fragment_asymmetric_file.tvStatus
+import timber.log.Timber
 import java.io.File
 import java.security.KeyPair
 import java.security.interfaces.RSAPrivateKey
@@ -46,7 +61,7 @@ import java.security.interfaces.RSAPublicKey
 import java.security.spec.InvalidKeySpecException
 
 @SuppressLint("SetTextI18n")
-class FragmentAsymmetricFile : Fragment(), AnkoLogger, ECResultListener {
+class FragmentAsymmetricFile : Fragment() {
 
     private val _rCEncrypt = 2
     private val _rCDecrypt = 3
@@ -79,32 +94,32 @@ class FragmentAsymmetricFile : Fragment(), AnkoLogger, ECResultListener {
         }
 
         buttonSelectEncryptF.setOnClickListener {
-            if (edPasswordF.text.toString() == "") {
+            if (edPasswordF.text.toString().isBlank()) {
                 view.snackLong("Password cannot be empty")
                 return@setOnClickListener
             }
             selectFile(_rCEncrypt)
         }
         buttonSelectDecryptF.setOnClickListener {
-            if (edPasswordF.text.toString() == "") {
+            if (edPasswordF.text.toString().isBlank()) {
                 view.snackLong("Password cannot be empty")
                 return@setOnClickListener
             }
-            if (tvPrivateKeyF.text == "") {
+            if (tvPrivateKeyF.text.isBlank()) {
                 view.snackLong("Encrypt first to generate private key")
                 return@setOnClickListener
             }
             selectFile(_rCDecrypt)
         }
         buttonSignF.setOnClickListener {
-            if (edPasswordF.text.toString() == "") {
+            if (edPasswordF.text.toString().isBlank()) {
                 view.snackLong("Password cannot be empty")
                 return@setOnClickListener
             }
             selectFile(_rCSign)
         }
         buttonVerifyF.setOnClickListener {
-            if (tvPublicKeyF.text == "") {
+            if (tvPublicKeyF.text.isBlank()) {
                 view.snackLong("Sign first to generate public key")
                 return@setOnClickListener
             }
@@ -143,9 +158,9 @@ class FragmentAsymmetricFile : Fragment(), AnkoLogger, ECResultListener {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
 
-        if (resultCode == Activity.RESULT_OK) {
+        val fis = data?.data?.let { context?.contentResolver?.openInputStream(it) } ?: return
 
-            val fis = context?.contentResolver?.openInputStream(data?.data)
+        if (resultCode == Activity.RESULT_OK) {
 
             val password = edPasswordF.text.toString()
 
@@ -157,35 +172,31 @@ class FragmentAsymmetricFile : Fragment(), AnkoLogger, ECResultListener {
                     eCryptKeys.genRSAKeyPair(object : ECRSAKeyPairListener {
                         override fun onGenerated(keyPair: KeyPair) {
                             val publicKey = keyPair.public as RSAPublicKey
-                            onUiThread { tvPublicKeyF.text = publicKey.encoded.toBase64String() }
+                            tvPublicKeyF.text = publicKey.encoded.toBase64String()
 
                             val privateKey = keyPair.private as RSAPrivateKey
                             // Symmetrically encrypt private key
-                            eCryptSymmetric.encrypt(privateKey.encoded.toBase64String(),
-                                    password, object : ECResultListener {
-                                override fun <T> onSuccess(result: T) {
-                                    onUiThread { tvPrivateKeyF.text = result as String }
-                                    eCryptAsymmetric.encrypt(fis, publicKey,
-                                            this@FragmentAsymmetricFile)
-                                }
-
-                                override fun onFailure(message: String, e: Exception) {
-                                    onUiThread {
+                            eCryptSymmetric.encrypt<String>(privateKey.encoded.toBase64String(), password)
+                                    .onSuccess { result ->
+                                        tvPrivateKeyF.text = result
+                                        eCryptAsymmetric
+                                                .encrypt<File>(fis, publicKey)
+                                                .onSuccess(this@FragmentAsymmetricFile::onSuccess)
+                                                .onFailure(this@FragmentAsymmetricFile::onFailure)
+                                                .onProgress(this@FragmentAsymmetricFile::onProgress)
+                                    }
+                                    .onFailure { message, _ ->
                                         progressBarF.hide()
                                         tvStatus.text = getString(R.string.tv_status_idle)
                                         tvPrivateKeyF.text = "Error while encrypting private key. $message"
                                         container.snackLong("Error while encrypting private key. $message")
                                     }
-                                }
-                            })
                         }
 
                         override fun onFailure(message: String, e: Exception) {
-                            onUiThread {
-                                progressBarF.hide()
-                                tvStatus.text = getString(R.string.tv_status_idle)
-                                container.snackLong("Error: $message")
-                            }
+                            progressBarF.hide()
+                            tvStatus.text = getString(R.string.tv_status_idle)
+                            container.snackLong("Error: $message")
                         }
                     })
                 }
@@ -193,27 +204,30 @@ class FragmentAsymmetricFile : Fragment(), AnkoLogger, ECResultListener {
                 _rCDecrypt -> {
                     tvStatus.text = getString(R.string.tv_status_decrypting)
                     // Decrypt private key
-                    eCryptSymmetric.decrypt(tvPrivateKeyF.text, password, object : ECResultListener {
-                        override fun <T> onSuccess(result: T) {
-                            try {
-                                val privateKey = eCryptKeys.genRSAPrivateKeyFromBase64(result as String)
-                                // Decrypt user file
-                                eCryptAsymmetric.decrypt(fis, privateKey, this@FragmentAsymmetricFile)
-                                progressBarF.show()
-                            } catch (e: IllegalArgumentException) {
-                                onFailure("Not a valid base64 string", e)
-                            } catch (e: InvalidKeySpecException) {
-                                onFailure("Not a valid private key", e)
-                            }
-                        }
+                    eCryptSymmetric
+                            .decrypt<String>(tvPrivateKeyF.text, password)
+                            .onSuccess { result ->
+                                try {
+                                    val privateKey = eCryptKeys.genRSAPrivateKeyFromBase64(result)
+                                    // Decrypt user file
+                                    eCryptAsymmetric
+                                            .decrypt<File>(fis, privateKey)
+                                            .onProgress(this@FragmentAsymmetricFile::onProgress)
+                                            .onSuccess(this@FragmentAsymmetricFile::onSuccess)
+                                            .onFailure(this@FragmentAsymmetricFile::onFailure)
 
-                        override fun onFailure(message: String, e: Exception) {
-                            onUiThread {
+                                    progressBarF.show()
+                                } catch (e: IllegalArgumentException) {
+                                    Timber.d(e)
+                                    onFailure("Not a valid base64 string", e)
+                                } catch (e: InvalidKeySpecException) {
+                                    onFailure("Not a valid private key", e)
+                                }
+                            }
+                            .onFailure { message, _ ->
                                 tvStatus.text = getString(R.string.tv_status_idle)
                                 container.snackLong("Error while decrypting private key. $message")
                             }
-                        }
-                    })
                 }
 
                 _rCSign -> {
@@ -227,39 +241,32 @@ class FragmentAsymmetricFile : Fragment(), AnkoLogger, ECResultListener {
                     eCryptKeys.genRSAKeyPair(object : ECRSAKeyPairListener {
 
                         override fun onGenerated(keyPair: KeyPair) {
-                            onUiThread {
-                                tvPublicKeyF.text = (keyPair.public as RSAPublicKey).encoded.toBase64String()
-                            }
+                            tvPublicKeyF.text = (keyPair.public as RSAPublicKey).encoded.toBase64String()
                             val privateKey = keyPair.private as RSAPrivateKey
 
                             // Encrypt private key
-                            eCryptSymmetric.encrypt(privateKey.encoded.toBase64String(),
-                                    password, object : ECResultListener {
-                                override fun <T> onSuccess(result: T) {
-                                    eCryptAsymmetric.sign(fis,
-                                            privateKey,
-                                            this@FragmentAsymmetricFile,
-                                            sigFile)
-                                    onUiThread { tvPrivateKeyF.text = result as String }
-                                }
-
-                                override fun onFailure(message: String, e: Exception) {
-                                    onUiThread {
+                            eCryptSymmetric
+                                    .encrypt<String>(privateKey.encoded.toBase64String(), password)
+                                    .onSuccess { result ->
+                                        eCryptAsymmetric
+                                                .sign(fis, privateKey, sigFile)
+                                                .onProgress(this@FragmentAsymmetricFile::onProgress)
+                                                .onSuccess(this@FragmentAsymmetricFile::onSuccess)
+                                                .onFailure(this@FragmentAsymmetricFile::onFailure)
+                                        tvPrivateKeyF.text = result
+                                    }
+                                    .onFailure { message, _ ->
                                         progressBarF.hide()
                                         tvStatus.text = getString(R.string.tv_status_idle)
                                         tvPrivateKeyF.text = "Error while encrypting private key. $message"
                                         container.snackLong("Error while encrypting private key. $message")
                                     }
-                                }
-                            })
                         }
 
                         override fun onFailure(message: String, e: Exception) {
-                            onUiThread {
-                                progressBarF.hide()
-                                tvStatus.text = getString(R.string.tv_status_idle)
-                                container.snackLong("Failed to generate RSA key pair. Try again.")
-                            }
+                            progressBarF.hide()
+                            tvStatus.text = getString(R.string.tv_status_idle)
+                            container.snackLong("Failed to generate RSA key pair. Try again.")
                         }
                     })
                 }
@@ -269,27 +276,22 @@ class FragmentAsymmetricFile : Fragment(), AnkoLogger, ECResultListener {
                     tvStatus.text = getString(R.string.tv_status_verifying)
                     try {
                         val publicKey = eCryptKeys.genRSAPublicKeyFromBase64(tvPublicKeyF.text.toString())
-                        eCryptAsymmetric.verify(fis, publicKey,
-                                File(Environment.getExternalStorageDirectory(), "ECryptSample/sample.sig"),
-                                object : ECVerifiedListener {
-                                    override fun onSuccess(verified: Boolean) {
-                                        onUiThread {
-                                            progressBarF.hide()
-                                            if (verified) tvResultF.text = getString(R.string.msg_valid)
-                                            else tvResultF.text = getString(R.string.msg_invalid)
-                                            tvStatus.text = getString(R.string.tv_status_idle)
-                                        }
-                                    }
-
-                                    override fun onFailure(message: String, e: Exception) {
-                                        onUiThread {
-                                            progressBarF.hide()
-                                            tvStatus.text = getString(R.string.tv_status_idle)
-                                            container.snackLong("Error: $message")
-                                        }
-                                    }
-                                })
+                        eCryptAsymmetric.verify(
+                                fis,
+                                publicKey,
+                                File(Environment.getExternalStorageDirectory(), "ECryptSample/sample.sig")
+                        ).onSuccess { verified ->
+                            progressBarF.hide()
+                            if (verified) tvResultF.text = getString(R.string.msg_valid)
+                            else tvResultF.text = getString(R.string.msg_invalid)
+                            tvStatus.text = getString(R.string.tv_status_idle)
+                        }.onFailure { message, _ ->
+                            progressBarF.hide()
+                            tvStatus.text = getString(R.string.tv_status_idle)
+                            container.snackLong("Error: $message")
+                        }
                     } catch (e: IllegalArgumentException) {
+                        Timber.d(e)
                         container.snackLong("Not a valid base64 string")
                         tvStatus.text = getString(R.string.tv_status_idle)
                     } catch (e: InvalidKeySpecException) {
@@ -302,35 +304,29 @@ class FragmentAsymmetricFile : Fragment(), AnkoLogger, ECResultListener {
     }
 
     private var maxSet = false
-    override fun onProgress(newBytes: Int, bytesProcessed: Long, totalBytes: Long) {
+    fun onProgress(newBytes: Int, bytesProcessed: Long, totalBytes: Long) {
         if (totalBytes > -1) {
-            onUiThread {
-                if (!maxSet) {
-                    progressBarF.isIndeterminate = false
-                    progressBarF.max = (totalBytes / 1024).toInt()
-                    maxSet = true
-                }
-                progressBarF.progress = (bytesProcessed / 1024).toInt()
+            if (!maxSet) {
+                progressBarF.isIndeterminate = false
+                progressBarF.max = (totalBytes / 1024).toInt()
+                maxSet = true
             }
+            progressBarF.progress = (bytesProcessed / 1024).toInt()
         }
     }
 
-    override fun <T> onSuccess(result: T) {
-        onUiThread {
-            progressBarF.hide()
-            tvStatus.text = getString(R.string.tv_status_idle)
-            tvResultF.text = resources.getString(
-                    R.string.success_result_to_file,
-                    (result as File).absolutePath)
-        }
+    fun <T> onSuccess(result: T) {
+        progressBarF.hide()
+        tvStatus.text = getString(R.string.tv_status_idle)
+        tvResultF.text = resources.getString(
+                R.string.success_result_to_file,
+                (result as File).absolutePath)
     }
 
-    override fun onFailure(message: String, e: Exception) {
-        onUiThread {
-            progressBarF.hide()
-            tvStatus.text = getString(R.string.tv_status_idle)
-            container.snackLong("Error: $message")
-        }
+    fun onFailure(message: String, e: Throwable) {
+        progressBarF.hide()
+        tvStatus.text = getString(R.string.tv_status_idle)
+        container.snackLong("Error: $message")
     }
 
     companion object {

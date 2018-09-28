@@ -12,7 +12,7 @@
      limitations under the License.
 -->
 
-<android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:card_view="http://schemas.android.com/apk/res-auto"
     android:id="@+id/cardView"
     android:layout_width="match_parent"
@@ -28,16 +28,16 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:paddingBottom="8dp"
-        android:paddingTop="8dp">
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp">
 
         <TextView
             android:id="@+id/tvTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:paddingEnd="16dp"
             android:paddingStart="16dp"
             android:paddingTop="16dp"
+            android:paddingEnd="16dp"
             android:textColor="@color/primary_text"
             android:textSize="24sp" />
 
@@ -53,7 +53,6 @@
                 style="?android:attr/buttonBarButtonStyle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignParentLeft="true"
                 android:layout_alignParentStart="true"
                 android:text="@string/btn_string" />
 
@@ -63,7 +62,6 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_toEndOf="@+id/buttonAction1"
-                android:layout_toRightOf="@+id/buttonAction1"
                 android:text="@string/btn_file" />
 
             <ImageView
@@ -72,12 +70,10 @@
                 android:layout_height="wrap_content"
                 android:layout_alignEnd="@+id/buttonAction2"
                 android:layout_alignParentEnd="true"
-                android:layout_alignParentRight="true"
-                android:layout_alignRight="@+id/buttonAction2"
                 android:layout_centerVertical="true"
                 android:background="@drawable/ic_keyboard_arrow_down_black_24px"
                 android:contentDescription="@string/iv_expand_collapse_button"
-                android:foreground="?android:attr/selectableItemBackground"
+                android:foreground="?attr/selectableItemBackground"
                 android:padding="4dp" />
 
         </RelativeLayout>
@@ -86,13 +82,13 @@
             android:id="@+id/tvDesc"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:paddingBottom="16dp"
-            android:paddingEnd="16dp"
             android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingBottom="16dp"
             android:textColor="@color/secondary_text"
             android:textSize="14sp"
             android:visibility="gone" />
 
     </LinearLayout>
 
-</android.support.v7.widget.CardView>
+</androidx.cardview.widget.CardView>

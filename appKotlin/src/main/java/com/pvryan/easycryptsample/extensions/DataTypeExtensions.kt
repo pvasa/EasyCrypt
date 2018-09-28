@@ -22,7 +22,7 @@ import java.util.regex.Pattern
 
 fun ByteArray.toBase64String(): String = Base64.encodeToString(this, Base64.URL_SAFE)
 fun ByteArray.toBase64(): ByteArray = Base64.encode(this, Base64.URL_SAFE)
-fun ByteArray.asString(): String = this.toString(Charsets.UTF_8)
+fun ByteArray.asString(): String = toString(Charsets.UTF_8)
 
 private val HEX_CHARS = charArrayOf('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F')
 fun ByteArray.asHexString(): String {
@@ -45,16 +45,16 @@ fun String.toNumber(default: Int): Int =
         }
 
 @Throws(IllegalArgumentException::class)
-fun String.asByteArray(): ByteArray = this.toByteArray(Charsets.UTF_8)
+fun String.asByteArray(): ByteArray = toByteArray(Charsets.UTF_8)
 
-fun String.fromBase64(): ByteArray = Base64.decode(this.asByteArray(), Base64.URL_SAFE)
+fun String.fromBase64(): ByteArray = Base64.decode(asByteArray(), Base64.URL_SAFE)
 
 private val pHex: Pattern = Pattern.compile("[0-9a-fA-F]+")
-fun String.isValidHex(): Boolean = (this.length % 2 == 0 && pHex.matcher(this).matches())
+fun String.isValidHex(): Boolean = (length % 2 == 0 && pHex.matcher(this).matches())
 
 @Throws(IllegalArgumentException::class)
 fun String.hexToByteArray(): ByteArray {
-    val trimmed = this.replace(" ", "")
+    val trimmed = replace(" ", "")
     if (!trimmed.isValidHex()) throw IllegalArgumentException("Invalid hex string.")
     val data = ByteArray(trimmed.length / 2)
     var i = 0
@@ -66,9 +66,9 @@ fun String.hexToByteArray(): ByteArray {
     return data
 }
 
-fun RSAKey.size(): Int = this.modulus.bitLength()
+fun RSAKey.size(): Int = modulus.bitLength()
 fun RSAKey.allowedInputSize(): Int {
-    val keyLength = this.size().toDouble()
+    val keyLength = size().toDouble()
     val hashOutputLength = 256
     return (Math.floor(keyLength / 8)
             - (2 * (hashOutputLength / 8)) - 2).toInt() // OAEPwithSHA-256 padding

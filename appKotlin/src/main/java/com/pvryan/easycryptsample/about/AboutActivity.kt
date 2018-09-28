@@ -15,12 +15,13 @@
 package com.pvryan.easycryptsample.about
 
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
 import android.view.MenuItem
 import android.view.View
+import androidx.appcompat.app.AppCompatActivity
 import com.pvryan.easycryptsample.Constants
 import com.pvryan.easycryptsample.R
-import kotlinx.android.synthetic.main.activity_about.*
+import kotlinx.android.synthetic.main.activity_about.container
+import kotlinx.android.synthetic.main.activity_about.toolbar
 import mehdi.sakout.aboutpage.AboutPage
 import mehdi.sakout.aboutpage.Element
 
@@ -32,7 +33,7 @@ class AboutActivity : AppCompatActivity() {
 
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.title = intent.extras[Constants.TITLE] as String
+        supportActionBar?.title = intent.extras?.get(Constants.TITLE) as? String
 
         val packageInfo = packageManager.getPackageInfo(packageName, 0)
         val appVersionElement = Element()

@@ -19,19 +19,24 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.os.Bundle
-import android.support.v4.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.Fragment
 import com.pvryan.easycrypt.ECKeys
 import com.pvryan.easycrypt.symmetric.ECPasswordListener
 import com.pvryan.easycryptsample.Constants
 import com.pvryan.easycryptsample.R
+import com.pvryan.easycryptsample.defaultPreferences
 import com.pvryan.easycryptsample.extensions.snackShort
 import com.pvryan.easycryptsample.extensions.toNumber
-import kotlinx.android.synthetic.main.fragment_generate_password.*
-import org.jetbrains.anko.support.v4.defaultSharedPreferences
-import org.jetbrains.anko.support.v4.onUiThread
+import com.pvryan.easycryptsample.get
+import kotlinx.android.synthetic.main.fragment_generate_password.buttonRandomOrgP
+import kotlinx.android.synthetic.main.fragment_generate_password.buttonSecureRandomP
+import kotlinx.android.synthetic.main.fragment_generate_password.edCharsP
+import kotlinx.android.synthetic.main.fragment_generate_password.edLengthP
+import kotlinx.android.synthetic.main.fragment_generate_password.llOutputTitleP
+import kotlinx.android.synthetic.main.fragment_generate_password.tvResultP
 import java.security.InvalidParameterException
 
 class FragmentGeneratePassword : Fragment() {
@@ -75,11 +80,11 @@ class FragmentGeneratePassword : Fragment() {
             try {
                 eCPasswords.genRandomOrgPassword(
                         edLengthP.text.toString().toNumber(Constants.DEFAULT_PASSWORD_LENGTH),
-                        defaultSharedPreferences.getString(getString(R.string.pref_api_key), ""),
+                        defaultPreferences[getString(R.string.pref_api_key), ""],
                         object : ECPasswordListener {
 
                             override fun onFailure(message: String, e: Exception) {
-                                onUiThread { view.snackShort("Invalid API key: ${e.localizedMessage}") }
+                                view.snackShort("Invalid API key: ${e.localizedMessage}")
                             }
 
                             override fun onGenerated(password: String) {

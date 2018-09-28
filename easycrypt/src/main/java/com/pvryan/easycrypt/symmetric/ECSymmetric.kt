@@ -12,7 +12,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.pvryan.easycrypt.symmetric
 
 import android.os.Build
@@ -21,45 +20,30 @@ import com.pvryan.easycrypt.ECResultListener
 import com.pvryan.easycrypt.PRNGFixes
 import com.pvryan.easycrypt.extensions.asByteArray
 import com.pvryan.easycrypt.extensions.fromBase64
-import org.jetbrains.anko.doAsync
 import org.jetbrains.annotations.NotNull
+import timber.log.Timber
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
 import java.security.InvalidKeyException
 import java.security.InvalidParameterException
-import java.security.spec.InvalidKeySpecException
 import javax.crypto.BadPaddingException
 import javax.crypto.Cipher
 import javax.crypto.IllegalBlockSizeException
-import javax.crypto.SecretKeyFactory
-import javax.crypto.spec.PBEKeySpec
-import javax.crypto.spec.SecretKeySpec
 
-@Suppress("KDocUnresolvedReference")
 /**
  * Secure symmetric encryption with AES256.
  */
-class ECSymmetric(transformation: ECSymmetricTransformations
-                  = ECSymmetricTransformations.AES_CBC_PKCS7Padding) {
+class ECSymmetric(transformation: ECSymmetricTransformations = ECSymmetricTransformations.AesCbcPkcs7Padding) {
 
-    private val cipher = Cipher.getInstance(transformation.value)
+    @PublishedApi
+    internal val cipher = Cipher.getInstance(transformation.value)
 
     init {
         when {
             Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT -> PRNGFixes.apply()
         }
-    }
-
-    @Throws(InvalidKeySpecException::class)
-    private fun getKey(password: String = String(), salt: ByteArray): SecretKeySpec {
-        val pbeKeySpec = PBEKeySpec(password.trim().toCharArray(),
-                salt, Constants.ITERATIONS, Constants.KEY_BITS_LENGTH)
-        val keyFactory: SecretKeyFactory =
-                SecretKeyFactory.getInstance(Constants.SECRET_KEY_FAC_ALGORITHM)
-        val keyBytes: ByteArray = keyFactory.generateSecret(pbeKeySpec).encoded
-        return SecretKeySpec(keyBytes, Constants.SECRET_KEY_SPEC_ALGORITHM)
     }
 
     /**
@@ -69,11 +53,10 @@ class ECSymmetric(transformation: ECSymmetricTransformations
      * Encryption progress is posted to [ECResultListener.onProgress].
      * Result can be a String or a File depending on the data type of [input] and parameter [outputFile].
      *
-     * @param T which can be either of [String], [CharSequence],
-     * [ByteArray], [InputStream], [FileInputStream], or [File]
-     * @param input data to be encrypted
+     * @param T datatype of expected result
+     * @param input data to be encrypted. It can be of type
+     * [String], [CharSequence], [ByteArray], [InputStream], [java.io.FileInputStream], or [File]
      * @param password string used to encrypt input
-     * @param erl listener interface of type [ECResultListener] where result and progress will be posted
      * @param outputFile optional output file. If provided, result will be written to this file
      *
      * @exception InvalidKeyException if password is null or blank
@@ -88,39 +71,46 @@ class ECSymmetric(transformation: ECSymmetricTransformations
      * process the input data provided.
      */
     @JvmOverloads
-    fun <T> encrypt(@NotNull input: T,
-                    @NotNull password: String,
-                    @NotNull erl: ECResultListener,
-                    @NotNull outputFile: File = File(Constants.DEF_ENCRYPTED_FILE_PATH)) {
-        doAsync {
+    inline fun <reified T> encrypt(
+            @NotNull input: Any,
+            @NotNull password: String,
+            @NotNull outputFile: File = File(Constants.DEF_ENCRYPTED_FILE_PATH)
+    ): ECResultListener<T> {
 
-            val tPass = password.trim()
+        val erl = ECResultListener<T>()
 
-            when (input) {
+        val tPass = password.trim()
 
-                is String -> encrypt(input.asByteArray(), password, erl, outputFile)
-
-                is CharSequence ->
-                    encrypt(input.toString().asByteArray(), password, erl, outputFile)
-
-                is ByteArrayInputStream -> encrypt(input.readBytes(), password, erl, outputFile)
-
-                is File -> {
-                    if (!input.exists() || input.isDirectory) {
-                        erl.onFailure(Constants.ERR_NO_SUCH_FILE, NoSuchFileException(input))
-                        return@doAsync
-                    }
-                    val encryptedFile =
-                            if (outputFile.absolutePath == Constants.DEF_ENCRYPTED_FILE_PATH)
-                                File(input.absolutePath + Constants.ECRYPT_FILE_EXT)
-                            else outputFile
-                    encrypt(input.inputStream(), password, erl, encryptedFile)
+        val parsedInput: Any = when (input) {
+            is String -> input.asByteArray()
+            is CharSequence -> input.toString().asByteArray()
+            is ByteArrayInputStream -> input.readBytes()
+            is File -> {
+                if (!input.exists() || input.isDirectory) {
+                    erl.onFailure?.invoke(Constants.ERR_NO_SUCH_FILE, NoSuchFileException(input))
+                    return erl
                 }
-
-                else -> performEncrypt.invoke(input, tPass, cipher,
-                        { pass, salt -> getKey(pass, salt) }, erl, outputFile)
+                input.inputStream()
+            }
+            is InputStream -> input
+            else -> {
+                erl.onFailure?.invoke(Constants.ERR_INPUT_TYPE_NOT_SUPPORTED, InvalidParameterException())
+                return erl
             }
         }
+
+        val parsedOutputFile =
+                if (input !is File || outputFile.absolutePath != Constants.DEF_ENCRYPTED_FILE_PATH) outputFile
+                else File(input.absolutePath + Constants.ECRYPT_FILE_EXT)
+
+        if (parsedOutputFile.exists() && parsedOutputFile.absolutePath != Constants.DEF_ENCRYPTED_FILE_PATH) {
+            (input as? InputStream)?.close()
+            erl.onFailure?.invoke(Constants.ERR_OUTPUT_FILE_EXISTS, FileAlreadyExistsException(parsedOutputFile))
+            return erl
+        }
+
+        encryptSymmetric(parsedInput, tPass, cipher, erl, parsedOutputFile)
+        return erl
     }
 
     /**
@@ -131,9 +121,8 @@ class ECSymmetric(transformation: ECSymmetricTransformations
      * Result can be a String or a File depending on the data type of [input] and parameter [outputFile]
      *
      * @param input input data to be decrypted. It can be of type
-     * [String], [CharSequence], [ByteArray], [InputStream], [FileInputStream], or [File]
-     * @param password password string used to performEncrypt input
-     * @param erl listener interface of type [ECResultListener] where result and progress will be posted
+     * [String], [CharSequence], [ByteArray], [InputStream], [java.io.FileInputStream], or [File]
+     * @param password password string used to PerformEncrypt input
      * @param outputFile optional output file. If provided, result will be written to this file
      *
      * @exception InvalidKeyException if password is null or blank
@@ -152,53 +141,57 @@ class ECSymmetric(transformation: ECSymmetricTransformations
      * bounded by the appropriate padding bytes
      */
     @JvmOverloads
-    fun <T> decrypt(@NotNull input: T,
-                    @NotNull password: String,
-                    @NotNull erl: ECResultListener,
-                    @NotNull outputFile: File = File(Constants.DEF_DECRYPTED_FILE_PATH)) {
-        doAsync {
+    inline fun <reified T> decrypt(
+            @NotNull input: Any,
+            @NotNull password: String,
+            @NotNull outputFile: File = File(Constants.DEF_DECRYPTED_FILE_PATH)
+    ): ECResultListener<T> {
 
-            val tPass = password.trim()
+        val erl = ECResultListener<T>()
 
-            when (input) {
+        val tPass = password.trim()
 
-                is String -> {
-                    try {
-                        decrypt(input.fromBase64().inputStream(), password, erl, outputFile)
-                    } catch (e: IllegalArgumentException) {
-                        erl.onFailure(Constants.ERR_BAD_BASE64, e)
-                    }
+        val parsedInput: Any = when (input) {
+            is String -> try {
+                input.fromBase64().inputStream()
+            } catch (e: IllegalArgumentException) {
+                Timber.d(e)
+                erl.onFailure?.invoke(Constants.ERR_BAD_BASE64, e)
+                return erl
+            }
+            is CharSequence -> try {
+                input.toString().fromBase64().inputStream()
+            } catch (e: IllegalArgumentException) {
+                Timber.d(e)
+                erl.onFailure?.invoke(Constants.ERR_BAD_BASE64, e)
+                return erl
+            }
+            is ByteArray -> input.inputStream()
+            is File -> {
+                if (!input.exists() || input.isDirectory) {
+                    erl.onFailure?.invoke(Constants.ERR_NO_SUCH_FILE, NoSuchFileException(input))
+                    return erl
                 }
-
-                is CharSequence -> {
-                    try {
-                        decrypt(input.toString().fromBase64().inputStream(),
-                                password, erl, outputFile)
-                    } catch (e: IllegalArgumentException) {
-                        erl.onFailure(Constants.ERR_BAD_BASE64, e)
-                    }
-                }
-
-                is ByteArray -> decrypt(input.inputStream(), password, erl, outputFile)
-
-                is File -> {
-
-                    if (!input.exists() || input.isDirectory) {
-                        erl.onFailure(Constants.ERR_NO_SUCH_FILE, NoSuchFileException(input))
-                        return@doAsync
-                    }
-
-                    val decryptedFile =
-                            if (outputFile.absolutePath == Constants.DEF_DECRYPTED_FILE_PATH)
-                                File(input.absoluteFile.toString().removeSuffix(Constants.ECRYPT_FILE_EXT))
-                            else outputFile
-
-                    decrypt(input.inputStream(), password, erl, decryptedFile)
-                }
-
-                else -> performDecrypt.invoke(input, tPass, cipher,
-                        { pass, salt -> getKey(pass, salt) }, erl, outputFile)
+                input.inputStream()
+            }
+            is InputStream -> input
+            else -> {
+                erl.onFailure?.invoke(Constants.ERR_INPUT_TYPE_NOT_SUPPORTED, InvalidParameterException())
+                return erl
             }
         }
+
+        val parsedOutputFile =
+                if (input !is File || outputFile.absolutePath != Constants.DEF_DECRYPTED_FILE_PATH) outputFile
+                else File(input.absoluteFile.toString().removeSuffix(Constants.ECRYPT_FILE_EXT))
+
+        if (parsedOutputFile.exists() && parsedOutputFile.absolutePath != Constants.DEF_DECRYPTED_FILE_PATH) {
+            (input as? InputStream)?.close()
+            erl.onFailure?.invoke(Constants.ERR_OUTPUT_FILE_EXISTS, FileAlreadyExistsException(parsedOutputFile))
+            return erl
+        }
+
+        decryptSymmetric(parsedInput, tPass, cipher, erl, parsedOutputFile)
+        return erl
     }
 }

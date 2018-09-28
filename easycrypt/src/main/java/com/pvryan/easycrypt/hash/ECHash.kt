@@ -12,15 +12,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.pvryan.easycrypt.hash
 
 import com.pvryan.easycrypt.Constants
 import com.pvryan.easycrypt.ECResultListener
 import com.pvryan.easycrypt.extensions.asByteArray
 import com.pvryan.easycrypt.extensions.asHexString
-import org.jetbrains.anko.doAsync
+import kotlinx.coroutines.experimental.CoroutineStart
+import kotlinx.coroutines.experimental.Dispatchers
+import kotlinx.coroutines.experimental.GlobalScope
+import kotlinx.coroutines.experimental.launch
 import org.jetbrains.annotations.NotNull
+import timber.log.Timber
 import java.io.File
 import java.io.FileInputStream
 import java.io.IOException
@@ -39,7 +42,6 @@ class ECHash {
      *
      * @param input input data to be hashed. It can be of type
      * [String], [CharSequence], [ByteArray], [InputStream], or [File]
-     * @param erl listener interface of type ResultListener where result and progress will be posted
      * @param outputFile optional output file. If provided, result will be written to this file
      *
      * @exception NoSuchFileException if input is a File which does not exists or is a Directory
@@ -48,60 +50,59 @@ class ECHash {
      * @exception FileAlreadyExistsException if output file is provided and already exists
      */
     @JvmOverloads
-    fun <T> calculate(@NotNull input: T,
-                      @NotNull algorithm: ECHashAlgorithms = ECHashAlgorithms.SHA_512,
-                      @NotNull erl: ECResultListener,
-                      @NotNull outputFile: File = File(Constants.DEF_HASH_FILE_PATH)) {
-        doAsync {
+    inline fun <reified T> calculate(
+            @NotNull input: Any,
+            @NotNull algorithm: ECHashAlgorithms = ECHashAlgorithms.SHA_512,
+            @NotNull outputFile: File = File(Constants.DEF_HASH_FILE_PATH)
+    ): ECResultListener<T> {
+
+        val erl = ECResultListener<T>()
+
+        val buffer = ByteArray(8192)
+
+        val parsedInput: Any = when (input) {
+
+            is String -> input.asByteArray().inputStream()
+            is CharSequence -> input.toString().asByteArray().inputStream()
+            is ByteArray -> input
+            is File -> input.inputStream()
+            is InputStream -> if (input.available() <= buffer.size) input.readBytes() else input
+            else -> {
+                erl.onFailure?.invoke(Constants.ERR_INPUT_TYPE_NOT_SUPPORTED, InvalidParameterException())
+                return erl
+            }
+        }
+
+        GlobalScope.launch(Dispatchers.Default, CoroutineStart.DEFAULT, null) {
 
             val digest: MessageDigest = MessageDigest.getInstance(algorithm.value)
 
-            when (input) {
-
-                is String -> {
-                    calculate(input.asByteArray().inputStream(), algorithm, erl, outputFile)
-                }
-
-                is CharSequence -> {
-                    calculate(input.toString().asByteArray().inputStream(),
-                            algorithm, erl, outputFile)
-                }
-
-                is File -> {
-                    calculate(input.inputStream(), algorithm, erl, outputFile)
-                }
+            when (parsedInput) {
 
                 is ByteArray -> {
-                    val hash = digest.digest(input).asHexString()
+                    val hash = digest.digest(parsedInput).asHexString()
                     if (outputFile.absolutePath != Constants.DEF_HASH_FILE_PATH) {
                         outputFile.outputStream().use {
                             it.write(hash.asByteArray())
                             it.flush()
                         }
-                        erl.onSuccess(outputFile)
+                        erl.onSuccess?.invoke(outputFile as T)
                     } else {
-                        erl.onSuccess(hash)
+                        erl.onSuccess?.invoke(hash as T)
                     }
                 }
 
                 is InputStream -> {
 
-                    val buffer = ByteArray(8192)
-
-                    if (input.available() <= buffer.size) {
-                        calculate(input.readBytes(), algorithm, erl, outputFile)
-                        return@doAsync
-                    }
-
                     try {
-                        val size = if (input is FileInputStream) input.channel.size() else -1
+                        val size = (parsedInput as? FileInputStream)?.channel?.size() ?: -1
                         var bytesCopied: Long = 0
-                        var read = input.read(buffer)
+                        var read = parsedInput.read(buffer)
                         while (read > -1) {
                             digest.update(buffer, 0, read)
                             bytesCopied += read
-                            erl.onProgress(read, bytesCopied, size)
-                            read = input.read(buffer)
+                            erl.onProgress?.invoke(read, bytesCopied, size)
+                            read = parsedInput.read(buffer)
                         }
 
                         val hash = digest.digest().asHexString()
@@ -111,20 +112,22 @@ class ECHash {
                                 it.write(hash.asByteArray())
                                 it.flush()
                             }
-                            erl.onSuccess(outputFile)
+                            erl.onSuccess?.invoke(outputFile as T)
                         } else {
-                            erl.onSuccess(hash)
+                            erl.onSuccess?.invoke(hash as T)
                         }
 
                     } catch (e: IOException) {
-                        erl.onFailure(Constants.ERR_CANNOT_READ, e)
+                        Timber.d(e)
+                        erl.onFailure?.invoke(Constants.ERR_CANNOT_READ, e)
                     } finally {
-                        input.close()
+                        parsedInput.close()
                     }
                 }
 
-                else -> erl.onFailure(Constants.ERR_INPUT_TYPE_NOT_SUPPORTED, InvalidParameterException())
+                else -> erl.onFailure?.invoke(Constants.ERR_INPUT_TYPE_NOT_SUPPORTED, InvalidParameterException())
             }
         }
+        return erl
     }
 }

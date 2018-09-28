@@ -12,36 +12,41 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.pvryan.easycryptsample.action
 
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
-import android.support.v4.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
-import com.pvryan.easycrypt.ECResultListener
+import androidx.fragment.app.Fragment
 import com.pvryan.easycrypt.hash.ECHash
 import com.pvryan.easycrypt.hash.ECHashAlgorithms
 import com.pvryan.easycryptsample.R
 import com.pvryan.easycryptsample.extensions.hide
 import com.pvryan.easycryptsample.extensions.show
 import com.pvryan.easycryptsample.extensions.snackLong
-import kotlinx.android.synthetic.main.fragment_hash_file.*
-import org.jetbrains.anko.AnkoLogger
-import org.jetbrains.anko.support.v4.onUiThread
+import kotlinx.android.synthetic.main.fragment_hash_file.buttonSelectHashF
+import kotlinx.android.synthetic.main.fragment_hash_file.llContentHFile
+import kotlinx.android.synthetic.main.fragment_hash_file.progressBarF
+import kotlinx.android.synthetic.main.fragment_hash_file.spinnerHashF
+import kotlinx.android.synthetic.main.fragment_hash_file.tvResultF
+import kotlinx.android.synthetic.main.fragment_hash_file.tvStatus
 
-class FragmentHashFile : Fragment(), AnkoLogger, ECResultListener {
+class FragmentHashFile : Fragment() {
 
     private val _rCHash = 2
     private val eCryptHash = ECHash()
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return inflater.inflate(R.layout.fragment_hash_file, container, false)
-    }
+    private var maxSet = false
+
+    override fun onCreateView(
+            inflater: LayoutInflater,
+            container: ViewGroup?,
+            savedInstanceState: Bundle?
+    ): View? = inflater.inflate(R.layout.fragment_hash_file, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -63,57 +68,48 @@ class FragmentHashFile : Fragment(), AnkoLogger, ECResultListener {
     }
 
     private fun selectFile(requestCode: Int) {
-        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
-        intent.addCategory(Intent.CATEGORY_OPENABLE)
-        intent.type = "*/*"
-        startActivityForResult(intent, requestCode)
+        Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = "*/*"
+        }.also { startActivityForResult(it, requestCode) }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
 
         if (resultCode == Activity.RESULT_OK) {
 
-            val fis = context?.contentResolver?.openInputStream(data?.data)
+            val fis = context?.contentResolver?.openInputStream(data?.data) ?: return
 
             progressBarF.show()
 
             when (requestCode) {
                 _rCHash -> {
                     tvStatus.text = getString(R.string.tv_status_hashing)
-                    eCryptHash.calculate(fis, spinnerHashF.selectedItem as ECHashAlgorithms, this)
+                    eCryptHash
+                            .calculate<String>(fis, spinnerHashF.selectedItem as ECHashAlgorithms)
+                            .onProgress { _, bytesProcessed, totalBytes ->
+                                if (totalBytes > -1) {
+                                    if (!maxSet) {
+                                        progressBarF.isIndeterminate = false
+                                        progressBarF.max = (totalBytes / 1024).toInt()
+                                        maxSet = true
+                                    }
+                                    progressBarF.progress = (bytesProcessed / 1024).toInt()
+                                }
+                            }
+                            .onSuccess { result ->
+                                progressBarF.hide()
+                                tvStatus.text = getString(R.string.tv_status_idle)
+                                tvResultF.text = result
+                            }
+                            .onFailure { message, e ->
+                                e.printStackTrace()
+                                progressBarF.hide()
+                                tvStatus.text = getString(R.string.tv_status_idle)
+                                llContentHFile.snackLong("Error: $message")
+                            }
                 }
             }
-        }
-    }
-
-    private var maxSet = false
-    override fun onProgress(newBytes: Int, bytesProcessed: Long, totalBytes: Long) {
-        if (totalBytes > -1) {
-            onUiThread {
-                if (!maxSet) {
-                    progressBarF.isIndeterminate = false
-                    progressBarF.max = (totalBytes / 1024).toInt()
-                    maxSet = true
-                }
-                progressBarF.progress = (bytesProcessed / 1024).toInt()
-            }
-        }
-    }
-
-    override fun <T> onSuccess(result: T) {
-        onUiThread {
-            progressBarF.hide()
-            tvStatus.text = getString(R.string.tv_status_idle)
-            tvResultF.text = result as String
-        }
-    }
-
-    override fun onFailure(message: String, e: Exception) {
-        e.printStackTrace()
-        onUiThread {
-            progressBarF.hide()
-            tvStatus.text = getString(R.string.tv_status_idle)
-            llContentHFile.snackLong("Error: $message")
         }
     }
 

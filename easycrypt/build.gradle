@@ -47,7 +47,7 @@ android {
     compileSdkVersion rootProject.ext.compileSdk
 
     defaultConfig {
-        minSdkVersion rootProject.ext.minSdk
+        minSdkVersion rootProject.ext.minSdkLib
         targetSdkVersion rootProject.ext.targetSdk
         versionCode rootProject.ext.easyCryptCode
         versionName rootProject.ext.easyCrypt
@@ -77,13 +77,13 @@ android {
 }
 
 dependencies {
-    implementation "com.android.support:appcompat-v7:${rootProject.ext.support}"
+    implementation 'androidx.appcompat:appcompat:1.0.0'
     implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.kotlin}"
-    implementation "org.jetbrains.anko:anko-commons:${rootProject.ext.anko}"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:${rootProject.ext.coroutinesAndroid}"
     implementation "com.squareup.retrofit2:retrofit:${rootProject.ext.retrofit}"
     implementation "com.squareup.retrofit2:converter-gson:${rootProject.ext.retrofit}"
+    implementation "com.jakewharton.timber:timber:${rootProject.ext.timber}"
     implementation "com.nulab-inc:zxcvbn:${rootProject.ext.zxcvbn}"
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:${rootProject.ext.coroutinesCore}"
 }
 
 kotlin {

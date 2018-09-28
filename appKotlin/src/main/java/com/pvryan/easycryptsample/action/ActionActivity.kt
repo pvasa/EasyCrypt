@@ -16,12 +16,12 @@
 package com.pvryan.easycryptsample.action
 
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
 import android.view.MenuItem
+import androidx.appcompat.app.AppCompatActivity
 import com.pvryan.easycryptsample.Constants
 import com.pvryan.easycryptsample.R
 import com.pvryan.easycryptsample.data.models.Card
-import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.activity_main.toolbar
 
 class ActionActivity : AppCompatActivity() {
 
@@ -31,11 +31,11 @@ class ActionActivity : AppCompatActivity() {
         setSupportActionBar(toolbar)
 
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.title = intent.extras[Constants.TITLE] as String
-        supportActionBar?.subtitle = intent.extras[Constants.SUB_TITLE] as String
+        supportActionBar?.title = intent.extras?.get(Constants.TITLE) as? String
+        supportActionBar?.subtitle = intent.extras?.get(Constants.SUB_TITLE) as? String
 
         val fragmentTransaction = supportFragmentManager.beginTransaction()
-        when (intent.extras[Card.ACTION]) {
+        when (intent.extras?.get(Card.ACTION)) {
 
             Card.actionTypeSString -> {
                 fragmentTransaction.replace(R.id.container, FragmentSymmetricString.newInstance(),

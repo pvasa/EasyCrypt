@@ -19,13 +19,13 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.Environment
-import android.support.design.widget.Snackbar
-import android.support.v7.app.AppCompatActivity
-import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.snackbar.Snackbar
 import com.pvryan.easycryptsample.Constants
 import com.pvryan.easycryptsample.R
 import com.pvryan.easycryptsample.about.AboutActivity
@@ -34,7 +34,8 @@ import com.pvryan.easycryptsample.data.models.Card
 import com.pvryan.easycryptsample.extensions.checkPermissions
 import com.pvryan.easycryptsample.extensions.snackIndefinite
 import com.pvryan.easycryptsample.settings.SettingsActivity
-import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.activity_main.mainContent
+import kotlinx.android.synthetic.main.activity_main.toolbar
 import java.io.File
 
 class MainActivity : AppCompatActivity() {

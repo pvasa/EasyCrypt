@@ -14,24 +14,50 @@
  */
 package com.pvryan.easycrypt
 
+import kotlinx.coroutines.experimental.Dispatchers
+import kotlinx.coroutines.experimental.GlobalScope
+import kotlinx.coroutines.experimental.android.Main
+import kotlinx.coroutines.experimental.launch
+
 /**
  * Interface to listen for result from encryption, decryption, or hashing
  */
-interface ECResultListener {
+class ECResultListener<T> {
+
     /**
      * @param newBytes count processed after last block
      * @param bytesProcessed count from total input
      */
-    fun onProgress(newBytes: Int, bytesProcessed: Long, totalBytes: Long) {}
+    @PublishedApi
+    internal var onProgress: ((newBytes: Int, bytesProcessed: Long, totalBytes: Long) -> Unit)? = null
 
     /**
      * @param result on successful execution of the calling method
      */
-    fun <T> onSuccess(result: T)
+    @PublishedApi
+    internal var onSuccess: ((result: T) -> Unit)? = null
 
     /**
      * @param message on failure
      * @param e exception thrown by called method
      */
-    fun onFailure(message: String, e: Exception)
+    @PublishedApi
+    internal var onFailure: ((message: String, e: Throwable) -> Unit)? = null
+
+    inline fun onSuccess(crossinline run: (result: T) -> Unit): ECResultListener<T> {
+        onSuccess = { GlobalScope.launch(Dispatchers.Main) { run(it) } }
+        return this
+    }
+
+    inline fun onFailure(crossinline run: (message: String, e: Throwable) -> Unit): ECResultListener<T> {
+        onFailure = { message: String, e: Throwable -> GlobalScope.launch(Dispatchers.Main) { run(message, e) } }
+        return this
+    }
+
+    inline fun onProgress(crossinline run: (newBytes: Int, bytesProcessed: Long, totalBytes: Long) -> Unit): ECResultListener<T> {
+        onProgress = { newBytes, bytesProcessed, totalBytes ->
+            GlobalScope.launch(Dispatchers.Main) { run(newBytes, bytesProcessed, totalBytes) }
+        }
+        return this
+    }
 }

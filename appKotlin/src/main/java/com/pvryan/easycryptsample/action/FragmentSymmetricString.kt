@@ -19,11 +19,10 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.support.v4.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.pvryan.easycrypt.ECResultListener
+import androidx.fragment.app.Fragment
 import com.pvryan.easycrypt.symmetric.ECSymmetric
 import com.pvryan.easycryptsample.Constants
 import com.pvryan.easycryptsample.R
@@ -31,10 +30,15 @@ import com.pvryan.easycryptsample.extensions.hide
 import com.pvryan.easycryptsample.extensions.setOnClickEndDrawableListener
 import com.pvryan.easycryptsample.extensions.show
 import com.pvryan.easycryptsample.extensions.snackLong
-import kotlinx.android.synthetic.main.fragment_symmetric_string.*
-import org.jetbrains.anko.support.v4.onUiThread
+import kotlinx.android.synthetic.main.fragment_symmetric_string.buttonDecryptS
+import kotlinx.android.synthetic.main.fragment_symmetric_string.buttonEncryptS
+import kotlinx.android.synthetic.main.fragment_symmetric_string.edInputS
+import kotlinx.android.synthetic.main.fragment_symmetric_string.edPasswordS
+import kotlinx.android.synthetic.main.fragment_symmetric_string.llContentSString
+import kotlinx.android.synthetic.main.fragment_symmetric_string.progressBarS
+import kotlinx.android.synthetic.main.fragment_symmetric_string.tvResultS
 
-class FragmentSymmetricString : Fragment(), ECResultListener {
+class FragmentSymmetricString : Fragment() {
 
     private val eCryptSymmetric = ECSymmetric()
 
@@ -47,23 +51,26 @@ class FragmentSymmetricString : Fragment(), ECResultListener {
         super.onViewCreated(view, savedInstanceState)
 
         edInputS.setOnClickEndDrawableListener {
-            /*val intent = Intent(activity, CameraActivity::class.java)
-            intent.putExtra(Constants.TITLE, getString(R.string.title_camera))
-            startActivityForResult(intent, Constants.rCCameraResult)*/
             llContentSString.snackLong(getString(R.string.scanComingSoon, "encrypt"))
         }
 
         buttonEncryptS.setOnClickListener {
-            if (edPasswordS.text.toString() != "") {
+            if (edPasswordS.text.toString().isNotBlank()) {
                 progressBarS.show()
-                eCryptSymmetric.encrypt(edInputS.text, edPasswordS.text.toString(), this)
+                eCryptSymmetric
+                        .encrypt<String>(edInputS.text?.toString().orEmpty(), edPasswordS.text.toString())
+                        .onSuccess(::onSuccess)
+                        .onFailure(::onFailure)
             } else view.snackLong("Password cannot be empty!")
         }
 
         buttonDecryptS.setOnClickListener {
-            if (edPasswordS.text.toString() != "") {
+            if (edPasswordS.text.toString().isNotBlank()) {
                 progressBarS.show()
-                eCryptSymmetric.decrypt(edInputS.text, edPasswordS.text.toString(), this)
+                eCryptSymmetric
+                        .decrypt<String>(edInputS.text?.toString().orEmpty(), edPasswordS.text.toString())
+                        .onSuccess(::onSuccess)
+                        .onFailure(::onFailure)
             } else view.snackLong("Password cannot be empty!")
         }
 
@@ -84,19 +91,15 @@ class FragmentSymmetricString : Fragment(), ECResultListener {
         }
     }
 
-    override fun <T> onSuccess(result: T) {
-        onUiThread {
-            progressBarS.hide()
-            tvResultS.text = result as String
-        }
+    private fun onSuccess(result: String) {
+        progressBarS.hide()
+        tvResultS.text = result
     }
 
-    override fun onFailure(message: String, e: Exception) {
+    private fun onFailure(message: String, e: Throwable) {
         e.printStackTrace()
-        onUiThread {
-            progressBarS.hide()
-            llContentSString.snackLong("Error: $message")
-        }
+        progressBarS.hide()
+        llContentSString.snackLong("Error: $message")
     }
 
     companion object {

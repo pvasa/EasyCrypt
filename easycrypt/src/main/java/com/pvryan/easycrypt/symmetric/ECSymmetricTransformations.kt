@@ -12,16 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.pvryan.easycrypt.symmetric
 
 /**
  * Transformations that can be used for symmetric encryption/decryption
  */
-@Suppress("EnumEntryName")
-enum class ECSymmetricTransformations(val value: String) {
+@Suppress("unused")
+sealed class ECSymmetricTransformations(val value: String) {
 
-    AES_CTR_NoPadding("AES/CTR/NoPadding"),
-    AES_CBC_PKCS7Padding("AES/CBC/PKCS7Padding")
-
+    object AesCtrNoPadding : ECSymmetricTransformations("AES/CTR/NoPadding")
+    object AesCbcPkcs7Padding : ECSymmetricTransformations("AES/CBC/PKCS7Padding")
 }

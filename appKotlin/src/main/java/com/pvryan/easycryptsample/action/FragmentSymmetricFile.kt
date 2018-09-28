@@ -12,113 +12,114 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.pvryan.easycryptsample.action
 
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
-import android.support.v4.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.pvryan.easycrypt.ECResultListener
+import androidx.fragment.app.Fragment
 import com.pvryan.easycrypt.symmetric.ECSymmetric
 import com.pvryan.easycryptsample.R
 import com.pvryan.easycryptsample.extensions.hide
 import com.pvryan.easycryptsample.extensions.show
 import com.pvryan.easycryptsample.extensions.snackLong
 import com.pvryan.easycryptsample.extensions.snackShort
-import kotlinx.android.synthetic.main.fragment_symmetric_file.*
-import org.jetbrains.anko.AnkoLogger
-import org.jetbrains.anko.support.v4.onUiThread
+import kotlinx.android.synthetic.main.fragment_symmetric_file.buttonSelectDecryptF
+import kotlinx.android.synthetic.main.fragment_symmetric_file.buttonSelectEncryptF
+import kotlinx.android.synthetic.main.fragment_symmetric_file.edPasswordF
+import kotlinx.android.synthetic.main.fragment_symmetric_file.llContentSFile
+import kotlinx.android.synthetic.main.fragment_symmetric_file.progressBarF
+import kotlinx.android.synthetic.main.fragment_symmetric_file.tvResultF
+import kotlinx.android.synthetic.main.fragment_symmetric_file.tvStatus
 import java.io.File
 
-class FragmentSymmetricFile : Fragment(), AnkoLogger, ECResultListener {
+class FragmentSymmetricFile : Fragment() {
 
     private val _rCEncrypt = 2
     private val _rCDecrypt = 3
     private val eCryptSymmetric = ECSymmetric()
 
-    override fun onCreateView(inflater: LayoutInflater,
-                              container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return inflater.inflate(R.layout.fragment_symmetric_file, container, false)
-    }
+    override fun onCreateView(
+            inflater: LayoutInflater,
+            container: ViewGroup?,
+            savedInstanceState: Bundle?
+    ): View? = inflater.inflate(R.layout.fragment_symmetric_file, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         buttonSelectEncryptF.setOnClickListener {
-            if (edPasswordF.text.toString() != "")
-                selectFile(_rCEncrypt)
+            if (edPasswordF.text.toString().isNotBlank()) selectFile(_rCEncrypt)
             else view.snackShort("Password cannot be empty!")
         }
         buttonSelectDecryptF.setOnClickListener {
-            if (edPasswordF.text.toString() != "")
-                selectFile(_rCDecrypt)
+            if (edPasswordF.text.toString().isNotBlank()) selectFile(_rCDecrypt)
             else view.snackShort("Password cannot be empty!")
         }
     }
 
     private fun selectFile(requestCode: Int) {
-        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
-        intent.addCategory(Intent.CATEGORY_OPENABLE)
-        intent.type = "*/*"
-        startActivityForResult(intent, requestCode)
+        Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = "*/*"
+        }.also { startActivityForResult(it, requestCode) }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
 
         if (resultCode == Activity.RESULT_OK) {
 
-            val fis = context?.contentResolver?.openInputStream(data?.data)
+            val fis = context?.contentResolver?.openInputStream(data?.data) ?: return
 
             progressBarF.show()
 
             when (requestCode) {
                 _rCEncrypt -> {
                     tvStatus.text = resources.getString(R.string.tv_status_encrypting)
-                    eCryptSymmetric.encrypt(fis, edPasswordF.text.toString(), this)
+                    eCryptSymmetric
+                            .encrypt<File>(fis, edPasswordF.text.toString())
+                            .onProgress(::onProgress)
+                            .onSuccess(::onSuccess)
+                            .onFailure(::onFailure)
                 }
                 _rCDecrypt -> {
                     tvStatus.text = resources.getString(R.string.tv_status_decrypting)
-                    eCryptSymmetric.decrypt(fis, edPasswordF.text.toString(), this)
+                    eCryptSymmetric
+                            .decrypt<File>(fis, edPasswordF.text.toString())
+                            .onProgress(::onProgress)
+                            .onSuccess(::onSuccess)
+                            .onFailure(::onFailure)
                 }
             }
         }
     }
 
     private var maxSet = false
-    override fun onProgress(newBytes: Int, bytesProcessed: Long, totalBytes: Long) {
+    private fun onProgress(newBytes: Int, bytesProcessed: Long, totalBytes: Long) {
         if (totalBytes > -1) {
-            onUiThread {
-                if (!maxSet) {
-                    progressBarF.isIndeterminate = false
-                    progressBarF.max = (totalBytes / 1024).toInt()
-                    maxSet = true
-                }
-                progressBarF.progress = (bytesProcessed / 1024).toInt()
+            if (!maxSet) {
+                progressBarF.isIndeterminate = false
+                progressBarF.max = (totalBytes / 1024).toInt()
+                maxSet = true
             }
+            progressBarF.progress = (bytesProcessed / 1024).toInt()
         }
     }
 
-    override fun <T> onSuccess(result: T) {
-        onUiThread {
-            progressBarF.hide()
-            tvStatus.text = getString(R.string.tv_status_idle)
-            tvResultF.text = resources.getString(
-                    R.string.success_result_to_file,
-                    (result as File).absolutePath)
-        }
+    private fun onSuccess(result: File) {
+        progressBarF.hide()
+        tvStatus.text = getString(R.string.tv_status_idle)
+        tvResultF.text = resources.getString(R.string.success_result_to_file, result.absolutePath)
     }
 
-    override fun onFailure(message: String, e: Exception) {
+    private fun onFailure(message: String, e: Throwable) {
         e.printStackTrace()
-        onUiThread {
-            progressBarF.hide()
-            tvStatus.text = getString(R.string.tv_status_idle)
-            llContentSFile.snackLong("Error: $message")
-        }
+        progressBarF.hide()
+        tvStatus.text = getString(R.string.tv_status_idle)
+        llContentSFile.snackLong("Error: $message")
     }
 
     companion object {

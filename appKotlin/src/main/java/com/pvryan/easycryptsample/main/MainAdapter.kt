@@ -14,17 +14,21 @@
  */
 package com.pvryan.easycryptsample.main
 
-import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.recyclerview.widget.RecyclerView
 import com.pvryan.easycryptsample.R
 import com.pvryan.easycryptsample.data.models.Card
 import com.pvryan.easycryptsample.extensions.gone
 import com.pvryan.easycryptsample.extensions.show
 import com.transitionseverywhere.Rotate
 import com.transitionseverywhere.TransitionManager
-import kotlinx.android.synthetic.main.card_view_main.view.*
+import kotlinx.android.synthetic.main.card_view_main.view.buttonAction1
+import kotlinx.android.synthetic.main.card_view_main.view.buttonAction2
+import kotlinx.android.synthetic.main.card_view_main.view.buttonExpandCollapse
+import kotlinx.android.synthetic.main.card_view_main.view.tvDesc
+import kotlinx.android.synthetic.main.card_view_main.view.tvTitle
 
 class MainAdapter(private val mDataset: ArrayList<Card>) : RecyclerView.Adapter<MainAdapter.ViewHolder>() {
 

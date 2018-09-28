@@ -20,42 +20,44 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.support.v4.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
-import com.pvryan.easycrypt.ECResultListener
+import androidx.fragment.app.Fragment
 import com.pvryan.easycrypt.hash.ECHash
 import com.pvryan.easycrypt.hash.ECHashAlgorithms
 import com.pvryan.easycryptsample.Constants
 import com.pvryan.easycryptsample.R
 import com.pvryan.easycryptsample.extensions.setOnClickEndDrawableListener
 import com.pvryan.easycryptsample.extensions.snackLong
-import kotlinx.android.synthetic.main.fragment_hash_string.*
-import org.jetbrains.anko.support.v4.onUiThread
+import kotlinx.android.synthetic.main.fragment_hash_string.buttonHashS
+import kotlinx.android.synthetic.main.fragment_hash_string.edInputS
+import kotlinx.android.synthetic.main.fragment_hash_string.llContentHString
+import kotlinx.android.synthetic.main.fragment_hash_string.spinnerHashS
+import kotlinx.android.synthetic.main.fragment_hash_string.tvResultS
 
-class FragmentHashString : Fragment(), ECResultListener {
+class FragmentHashString : Fragment() {
 
     private val eCryptHash = ECHash()
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return inflater.inflate(R.layout.fragment_hash_string, container, false)
-    }
+    override fun onCreateView(
+            inflater: LayoutInflater,
+            container: ViewGroup?,
+            savedInstanceState: Bundle?
+    ): View? = inflater.inflate(R.layout.fragment_hash_string, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         edInputS.setOnClickEndDrawableListener {
-            /*val intent = Intent(activity, CameraActivity::class.java)
-            intent.putExtra(Constants.TITLE, getString(R.string.title_camera))
-            startActivityForResult(intent, Constants.rCCameraResult)*/
             llContentHString.snackLong(getString(R.string.scanComingSoon, "hash"))
         }
 
         val hashAdapter: ArrayAdapter<ECHashAlgorithms> = ArrayAdapter(view.context,
                 android.R.layout.simple_spinner_item,
-                arrayListOf(ECHashAlgorithms.SHA_512,
+                arrayListOf(
+                        ECHashAlgorithms.SHA_512,
                         ECHashAlgorithms.SHA_384,
                         ECHashAlgorithms.SHA_256,
                         ECHashAlgorithms.SHA_224,
@@ -65,13 +67,18 @@ class FragmentHashString : Fragment(), ECResultListener {
         spinnerHashS.adapter = hashAdapter
 
         buttonHashS.setOnClickListener {
-            eCryptHash.calculate(edInputS.text, spinnerHashS.selectedItem as ECHashAlgorithms, this)
+            eCryptHash
+                    .calculate<String>(edInputS.text?.toString().orEmpty(), spinnerHashS.selectedItem as ECHashAlgorithms)
+                    .onSuccess { result -> tvResultS.text = result }
+                    .onFailure { message, e ->
+                        e.printStackTrace()
+                        llContentHString.snackLong("Error: $message")
+                    }
         }
 
         val clipboard = activity?.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         tvResultS.setOnLongClickListener {
-            val data = ClipData.newPlainText("result", tvResultS.text)
-            clipboard.primaryClip = data
+            clipboard.primaryClip = ClipData.newPlainText("result", tvResultS.text)
             view.snackLong("Result copied to clipboard")
             true
         }
@@ -82,19 +89,6 @@ class FragmentHashString : Fragment(), ECResultListener {
             Constants.rCCameraResult -> {
                 data?.let { edInputS.setText(it.getStringExtra(Constants.INPUT_STRING) ?: "") }
             }
-        }
-    }
-
-    override fun <T> onSuccess(result: T) {
-        onUiThread {
-            tvResultS.text = result as String
-        }
-    }
-
-    override fun onFailure(message: String, e: Exception) {
-        e.printStackTrace()
-        onUiThread {
-            llContentHString.snackLong("Error: $message")
         }
     }
 

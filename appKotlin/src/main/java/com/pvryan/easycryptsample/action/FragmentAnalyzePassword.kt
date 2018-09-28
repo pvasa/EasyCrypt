@@ -17,17 +17,24 @@ package com.pvryan.easycryptsample.action
 import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.os.Bundle
-import android.support.v4.app.Fragment
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.DecelerateInterpolator
+import androidx.fragment.app.Fragment
 import com.pvryan.easycrypt.symmetric.ECPasswordAnalyzer
 import com.pvryan.easycryptsample.R
-import kotlinx.android.synthetic.main.fragment_analyze_password.*
-import java.util.*
+import kotlinx.android.synthetic.main.fragment_analyze_password.edPasswordP
+import kotlinx.android.synthetic.main.fragment_analyze_password.progressBarP
+import kotlinx.android.synthetic.main.fragment_analyze_password.tvCalcTime
+import kotlinx.android.synthetic.main.fragment_analyze_password.tvGuesses
+import kotlinx.android.synthetic.main.fragment_analyze_password.tvGuessesLog10
+import kotlinx.android.synthetic.main.fragment_analyze_password.tvOfflineBFTime
+import kotlinx.android.synthetic.main.fragment_analyze_password.tvOnlineBFTime
+import kotlinx.android.synthetic.main.fragment_analyze_password.tvWarning
+import java.util.Locale
 
 class FragmentAnalyzePassword : Fragment() {
 

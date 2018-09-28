@@ -22,23 +22,42 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.os.Environment
-import android.support.v4.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.Fragment
 import com.pvryan.easycrypt.ECKeys
-import com.pvryan.easycrypt.ECResultListener
 import com.pvryan.easycrypt.asymmetric.ECAsymmetric
 import com.pvryan.easycrypt.asymmetric.ECRSAKeyPairListener
-import com.pvryan.easycrypt.asymmetric.ECVerifiedListener
 import com.pvryan.easycrypt.symmetric.ECSymmetric
 import com.pvryan.easycryptsample.Constants
 import com.pvryan.easycryptsample.R
-import com.pvryan.easycryptsample.extensions.*
+import com.pvryan.easycryptsample.extensions.gone
+import com.pvryan.easycryptsample.extensions.hide
+import com.pvryan.easycryptsample.extensions.setOnClickEndDrawableListener
+import com.pvryan.easycryptsample.extensions.show
+import com.pvryan.easycryptsample.extensions.snackLong
+import com.pvryan.easycryptsample.extensions.toBase64String
 import com.transitionseverywhere.Rotate
 import com.transitionseverywhere.TransitionManager
-import kotlinx.android.synthetic.main.fragment_asymmetric_string.*
-import org.jetbrains.anko.support.v4.onUiThread
+import kotlinx.android.synthetic.main.fragment_asymmetric_string.bExpandCollapseOutputS
+import kotlinx.android.synthetic.main.fragment_asymmetric_string.bExpandCollapsePrivateS
+import kotlinx.android.synthetic.main.fragment_asymmetric_string.bExpandCollapsePublicS
+import kotlinx.android.synthetic.main.fragment_asymmetric_string.buttonDecryptS
+import kotlinx.android.synthetic.main.fragment_asymmetric_string.buttonEncryptS
+import kotlinx.android.synthetic.main.fragment_asymmetric_string.buttonSignS
+import kotlinx.android.synthetic.main.fragment_asymmetric_string.buttonVerifyS
+import kotlinx.android.synthetic.main.fragment_asymmetric_string.edInputS
+import kotlinx.android.synthetic.main.fragment_asymmetric_string.edPasswordS
+import kotlinx.android.synthetic.main.fragment_asymmetric_string.llContentAString
+import kotlinx.android.synthetic.main.fragment_asymmetric_string.progressBarS
+import kotlinx.android.synthetic.main.fragment_asymmetric_string.rlOutputTitleS
+import kotlinx.android.synthetic.main.fragment_asymmetric_string.rlPrivateKeyTitleS
+import kotlinx.android.synthetic.main.fragment_asymmetric_string.rlPublicKeyTitleS
+import kotlinx.android.synthetic.main.fragment_asymmetric_string.tvPrivateKeyS
+import kotlinx.android.synthetic.main.fragment_asymmetric_string.tvPublicKeyS
+import kotlinx.android.synthetic.main.fragment_asymmetric_string.tvResultS
+import timber.log.Timber
 import java.io.File
 import java.security.KeyPair
 import java.security.interfaces.RSAPrivateKey
@@ -46,7 +65,7 @@ import java.security.interfaces.RSAPublicKey
 import java.security.spec.InvalidKeySpecException
 
 @SuppressLint("SetTextI18n")
-class FragmentAsymmetricString : Fragment(), ECResultListener {
+class FragmentAsymmetricString : Fragment() {
 
     private val eCryptSymmetric = ECSymmetric()
     private val eCryptAsymmetric = ECAsymmetric()
@@ -60,9 +79,6 @@ class FragmentAsymmetricString : Fragment(), ECResultListener {
         super.onViewCreated(view, savedInstanceState)
 
         edInputS.setOnClickEndDrawableListener {
-            /*val intent = Intent(activity, CameraActivity::class.java)
-            intent.putExtra(Constants.TITLE, getString(R.string.title_camera))
-            startActivityForResult(intent, Constants.rCCameraResult)*/
             llContentAString.snackLong(getString(R.string.scanComingSoon, "encrypt"))
         }
 
@@ -88,7 +104,7 @@ class FragmentAsymmetricString : Fragment(), ECResultListener {
 
         buttonEncryptS.setOnClickListener {
 
-            if (edPasswordS.text.toString() == "") {
+            if (edPasswordS.text.toString().isBlank()) {
                 view.snackLong("Password cannot be empty")
                 return@setOnClickListener
             }
@@ -101,73 +117,94 @@ class FragmentAsymmetricString : Fragment(), ECResultListener {
 
                 override fun onGenerated(keyPair: KeyPair) {
                     val publicKey = keyPair.public as RSAPublicKey
-                    onUiThread { tvPublicKeyS.text = publicKey.encoded.toBase64String() }
+                    tvPublicKeyS.text = publicKey.encoded.toBase64String()
 
                     // Symmetrically encrypt private key
                     val privateKey = keyPair.private as RSAPrivateKey
-                    eCryptSymmetric.encrypt(privateKey.encoded.toBase64String(),
-                            password, object : ECResultListener {
-                        override fun <T> onSuccess(result: T) {
-                            onUiThread { tvPrivateKeyS.text = result as String }
-                            eCryptAsymmetric.encrypt(edInputS.text.toString(),
-                                    publicKey, this@FragmentAsymmetricString)
-                        }
-
-                        override fun onFailure(message: String, e: Exception) {
-                            onUiThread {
+                    eCryptSymmetric
+                            .encrypt<String>(privateKey.encoded.toBase64String(), password)
+                            .onSuccess { securePrivateKey ->
+                                tvPrivateKeyS.text = securePrivateKey
+                                eCryptAsymmetric
+                                        .encrypt<String>(edInputS.text.toString(), publicKey)
+                                        .onSuccess { result ->
+                                            progressBarS.hide()
+                                            llContentAString.snackLong("Check output")
+                                            tvResultS.text = result
+                                        }
+                                        .onFailure { message, e ->
+                                            Timber.d(e)
+                                            progressBarS.hide()
+                                            llContentAString.snackLong("Error: $message")
+                                        }
+                            }
+                            .onFailure { message, e ->
+                                Timber.d(e)
                                 progressBarS.hide()
                                 tvPrivateKeyS.text = "Error while encrypting private key. $message"
                                 view.snackLong("Error while encrypting private key. $message")
                             }
-                        }
-                    })
                 }
 
                 override fun onFailure(message: String, e: Exception) {
-                    onUiThread {
-                        progressBarS.hide()
-                        view.snackLong("Error: $message")
-                    }
+                    Timber.d(e)
+                    progressBarS.hide()
+                    view.snackLong("Error: $message")
                 }
             })
         }
 
         buttonDecryptS.setOnClickListener {
 
-            if (edPasswordS.text.toString() == "") {
+            if (edPasswordS.text.toString().isBlank()) {
                 view.snackLong("Password cannot be empty")
                 return@setOnClickListener
             }
-            if (tvPrivateKeyS.text == "") {
+            if (tvPrivateKeyS.text.isBlank()) {
                 view.snackLong("Encrypt first to generate private key")
                 return@setOnClickListener
             }
 
             val password = edPasswordS.text.toString()
             // Decrypt private key
-            eCryptSymmetric.decrypt(tvPrivateKeyS.text, password, object : ECResultListener {
-                override fun <T> onSuccess(result: T) {
-                    try {
-                        val privateKey = eCryptKeys.genRSAPrivateKeyFromBase64(result as String)
-                        // Decrypt input text
-                        eCryptAsymmetric.decrypt(edInputS.text, privateKey, this@FragmentAsymmetricString)
-                        onUiThread { progressBarS.show() }
-                    } catch (e: IllegalArgumentException) {
-                        onFailure("Not a valid base64 string", e)
-                    } catch (e: InvalidKeySpecException) {
-                        onFailure("Not a valid private key", e)
+            eCryptSymmetric
+                    .decrypt<String>(tvPrivateKeyS.text, password)
+                    .onSuccess { key ->
+                        try {
+                            val privateKey = eCryptKeys.genRSAPrivateKeyFromBase64(key)
+                            // Decrypt input text
+                            eCryptAsymmetric
+                                    .decrypt<String>(edInputS.text.toString(), privateKey)
+                                    .onSuccess { result ->
+                                        progressBarS.hide()
+                                        llContentAString.snackLong("Check output")
+                                        tvResultS.text = result
+                                    }
+                                    .onFailure { message, e ->
+                                        Timber.d(e)
+                                        progressBarS.hide()
+                                        llContentAString.snackLong("Error: $message")
+                                    }
+                            progressBarS.show()
+                        } catch (e: Exception) {
+                            progressBarS.hide()
+                            when (e) {
+                                is IllegalArgumentException ->
+                                    llContentAString.snackLong("Error: Not a valid base64 string")
+                                is InvalidKeySpecException ->
+                                    llContentAString.snackLong("Not a valid private key")
+                            }
+                        }
                     }
-                }
-
-                override fun onFailure(message: String, e: Exception) {
-                    onUiThread { view.snackLong("Error while decrypting private key. $message") }
-                }
-            })
+                    .onFailure { message, e ->
+                        Timber.d(e)
+                        view.snackLong("Error while decrypting private key. $message")
+                    }
         }
 
         buttonSignS.setOnClickListener {
 
-            if (edPasswordS.text.toString() == "") {
+            if (edPasswordS.text.toString().isBlank()) {
                 view.snackLong("Password cannot be empty")
                 return@setOnClickListener
             }
@@ -182,69 +219,70 @@ class FragmentAsymmetricString : Fragment(), ECResultListener {
             eCryptKeys.genRSAKeyPair(object : ECRSAKeyPairListener {
 
                 override fun onGenerated(keyPair: KeyPair) {
-                    onUiThread {
-                        tvPublicKeyS.text = (keyPair.public as RSAPublicKey).encoded.toBase64String()
-                    }
+
+                    tvPublicKeyS.text = (keyPair.public as RSAPublicKey).encoded.toBase64String()
+
                     val privateKey = keyPair.private as RSAPrivateKey
 
                     // Encrypt private key
-                    eCryptSymmetric.encrypt(privateKey.encoded.toBase64String(),
-                            password, object : ECResultListener {
-                        override fun <T> onSuccess(result: T) {
-                            eCryptAsymmetric.sign(edInputS.text,
-                                    privateKey,
-                                    this@FragmentAsymmetricString,
-                                    sigFile)
-                            onUiThread { tvPrivateKeyS.text = result as String }
-                        }
-
-                        override fun onFailure(message: String, e: Exception) {
-                            onUiThread {
+                    eCryptSymmetric.encrypt<String>(privateKey.encoded.toBase64String(), password)
+                            .onSuccess { result ->
+                                eCryptAsymmetric
+                                        .sign(edInputS.text.toString(), privateKey, sigFile)
+                                        .onSuccess { outputFile ->
+                                            progressBarS.hide()
+                                            llContentAString.snackLong("Check output")
+                                            tvResultS.text = resources.getString(
+                                                    R.string.success_result_to_file,
+                                                    outputFile.absolutePath)
+                                        }
+                                        .onFailure { message, e ->
+                                            Timber.d(e)
+                                            progressBarS.hide()
+                                            llContentAString.snackLong("Error: $message")
+                                        }
+                                tvPrivateKeyS.text = result
+                            }
+                            .onFailure { message, e ->
+                                Timber.d(e)
                                 progressBarS.hide()
                                 tvPrivateKeyS.text = "Error while encrypting private key. $message"
                                 view.snackLong("Error while encrypting private key. $message")
                             }
-                        }
-                    })
                 }
 
                 override fun onFailure(message: String, e: Exception) {
-                    onUiThread {
-                        progressBarS.hide()
-                        view.snackLong("Failed to generate RSA key pair. Try again.")
-                    }
+                    Timber.d(e)
+                    progressBarS.hide()
+                    view.snackLong("Failed to generate RSA key pair. Try again.")
                 }
             })
         }
 
         buttonVerifyS.setOnClickListener {
 
-            if (tvPublicKeyS.text == "") {
+            if (tvPublicKeyS.text.isBlank()) {
                 view.snackLong("Sign first to generate public key")
                 return@setOnClickListener
             }
 
             try {
                 val publicKey = eCryptKeys.genRSAPublicKeyFromBase64(tvPublicKeyS.text.toString())
-                eCryptAsymmetric.verify(edInputS.text.toString(), publicKey,
-                        File(Environment.getExternalStorageDirectory(), "ECryptSample/sample.sig"),
-                        object : ECVerifiedListener {
-                            override fun onSuccess(verified: Boolean) {
-                                onUiThread {
-                                    progressBarS.hide()
-                                    if (verified) tvResultS.text = getString(R.string.msg_valid)
-                                    else tvResultS.text = getString(R.string.msg_invalid)
-                                }
-                            }
-
-                            override fun onFailure(message: String, e: Exception) {
-                                onUiThread {
-                                    progressBarS.hide()
-                                    view.snackLong("Error: $message")
-                                }
-                            }
-                        })
+                eCryptAsymmetric.verify(
+                        edInputS.text.toString(),
+                        publicKey,
+                        File(Environment.getExternalStorageDirectory(), "ECryptSample/sample.sig")
+                ).onSuccess { verified ->
+                    progressBarS.hide()
+                    if (verified) tvResultS.text = getString(R.string.msg_valid)
+                    else tvResultS.text = getString(R.string.msg_invalid)
+                }.onFailure { message, e ->
+                    Timber.d(e)
+                    progressBarS.hide()
+                    view.snackLong("Error: $message")
+                }
             } catch (e: IllegalArgumentException) {
+                Timber.d(e)
                 view.snackLong("Not a valid base64 string")
             } catch (e: InvalidKeySpecException) {
                 view.snackLong("Not a valid private key")
@@ -290,27 +328,6 @@ class FragmentAsymmetricString : Fragment(), ECResultListener {
             Constants.rCCameraResult -> {
                 data?.let { edInputS.setText(it.getStringExtra(Constants.INPUT_STRING) ?: "") }
             }
-        }
-    }
-
-    override fun <T> onSuccess(result: T) {
-        onUiThread {
-            progressBarS.hide()
-            llContentAString.snackLong("Check output")
-            tvResultS.text = when (result) {
-                is String -> result
-                is File -> resources.getString(
-                        R.string.success_result_to_file,
-                        (result as File).absolutePath)
-                else -> "Invalid output. Try again."
-            }
-        }
-    }
-
-    override fun onFailure(message: String, e: Exception) {
-        onUiThread {
-            progressBarS.hide()
-            llContentAString.snackLong("Error: $message")
         }
     }
 

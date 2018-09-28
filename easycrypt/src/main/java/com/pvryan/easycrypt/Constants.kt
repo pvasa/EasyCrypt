@@ -12,20 +12,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.pvryan.easycrypt
 
 import android.os.Environment
-import com.nulabinc.zxcvbn.Zxcvbn
 import java.io.File
-import java.security.SecureRandom
 
+@PublishedApi
 internal open class Constants {
 
     companion object {
-
-        val random = SecureRandom()
-        val zxcvbn = Zxcvbn()
 
         const val SECRET_KEY_FAC_ALGORITHM = "PBKDF2WithHmacSHA1"
 //                if (Build.VERSION.SDK_INT < 26) "PBKDF2WithHmacSHA1"

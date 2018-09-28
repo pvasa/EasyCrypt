@@ -18,12 +18,13 @@ import android.content.SharedPreferences
 import android.os.Bundle
 import android.preference.Preference
 import android.preference.PreferenceFragment
-import android.support.v7.app.AppCompatActivity
 import android.view.MenuItem
+import androidx.appcompat.app.AppCompatActivity
 import com.pvryan.easycryptsample.Constants
 import com.pvryan.easycryptsample.R
-import kotlinx.android.synthetic.main.activity_settings.*
-import org.jetbrains.anko.defaultSharedPreferences
+import com.pvryan.easycryptsample.defaultPreferences
+import com.pvryan.easycryptsample.get
+import kotlinx.android.synthetic.main.activity_settings.toolbar
 
 class SettingsActivity : AppCompatActivity() {
 
@@ -33,13 +34,12 @@ class SettingsActivity : AppCompatActivity() {
         setSupportActionBar(toolbar)
 
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.title = intent.extras[Constants.TITLE] as String
+        supportActionBar?.title = intent.extras?.get(Constants.TITLE) as? String
 
         fragmentManager.beginTransaction().replace(R.id.container, SettingsFragment()).commit()
     }
 
-    class SettingsFragment : PreferenceFragment(),
-            SharedPreferences.OnSharedPreferenceChangeListener {
+    class SettingsFragment : PreferenceFragment(), SharedPreferences.OnSharedPreferenceChangeListener {
 
         private lateinit var preference: Preference
 
@@ -50,34 +50,29 @@ class SettingsActivity : AppCompatActivity() {
             val prefApiKey = getString(R.string.pref_api_key)
             preference = findPreference(prefApiKey)
 
-            if (!defaultSharedPreferences.getString(prefApiKey, "").isBlank()) {
+            if (defaultPreferences[prefApiKey, ""].isNotBlank()) {
                 preference.summary = getString(R.string.summary_set)
             }
         }
 
         override fun onPause() {
             super.onPause()
-            preferenceScreen.sharedPreferences
-                    .unregisterOnSharedPreferenceChangeListener(this@SettingsFragment)
+            preferenceScreen.sharedPreferences.unregisterOnSharedPreferenceChangeListener(this@SettingsFragment)
         }
 
         override fun onResume() {
             super.onResume()
-            preferenceScreen.sharedPreferences
-                    .registerOnSharedPreferenceChangeListener(this@SettingsFragment)
+            preferenceScreen.sharedPreferences.registerOnSharedPreferenceChangeListener(this@SettingsFragment)
         }
 
-        override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?,
-                                               key: String?) {
+        override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {
 
             when (key) {
                 getString(R.string.pref_api_key) -> {
-                    val apiKey = defaultSharedPreferences.getString(key, "")
-                    if (apiKey.isBlank()) {
-                        preference.summary = getString(R.string.summary_not_set)
-                    } else {
-                        preference.summary = getString(R.string.summary_set)
-                    }
+                    val apiKey = defaultPreferences[key, ""]
+                    preference.summary =
+                            if (apiKey.isNotBlank()) getString(R.string.summary_set)
+                            else getString(R.string.summary_not_set)
                 }
             }
         }

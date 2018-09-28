@@ -12,15 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.pvryan.easycryptsample.extensions
 
 import android.content.pm.PackageManager
-import android.support.v4.app.ActivityCompat
-import android.support.v4.content.ContextCompat
-import android.support.v4.util.ArraySet
-import android.support.v7.app.AlertDialog
-import android.support.v7.app.AppCompatActivity
+import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
+import androidx.collection.ArraySet
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import com.pvryan.easycryptsample.Constants
 import com.pvryan.easycryptsample.R
 
@@ -44,16 +43,16 @@ fun AppCompatActivity.checkPermissions(requestCode: Int, permissions: Array<out 
                 .setCancelable(true)
                 .setTitle(getString(R.string.title_permissions))
                 .setMessage(message)
-                .setPositiveButton(getString(R.string.button_allow), { dialog, _ ->
+                .setPositiveButton(getString(R.string.button_allow)) { dialog, _ ->
                     ActivityCompat.requestPermissions(
                             this, unGranted.toTypedArray(), requestCode)
                     dialog.dismiss()
-                })
-                .setNegativeButton(getString(R.string.button_deny), { dialog, _ ->
+                }
+                .setNegativeButton(getString(R.string.button_deny)) { dialog, _ ->
                     dialog.cancel()
-                })
+                }
                 .setOnCancelListener {
-                    this.onRequestPermissionsResult(requestCode, permissions,
+                    onRequestPermissionsResult(requestCode, permissions,
                             kotlin.intArrayOf(PackageManager.PERMISSION_DENIED))
                 }.show()
         false
