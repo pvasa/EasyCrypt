@@ -108,7 +108,7 @@ play {
 }
 
 dependencies {
-    debugImplementation project(':easycrypt')
+    implementation project(':easycrypt')
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.kotlin}"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:${rootProject.ext.coroutinesAndroid}"

@@ -12,7 +12,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.pvryan.easycrypt.extensions
 
 import android.util.Base64
@@ -23,21 +22,17 @@ import java.io.File
 import java.io.IOException
 import java.security.SecureRandom
 
-private val HEX_CHARS = charArrayOf('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F')
+private val HEX_CHARS = "0123456789ABCDEF".toCharArray()
 
 internal val random = SecureRandom()
 
-@PublishedApi
-internal fun ByteArray.toBase64String(): String = Base64.encodeToString(this, Base64.URL_SAFE)
+fun ByteArray.toBase64String(): String = Base64.encodeToString(this, Base64.URL_SAFE)
 
-@PublishedApi
-internal fun ByteArray.toBase64(): ByteArray = Base64.encode(this, Base64.URL_SAFE)
+fun ByteArray.toBase64(): ByteArray = Base64.encode(this, Base64.URL_SAFE)
 
-@PublishedApi
-internal fun ByteArray.asString(): String = toString(Charsets.UTF_8)
+fun ByteArray.asString(): String = toString(Charsets.UTF_8)
 
-@PublishedApi
-internal fun ByteArray.asHexString(): String {
+fun ByteArray.asHexString(): String {
     val result = StringBuffer()
     forEach {
         val octet = it.toInt()
@@ -70,7 +65,8 @@ internal inline fun <reified T> ByteArray.handleSuccess(
             erl.onFailure?.invoke(Constants.ERR_CANNOT_WRITE, e)
         }
 
-    } else if (asBase64String) erl.onSuccess?.invoke(toBase64String() as T) else erl.onSuccess?.invoke(asString() as T)
+    } else if (asBase64String) erl.onSuccess?.invoke(toBase64String() as T)
+    else erl.onSuccess?.invoke(asString() as T)
 }
 
 @PublishedApi

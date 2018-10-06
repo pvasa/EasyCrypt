@@ -5,8 +5,6 @@ import com.pvryan.easycrypt.ECResultListener
 import com.pvryan.easycrypt.extensions.asString
 import com.pvryan.easycrypt.extensions.fromBase64
 import com.pvryan.easycrypt.extensions.toBase64
-import kotlinx.coroutines.experimental.CoroutineStart
-import kotlinx.coroutines.experimental.Dispatchers
 import kotlinx.coroutines.experimental.GlobalScope
 import kotlinx.coroutines.experimental.launch
 import timber.log.Timber
@@ -28,7 +26,7 @@ internal fun asymmetricSign(
         privateKey: RSAPrivateKey,
         erl: ECResultListener<File>,
         outputFile: File
-) = GlobalScope.launch(Dispatchers.Default, CoroutineStart.DEFAULT, null) {
+) = GlobalScope.launch {
 
     if (outputFile.exists()) {
         (input as? InputStream)?.close()
@@ -85,7 +83,7 @@ internal fun asymmetricVerify(
         publicKey: RSAPublicKey,
         sigFile: File,
         erl: ECResultListener<Boolean>
-) = GlobalScope.launch(Dispatchers.Default, CoroutineStart.DEFAULT, null) {
+) = GlobalScope.launch {
 
     signature.initVerify(publicKey)
 

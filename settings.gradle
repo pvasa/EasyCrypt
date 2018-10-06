@@ -1,1 +1,1 @@
-include ':easycrypt', ':appKotlin'
+include ':easycrypt', ':appKotlin', ':easycryptsamplejava'

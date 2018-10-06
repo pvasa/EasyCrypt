@@ -18,25 +18,55 @@ import android.os.Build
 import com.pvryan.easycrypt.Constants
 import com.pvryan.easycrypt.ECResultListener
 import com.pvryan.easycrypt.PRNGFixes
-import com.pvryan.easycrypt.extensions.asByteArray
-import com.pvryan.easycrypt.extensions.fromBase64
+import com.pvryan.easycrypt.extensions.asString
+import com.pvryan.easycrypt.extensions.generateRandom
+import com.pvryan.easycrypt.extensions.toBase64
+import com.pvryan.easycrypt.extensions.toBase64String
+import com.pvryan.easycrypt.parse
+import kotlinx.coroutines.experimental.GlobalScope
+import kotlinx.coroutines.experimental.async
 import org.jetbrains.annotations.NotNull
-import timber.log.Timber
 import java.io.ByteArrayInputStream
 import java.io.File
+import java.io.FileInputStream
 import java.io.IOException
 import java.io.InputStream
 import java.security.InvalidKeyException
 import java.security.InvalidParameterException
+import java.security.spec.InvalidKeySpecException
 import javax.crypto.BadPaddingException
 import javax.crypto.Cipher
+import javax.crypto.CipherInputStream
+import javax.crypto.CipherOutputStream
 import javax.crypto.IllegalBlockSizeException
+import javax.crypto.SecretKeyFactory
+import javax.crypto.spec.IvParameterSpec
+import javax.crypto.spec.PBEKeySpec
+import javax.crypto.spec.SecretKeySpec
+
+typealias ProgressListener = (newBytes: Int, bytesProcessed: Long, totalBytes: Long) -> Unit
+
+fun File.isDefault(): Boolean =
+        absolutePath == Constants.DEF_ENCRYPTED_FILE_PATH
+                || absolutePath == Constants.DEF_DECRYPTED_FILE_PATH
+
+@Throws(InvalidKeySpecException::class)
+@PublishedApi
+internal fun getKey(password: String = String(), salt: ByteArray): SecretKeySpec {
+    val pbeKeySpec = PBEKeySpec(password.trim().toCharArray(),
+            salt, Constants.ITERATIONS, Constants.KEY_BITS_LENGTH)
+    val keyFactory: SecretKeyFactory =
+            SecretKeyFactory.getInstance(Constants.SECRET_KEY_FAC_ALGORITHM)
+    val keyBytes: ByteArray = keyFactory.generateSecret(pbeKeySpec).encoded
+    return SecretKeySpec(keyBytes, Constants.SECRET_KEY_SPEC_ALGORITHM)
+}
 
 /**
  * Secure symmetric encryption with AES256.
  */
-class ECSymmetric(transformation: ECSymmetricTransformations = ECSymmetricTransformations.AesCbcPkcs7Padding) {
-
+open class ECSymmetric(
+        transformation: ECSymmetricTransformations = ECSymmetricTransformations.AesCbcPkcs7Padding
+) {
     @PublishedApi
     internal val cipher = Cipher.getInstance(transformation.value)
 
@@ -71,46 +101,84 @@ class ECSymmetric(transformation: ECSymmetricTransformations = ECSymmetricTransf
      * process the input data provided.
      */
     @JvmOverloads
-    inline fun <reified T> encrypt(
+    open fun <T> encrypt(
             @NotNull input: Any,
             @NotNull password: String,
-            @NotNull outputFile: File = File(Constants.DEF_ENCRYPTED_FILE_PATH)
-    ): ECResultListener<T> {
+            @NotNull outputFile: File = File(Constants.DEF_ENCRYPTED_FILE_PATH),
+            progressListener: ProgressListener? = null
+    ) = GlobalScope.async {
 
-        val erl = ECResultListener<T>()
+        val (parsedInput, parsedOutputFile) = Pair(input, outputFile).parse(true)
 
-        val tPass = password.trim()
+        val salt = ByteArray(Constants.SALT_BYTES_LENGTH).generateRandom()
+        val keySpec = getKey(password, salt)
+        val iv = ByteArray(cipher.blockSize).generateRandom()
+        val ivParams = IvParameterSpec(iv)
 
-        val parsedInput: Any = when (input) {
-            is String -> input.asByteArray()
-            is CharSequence -> input.toString().asByteArray()
-            is ByteArrayInputStream -> input.readBytes()
-            is File -> {
-                if (!input.exists() || input.isDirectory) {
-                    erl.onFailure?.invoke(Constants.ERR_NO_SUCH_FILE, NoSuchFileException(input))
-                    return erl
+        cipher.init(Cipher.ENCRYPT_MODE, keySpec, ivParams)
+
+        when (parsedInput) {
+
+            is ByteArray -> {
+
+                val result = iv.plus(salt).plus(cipher.doFinal(parsedInput))
+
+                with(result) {
+                    return@async if (!parsedOutputFile.isDefault()) {
+                        parsedOutputFile.outputStream().use {
+                            it.write(toBase64())
+                            it.flush()
+                        }
+                        parsedOutputFile as T
+                    } else toBase64String() as T
                 }
-                input.inputStream()
             }
-            is InputStream -> input
-            else -> {
-                erl.onFailure?.invoke(Constants.ERR_INPUT_TYPE_NOT_SUPPORTED, InvalidParameterException())
-                return erl
+
+            is FileInputStream -> {
+
+                val fos = with(parsedOutputFile) {
+                    if (exists()) delete()
+                    createNewFile()
+                    outputStream()
+                }
+
+                try {
+                    fos.write(iv)
+                    fos.write(salt)
+                } catch (e: IOException) {
+                    fos.flush()
+                    fos.close()
+                    parsedInput.close()
+                    parsedOutputFile.delete()
+                    throw e
+                }
+
+                val cos = CipherOutputStream(fos, cipher)
+
+                try {
+                    val size = parsedInput.channel.size()
+                    val buffer = ByteArray(8192)
+                    var bytesCopied: Long = 0
+                    var read = parsedInput.read(buffer)
+
+                    while (read > -1) {
+                        cos.write(buffer, 0, read)
+                        bytesCopied += read
+                        progressListener?.invoke(read, bytesCopied, size)
+                        read = parsedInput.read(buffer)
+                    }
+                } catch (e: IOException) {
+                    parsedOutputFile.delete()
+                    throw e
+                } finally {
+                    cos.flush()
+                    cos.close()
+                    parsedInput.close()
+                }
+                return@async parsedOutputFile as T
             }
         }
-
-        val parsedOutputFile =
-                if (input !is File || outputFile.absolutePath != Constants.DEF_ENCRYPTED_FILE_PATH) outputFile
-                else File(input.absolutePath + Constants.ECRYPT_FILE_EXT)
-
-        if (parsedOutputFile.exists() && parsedOutputFile.absolutePath != Constants.DEF_ENCRYPTED_FILE_PATH) {
-            (input as? InputStream)?.close()
-            erl.onFailure?.invoke(Constants.ERR_OUTPUT_FILE_EXISTS, FileAlreadyExistsException(parsedOutputFile))
-            return erl
-        }
-
-        encryptSymmetric(parsedInput, tPass, cipher, erl, parsedOutputFile)
-        return erl
+        throw RuntimeException("Unable to produce result.")
     }
 
     /**
@@ -141,57 +209,138 @@ class ECSymmetric(transformation: ECSymmetricTransformations = ECSymmetricTransf
      * bounded by the appropriate padding bytes
      */
     @JvmOverloads
-    inline fun <reified T> decrypt(
+    open fun <T> decrypt(
             @NotNull input: Any,
             @NotNull password: String,
-            @NotNull outputFile: File = File(Constants.DEF_DECRYPTED_FILE_PATH)
-    ): ECResultListener<T> {
+            @NotNull outputFile: File = File(Constants.DEF_DECRYPTED_FILE_PATH),
+            progressListener: ProgressListener? = null
+    ) = GlobalScope.async {
 
-        val erl = ECResultListener<T>()
+        val (parsedInput, parsedOutputFile) = Pair(input, outputFile).parse(false)
 
-        val tPass = password.trim()
+        val ivBytesLength = cipher.blockSize
 
-        val parsedInput: Any = when (input) {
-            is String -> try {
-                input.fromBase64().inputStream()
-            } catch (e: IllegalArgumentException) {
-                Timber.d(e)
-                erl.onFailure?.invoke(Constants.ERR_BAD_BASE64, e)
-                return erl
-            }
-            is CharSequence -> try {
-                input.toString().fromBase64().inputStream()
-            } catch (e: IllegalArgumentException) {
-                Timber.d(e)
-                erl.onFailure?.invoke(Constants.ERR_BAD_BASE64, e)
-                return erl
-            }
-            is ByteArray -> input.inputStream()
-            is File -> {
-                if (!input.exists() || input.isDirectory) {
-                    erl.onFailure?.invoke(Constants.ERR_NO_SUCH_FILE, NoSuchFileException(input))
-                    return erl
+        when (parsedInput) {
+
+            is ByteArray -> {
+
+                val iv = parsedInput.copyOfRange(0, ivBytesLength - 1)
+                val salt = parsedInput.copyOfRange(ivBytesLength, Constants.SALT_BYTES_LENGTH - 1)
+
+                if (ivBytesLength != iv.size
+                        || Constants.SALT_BYTES_LENGTH != salt.size) {
+                    throw BadPaddingException(Constants.ERR_INVALID_INPUT_DATA)
                 }
-                input.inputStream()
+
+                val ivParams = IvParameterSpec(iv)
+                val key = getKey(password, salt)
+
+                cipher.init(Cipher.DECRYPT_MODE, key, ivParams)
+
+                with(parsedInput.readBytes()) {
+                    return@async if (!parsedOutputFile.isDefault()) try {
+                        parsedOutputFile.outputStream().use {
+                            it.write(this)
+                            it.flush()
+                        }
+                        parsedOutputFile as T
+                    } catch (e: IOException) {
+                        throw IOException(Constants.ERR_CANNOT_WRITE, e)
+                    } else asString()
+                }
             }
-            is InputStream -> input
-            else -> {
-                erl.onFailure?.invoke(Constants.ERR_INPUT_TYPE_NOT_SUPPORTED, InvalidParameterException())
-                return erl
+
+            is ByteArrayInputStream -> {
+
+                val iv = ByteArray(ivBytesLength)
+                val salt = ByteArray(Constants.SALT_BYTES_LENGTH)
+
+                if (ivBytesLength != parsedInput.read(iv)
+                        || Constants.SALT_BYTES_LENGTH != parsedInput.read(salt)) {
+                    parsedInput.close()
+                    throw BadPaddingException(Constants.ERR_INVALID_INPUT_DATA)
+                }
+
+                val ivParams = IvParameterSpec(iv)
+                val key = getKey(password, salt)
+
+                try {
+                    cipher.init(Cipher.DECRYPT_MODE, key, ivParams)
+
+                    with(parsedInput.readBytes()) {
+                        return@async if (!parsedOutputFile.isDefault()) try {
+                            parsedOutputFile.outputStream().use {
+                                it.write(this)
+                                it.flush()
+                            }
+                            parsedOutputFile as T
+                        } catch (e: IOException) {
+                            throw IOException(Constants.ERR_CANNOT_WRITE, e)
+                        } else asString() as T
+                    }
+                } catch (e: BadPaddingException) {
+                    throw e
+                } catch (e: IllegalBlockSizeException) {
+                    throw e
+                } finally {
+                    parsedInput.close()
+                }
+            }
+
+            is FileInputStream -> {
+
+                var cis: CipherInputStream? = null
+
+                val fos = with(parsedOutputFile) {
+                    if (exists()) delete()
+                    createNewFile()
+                    outputStream()
+                }
+
+                val iv = ByteArray(ivBytesLength)
+                val salt = ByteArray(Constants.SALT_BYTES_LENGTH)
+
+                try {
+                    if (ivBytesLength != parsedInput.read(iv) ||
+                            Constants.SALT_BYTES_LENGTH != parsedInput.read(salt)) {
+                        parsedInput.close()
+                        throw BadPaddingException(Constants.ERR_INVALID_INPUT_DATA)
+                    }
+                } catch (e: IOException) {
+                    parsedInput.close()
+                    throw e
+                }
+
+                val key = getKey(password, salt)
+                val ivParams = IvParameterSpec(iv)
+
+                cipher.init(Cipher.DECRYPT_MODE, key, ivParams)
+
+                try {
+                    val size = parsedInput.channel.size()
+                    cis = CipherInputStream(parsedInput, cipher)
+
+                    val buffer = ByteArray(8192)
+                    var bytesCopied: Long = 0
+
+                    var read = cis.read(buffer)
+                    while (read > -1) {
+                        fos.write(buffer, 0, read)
+                        bytesCopied += read
+                        progressListener?.invoke(read, bytesCopied, size)
+                        read = cis.read(buffer)
+                    }
+                } catch (e: IOException) {
+                    parsedOutputFile.delete()
+                    throw e
+                } finally {
+                    fos.flush()
+                    fos.close()
+                    cis?.close()
+                }
+                return@async parsedOutputFile as T
             }
         }
-
-        val parsedOutputFile =
-                if (input !is File || outputFile.absolutePath != Constants.DEF_DECRYPTED_FILE_PATH) outputFile
-                else File(input.absoluteFile.toString().removeSuffix(Constants.ECRYPT_FILE_EXT))
-
-        if (parsedOutputFile.exists() && parsedOutputFile.absolutePath != Constants.DEF_DECRYPTED_FILE_PATH) {
-            (input as? InputStream)?.close()
-            erl.onFailure?.invoke(Constants.ERR_OUTPUT_FILE_EXISTS, FileAlreadyExistsException(parsedOutputFile))
-            return erl
-        }
-
-        decryptSymmetric(parsedInput, tPass, cipher, erl, parsedOutputFile)
-        return erl
+        throw RuntimeException("Unable to produce result.")
     }
 }

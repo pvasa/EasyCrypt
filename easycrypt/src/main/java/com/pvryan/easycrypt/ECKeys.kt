@@ -154,7 +154,7 @@ class ECKeys {
      */
     @JvmOverloads
     fun genRSAKeyPair(kpl: ECRSAKeyPairListener,
-                      keySize: KeySizes = KeySizes.S_4096) = GlobalScope.async {
+                      keySize: KeySizes = KeySizes.S4096) = GlobalScope.async {
         val generator = KeyPairGenerator.getInstance(Constants.ASYMMETRIC_ALGORITHM)
         generator.initialize(keySize.value, random)
         val keyPair = generator.generateKeyPair()

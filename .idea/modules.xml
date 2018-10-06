@@ -6,6 +6,7 @@
       <module fileurl="file://$PROJECT_DIR$/appKotlin/appKotlin.iml" filepath="$PROJECT_DIR$/appKotlin/appKotlin.iml" />
       <module fileurl="file://$PROJECT_DIR$/buildSrc/buildSrc.iml" filepath="$PROJECT_DIR$/buildSrc/buildSrc.iml" />
       <module fileurl="file://$PROJECT_DIR$/easycrypt/easycrypt.iml" filepath="$PROJECT_DIR$/easycrypt/easycrypt.iml" />
+      <module fileurl="file://$PROJECT_DIR$/easycryptsamplejava/easycryptsamplejava.iml" filepath="$PROJECT_DIR$/easycryptsamplejava/easycryptsamplejava.iml" />
     </modules>
   </component>
 </project>
