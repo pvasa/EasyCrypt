@@ -35,9 +35,9 @@
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="32dp"
             android:layout_marginStart="32dp"
             android:layout_marginTop="32dp"
+            android:layout_marginEnd="32dp"
             app:passwordToggleEnabled="true">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -53,9 +53,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
-            android:layout_marginEnd="32dp"
             android:layout_marginStart="32dp"
             android:layout_marginTop="16dp"
+            android:layout_marginEnd="32dp"
             android:text="@string/tv_select_file_to"
             android:textAppearance="?android:textAppearanceMedium"
             android:textColor="@color/primary_text" />
@@ -63,8 +63,8 @@
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="32dp"
             android:layout_marginStart="32dp"
+            android:layout_marginEnd="32dp"
             android:orientation="horizontal">
 
             <Button
@@ -100,9 +100,9 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="32dp"
             android:layout_marginStart="32dp"
             android:layout_marginTop="16dp"
+            android:layout_marginEnd="32dp"
             android:orientation="horizontal">
 
             <TextView
@@ -122,9 +122,9 @@
             android:id="@+id/rlPrivateKeyTitleF"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="32dp"
             android:layout_marginStart="32dp"
             android:layout_marginTop="16dp"
+            android:layout_marginEnd="32dp"
             android:background="?attr/selectableItemBackground"
             android:clickable="true"
             android:focusable="true"
@@ -134,8 +134,8 @@
                 android:id="@+id/labelPrivateKeyF"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_alignParentLeft="true"
                 android:layout_alignParentStart="true"
+                android:layout_alignParentLeft="true"
                 android:layout_gravity="center_vertical"
                 android:labelFor="@+id/tvPrivateKeyS"
                 android:text="@string/tv_secure_private_key"
@@ -148,9 +148,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignEnd="@+id/labelPrivateKeyF"
+                android:layout_alignRight="@+id/labelPrivateKeyF"
                 android:layout_alignParentEnd="true"
                 android:layout_alignParentRight="true"
-                android:layout_alignRight="@+id/labelPrivateKeyF"
                 android:layout_gravity="center_vertical"
                 android:background="@drawable/ic_keyboard_arrow_down_black_24px"
                 android:contentDescription="@string/iv_expand_collapse_button"
@@ -161,8 +161,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/labelPrivateKeyF"
-                android:layout_marginLeft="4dp"
                 android:layout_marginStart="4dp"
+                android:layout_marginLeft="4dp"
                 android:layout_marginTop="8dp"
                 android:textIsSelectable="false"
                 android:visibility="gone" />
@@ -173,9 +173,9 @@
             android:id="@+id/rlPublicKeyTitleF"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="32dp"
             android:layout_marginStart="32dp"
             android:layout_marginTop="16dp"
+            android:layout_marginEnd="32dp"
             android:background="?attr/selectableItemBackground"
             android:clickable="true"
             android:focusable="true"
@@ -186,8 +186,8 @@
                 android:id="@+id/labelPublicKeyF"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_alignParentLeft="true"
                 android:layout_alignParentStart="true"
+                android:layout_alignParentLeft="true"
                 android:layout_gravity="start|center_vertical"
                 android:labelFor="@+id/tvPublicKeyS"
                 android:text="@string/tv_public_key"
@@ -200,9 +200,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignEnd="@+id/labelPublicKeyF"
+                android:layout_alignRight="@+id/labelPublicKeyF"
                 android:layout_alignParentEnd="true"
                 android:layout_alignParentRight="true"
-                android:layout_alignRight="@+id/labelPublicKeyF"
                 android:layout_gravity="center_vertical"
                 android:background="@drawable/ic_keyboard_arrow_down_black_24px"
                 android:contentDescription="@string/iv_expand_collapse_button"
@@ -213,8 +213,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/labelPublicKeyF"
-                android:layout_marginLeft="4dp"
                 android:layout_marginStart="4dp"
+                android:layout_marginLeft="4dp"
                 android:layout_marginTop="8dp"
                 android:textIsSelectable="false"
                 android:visibility="gone" />
@@ -225,9 +225,9 @@
             android:id="@+id/labelOutputF"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="32dp"
             android:layout_marginStart="32dp"
             android:layout_marginTop="16dp"
+            android:layout_marginEnd="32dp"
             android:labelFor="@+id/tvResultF"
             android:text="@string/tv_output"
             android:textAppearance="?android:textAppearanceMedium"
@@ -238,12 +238,12 @@
             android:id="@+id/tvResultF"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="32dp"
-            android:layout_marginEnd="32dp"
-            android:layout_marginLeft="36dp"
-            android:layout_marginRight="32dp"
             android:layout_marginStart="36dp"
+            android:layout_marginLeft="36dp"
             android:layout_marginTop="8dp"
+            android:layout_marginEnd="32dp"
+            android:layout_marginRight="32dp"
+            android:layout_marginBottom="32dp"
             android:textIsSelectable="false" />
 
     </LinearLayout>

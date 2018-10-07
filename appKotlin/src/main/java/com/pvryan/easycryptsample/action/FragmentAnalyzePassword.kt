@@ -34,7 +34,7 @@ import kotlinx.android.synthetic.main.fragment_analyze_password.tvGuessesLog10
 import kotlinx.android.synthetic.main.fragment_analyze_password.tvOfflineBFTime
 import kotlinx.android.synthetic.main.fragment_analyze_password.tvOnlineBFTime
 import kotlinx.android.synthetic.main.fragment_analyze_password.tvWarning
-import java.util.Locale
+import java.util.*
 
 class FragmentAnalyzePassword : Fragment() {
 
